@@ -14,7 +14,7 @@ The format is based on [Keep a Changelog], and this project adheres to
 - Initial release
 
 <!-- references -->
-[Unreleased]: https://github.com/dogmatiq/GITHUB_REPO_NAME
+[Unreleased]: https://github.com/dogmatiq/projectionkit
 
 <!-- version template
 ## [0.0.1] - YYYY-MM-DD

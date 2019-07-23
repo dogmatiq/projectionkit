@@ -1,1 +1,2 @@
-package GITHUB_REPO_NAME
+// Package projectionkit provides utilities for building Dogma projections.
+package projectionkit
