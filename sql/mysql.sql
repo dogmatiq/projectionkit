@@ -1,0 +1,7 @@
+CREATE TABLE projection_kv (
+    handler VARBINARY(255) NOT NULL,
+    k       VARBINARY(255) NOT NULL,
+    v       VARBINARY(255) NOT NULL,
+
+    PRIMARY KEY (handler, k)
+) ENGINE=InnoDB ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=4;
