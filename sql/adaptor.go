@@ -33,35 +33,35 @@ func New(db *sql.DB, h MessageHandler) dogma.ProjectionMessageHandler {
 // HandleEvent updates the projection to reflect the occurrence of an event.
 func (a *adaptor) HandleEvent(
 	ctx context.Context,
+	r, c, n []byte,
 	s dogma.ProjectionEventScope,
 	m dogma.Message,
-	k, v []byte,
-) error {
+) (bool, error) {
 	tx, err := a.db.BeginTx(ctx, nil)
 	if err != nil {
-		return err
+		return false, err
 	}
 	defer tx.Rollback()
 
+	ok, err := a.driver.UpdateVersion(ctx, tx, a.key, r, c, n)
+	if !ok || err != nil {
+		return ok, err
+	}
+
 	if err := a.MessageHandler.HandleEvent(ctx, tx, s, m); err != nil {
-		return err
+		return false, err
 	}
 
-	if err := a.driver.Associate(ctx, tx, a.key, k, v); err != nil {
-		return err
-	}
-
-	return tx.Commit()
+	return true, tx.Commit()
 }
 
-// Recover returns the value component of a key/value association persisted
-// by a call to HandleEvent().
-func (a *adaptor) Recover(ctx context.Context, k []byte) (v []byte, ok bool, err error) {
-	return a.driver.Recover(ctx, a.db, a.key, k)
+// ResourceVersion returns the version of the resource r.
+func (a *adaptor) ResourceVersion(ctx context.Context, r []byte) ([]byte, error) {
+	return a.driver.ResourceVersion(ctx, a.db, a.key, r)
 }
 
-// Discard informs the projection that a specific key/value association is
-// no longer required.
-func (a *adaptor) Discard(ctx context.Context, k []byte) error {
-	return a.driver.Discard(ctx, a.db, a.key, k)
+// CloseResource informs the projection that the resource r will not be
+// used in any future calls to HandleEvent().
+func (a *adaptor) CloseResource(ctx context.Context, r []byte) error {
+	return a.driver.CloseResource(ctx, a.db, a.key, r)
 }

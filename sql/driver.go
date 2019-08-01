@@ -7,24 +7,24 @@ import (
 
 // Driver is an interface for database-specific projection drivers.
 type Driver interface {
-	Associate(
+	UpdateVersion(
 		ctx context.Context,
 		tx *sql.Tx,
 		h string,
-		k, v []byte,
-	) error
+		r, c, n []byte,
+	) (bool, error)
 
-	Recover(
+	ResourceVersion(
 		ctx context.Context,
 		db *sql.DB,
 		h string,
-		k []byte,
-	) ([]byte, bool, error)
+		r []byte,
+	) ([]byte, error)
 
-	Discard(
+	CloseResource(
 		ctx context.Context,
 		db *sql.DB,
 		h string,
-		k []byte,
+		r []byte,
 	) error
 }
