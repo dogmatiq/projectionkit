@@ -1,6 +1,7 @@
 package sql
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 )
@@ -10,68 +11,90 @@ var MySQL Driver = mySQL{}
 
 type mySQL struct{}
 
-func (mySQL) Associate(
+func (mySQL) UpdateVersion(
 	ctx context.Context,
 	tx *sql.Tx,
 	h string,
-	k, v []byte,
-) error {
-	_, err := tx.ExecContext(
+	r, c, n []byte,
+) (bool, error) {
+	row := tx.QueryRowContext(
 		ctx,
-		`INSERT INTO projection SET
-			handler = ?
-			k = ?
-			v = ?
-		ON DUPLICATE KEY UPDATE
-			v = VALUES(v)`,
+		`SELECT version
+		FROM projection_occ
+		WHERE handler = ?
+		AND resource = ?
+		FOR UPDATE`,
+		c,
 		h,
-		k,
-		v,
+		r,
 	)
 
-	return err
+	var actual []byte
+
+	err := row.Scan(&actual)
+	if err != nil && err != sql.ErrNoRows {
+		return false, err
+	}
+
+	if !bytes.Equal(c, actual) {
+		return false, nil
+	}
+
+	_, err = tx.ExecContext(
+		ctx,
+		`INSERT INTO projection SET
+				handler = ?
+				resource = ?
+				version = ?
+			ON DUPLICATE KEY UPDATE
+				v = VALUES(v)`,
+		h,
+		r,
+		n,
+	)
+
+	return true, err
 }
 
-func (mySQL) Recover(
+func (mySQL) ResourceVersion(
 	ctx context.Context,
 	db *sql.DB,
 	h string,
-	k []byte,
-) (v []byte, ok bool, err error) {
+	r []byte,
+) ([]byte, error) {
 	row := db.QueryRowContext(
 		ctx,
 		`SELECT v
 		FROM projection
 		WHERE handler = ?
-		AND k = ?`,
+		AND resource = ?`,
 		h,
-		k,
+		r,
 	)
 
-	err = row.Scan(&v)
+	var v []byte
+	err := row.Scan(&v)
 
 	if err == sql.ErrNoRows {
-		err = nil
-	} else {
-		ok = true
+		return nil, nil
 	}
 
-	return
+	return v, err
 }
 
-func (mySQL) Discard(
+func (mySQL) CloseResource(
 	ctx context.Context,
 	db *sql.DB,
 	h string,
-	k []byte,
+	r []byte,
 ) error {
 	_, err := db.ExecContext(
 		ctx,
 		`DELETE FROM projection
 		WHERE handler = ?
-		AND k = ?`,
+		AND resource = ?`,
 		h,
-		k,
+		r,
 	)
 
 	return err
