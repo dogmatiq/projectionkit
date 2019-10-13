@@ -1,7 +1,0 @@
-CREATE TABLE projection_occ (
-    handler  VARBINARY(255) NOT NULL,
-    resource VARBINARY(255) NOT NULL,
-    version  VARBINARY(255) NOT NULL,
-
-    PRIMARY KEY (handler, resource)
-) ENGINE=InnoDB ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=4;

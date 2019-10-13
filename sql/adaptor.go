@@ -57,11 +57,11 @@ func (a *adaptor) HandleEvent(
 
 // ResourceVersion returns the version of the resource r.
 func (a *adaptor) ResourceVersion(ctx context.Context, r []byte) ([]byte, error) {
-	return a.driver.ResourceVersion(ctx, a.db, a.key, r)
+	return a.driver.QueryVersion(ctx, a.db, a.key, r)
 }
 
 // CloseResource informs the projection that the resource r will not be
 // used in any future calls to HandleEvent().
 func (a *adaptor) CloseResource(ctx context.Context, r []byte) error {
-	return a.driver.CloseResource(ctx, a.db, a.key, r)
+	return a.driver.DeleteResource(ctx, a.db, a.key, r)
 }

@@ -1,5 +1,15 @@
 language: go
 go: '1.13'
+addongs:
+  mariadb: 10.4
+env:
+  global:
+  - DOGMATIQ_TEST_MYSQL_DSN="travis@tcp(127.0.0.1:3306)/dogmatiq"
+before_install:
+- mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql mysql
+- mysql -e 'CREATE DATABASE dogmatiq;'
+- mysql -e 'CREATE USER travis@localhost;'
+- mysql -e 'GRANT ALL ON dogmatiq.* TO travis@localhost;'
 install: go mod download
 script: make ci
 after_success: bash <(curl -s https://codecov.io/bash)
