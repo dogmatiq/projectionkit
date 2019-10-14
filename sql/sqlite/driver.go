@@ -1,12 +1,11 @@
-package mysql
+package sqlite
 
 import (
 	"context"
 	"database/sql"
 )
 
-// Driver is an implementation of sql.Driver for MySQL and compatible databases
-// such as MariaDB.
+// Driver is an implementation of sql.Driver for SQLite.
 type Driver struct{}
 
 // UpdateVersion updates the version for a specific handler and resource.
