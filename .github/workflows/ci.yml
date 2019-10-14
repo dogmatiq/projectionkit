@@ -32,6 +32,8 @@ jobs:
         DOGMATIQ_TEST_MYSQL_DSN: "root:rootpass@tcp(127.0.0.1:${{ job.services.mariadb.ports['3306'] }})/dogmatiq"
     - name: Upload Coverage Reports
       if: success()
-      run: bash <(curl -s https://codecov.io/bash) -t "$TOKEN" -B "${{ github.ref }}"
+      run: |
+        test ! -z "$TOKEN"
+        bash <(curl -s https://codecov.io/bash) -t "$TOKEN" -B "${{ github.ref }}"
       env:
         TOKEN: "${{ secrets.CODECOV_TOKEN }}"
