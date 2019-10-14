@@ -18,6 +18,12 @@ jobs:
           MYSQL_DATABASE: dogmatiq
           MYSQL_USER: dogmatiq
           MYSQL_PASSWORD: dogmatiq
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: rootpass
+        ports:
+        - 5432/tcp
     steps:
     - name: Set up Go
       uses: actions/setup-go@v1
@@ -30,6 +36,7 @@ jobs:
       run: make ci
       env:
         DOGMATIQ_TEST_MYSQL_DSN: "root:rootpass@tcp(127.0.0.1:${{ job.services.mariadb.ports['3306'] }})/dogmatiq"
+        DOGMATIQ_TEST_POSTGRES_DSN: "user=postgres password=rootpass sslmode=disable port=${{ job.services.postgres.ports['5432'] }}"
     - name: Upload Coverage Reports
       if: success()
       run: |
