@@ -1,4 +1,6 @@
--include artifacts/make/go.mk
+-include .makefiles/Makefile
+-include .makefiles/pkg/protobuf/v1/Makefile
+-include .makefiles/pkg/go/v1/Makefile
 
-artifacts/make/%.mk:
-	curl -sf https://dogmatiq.io/makefiles/fetch | bash /dev/stdin $*
+.makefiles/%:
+	@curl -sfL https://makefiles.dev/v1 | bash /dev/stdin "$@"

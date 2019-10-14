@@ -1,7 +1,7 @@
 version: "3.7"
 
 services:
-  db:
+  mariadb:
     image: mariadb:latest
     environment:
       MYSQL_ROOT_PASSWORD: rootpass
@@ -9,8 +9,9 @@ services:
       MYSQL_USER: dogmatiq
       MYSQL_PASSWORD: dogmatiq
     ports:
-       - "3306:3306/tcp"
+    - "3306:3306/tcp"
     volumes:
-      - db:/var/lib/mysql
+    - mariadb:/var/lib/mysql
+
 volumes:
-  db:
+  mariadb:

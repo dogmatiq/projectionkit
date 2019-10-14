@@ -1,6 +1,6 @@
 # Dogma Projection Kit
 
-[![Build Status](http://img.shields.io/travis/com/dogmatiq/projectionkit/master.svg)](https://travis-ci.com/dogmatiq/projectionkit)
+[![Build Status](https://github.com/dogmatiq/projectionkit/workflows/CI/badge.svg)](https://github.com/dogmatiq/projectionkit/actions?workflow=CI)
 [![Code Coverage](https://img.shields.io/codecov/c/github/dogmatiq/projectionkit/master.svg)](https://codecov.io/github/dogmatiq/projectionkit)
 [![Latest Version](https://img.shields.io/github/tag/dogmatiq/projectionkit.svg?label=semver)](https://semver.org)
 [![GoDoc](https://godoc.org/github.com/dogmatiq/projectionkit?status.svg)](https://godoc.org/github.com/dogmatiq/projectionkit)
