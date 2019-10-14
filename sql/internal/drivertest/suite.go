@@ -195,19 +195,12 @@ func Declare(
 		)
 
 		ginkgo.It("can delete the resource", func() {
-			tx, err := db.BeginTx(ctx, nil)
-			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
-			defer tx.Rollback()
-
-			err = d.DeleteResource(
+			err := d.DeleteResource(
 				ctx,
 				db,
 				"<handler>",
 				[]byte("<resource>"),
 			)
-			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
-
-			err = tx.Commit()
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 
 			ver, err := d.QueryVersion(
