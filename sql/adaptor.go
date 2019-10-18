@@ -19,11 +19,15 @@ type adaptor struct {
 }
 
 // New returns a new projection message handler that uses the given database pool.
-func New(db *sql.DB, h MessageHandler) dogma.ProjectionMessageHandler {
+func New(
+	db *sql.DB,
+	d Driver,
+	h MessageHandler,
+) dogma.ProjectionMessageHandler {
 	a := &adaptor{
 		MessageHandler: h,
 		db:             db,
-		driver:         nil, // TODO: determine driver
+		driver:         d,
 		key:            identity.Key(h),
 	}
 
