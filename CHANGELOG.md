@@ -11,9 +11,15 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Add `sql.NewDriver()` function, which returns the appropriate driver for supported `*sql.DB` instances
+- **[BC]** Return an error from `sql.New()`
+
 ### Fixed
 
-- **[BC]** `sql.New()` now requires the driver implementation to be specified explicitly
+- **[BC]** Add driver parameter to `sql.New()`
+
 
 ## [0.1.0] - 2019-10-14
 

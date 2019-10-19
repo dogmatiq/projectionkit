@@ -18,12 +18,22 @@ type adaptor struct {
 	driver Driver
 }
 
-// New returns a new projection message handler that uses the given database pool.
+// New returns a new projection message handler that uses the given database.
+//
+// If d is nil, the appropriate default driver for db is used, if recognized.
 func New(
 	db *sql.DB,
-	d Driver,
 	h MessageHandler,
-) dogma.ProjectionMessageHandler {
+	d Driver,
+) (dogma.ProjectionMessageHandler, error) {
+	if d == nil {
+		var err error
+		d, err = NewDriver(db)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	a := &adaptor{
 		MessageHandler: h,
 		db:             db,
@@ -31,7 +41,7 @@ func New(
 		key:            identity.Key(h),
 	}
 
-	return a
+	return a, nil
 }
 
 // HandleEvent updates the projection to reflect the occurrence of an event.
