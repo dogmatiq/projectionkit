@@ -5,12 +5,9 @@ import (
 	"database/sql"
 	"fmt"
 
-	pkmysql "github.com/dogmatiq/projectionkit/sql/mysql"
+	"github.com/dogmatiq/projectionkit/sql/mysql"
 	"github.com/dogmatiq/projectionkit/sql/postgres"
 	"github.com/dogmatiq/projectionkit/sql/sqlite"
-	"github.com/go-sql-driver/mysql"
-	"github.com/lib/pq"
-	"github.com/mattn/go-sqlite3"
 )
 
 // Driver is an interface for database-specific projection drivers.
@@ -43,16 +40,20 @@ type Driver interface {
 // NewDriver returns the appropriate driver implementation to use with the given
 // database.
 func NewDriver(db *sql.DB) (Driver, error) {
-	d := db.Driver()
+	if mysql.IsCompatibleWith(db) {
+		return &mysql.Driver{}, nil
+	}
 
-	switch d.(type) {
-	case *mysql.MySQLDriver:
-		return &pkmysql.Driver{}, nil
-	case *pq.Driver:
+	if postgres.IsCompatibleWith(db) {
 		return &postgres.Driver{}, nil
-	case *sqlite3.SQLiteDriver:
+	}
+
+	if sqlite.IsCompatibleWith(db) {
 		return &sqlite.Driver{}, nil
 	}
 
-	return nil, fmt.Errorf("can not deduce the appropriate SQL projection driver for %T", d)
+	return nil, fmt.Errorf(
+		"can not deduce the appropriate SQL projection driver for %T",
+		db.Driver(),
+	)
 }

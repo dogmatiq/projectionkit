@@ -3,6 +3,8 @@ package sql_test
 import (
 	"database/sql"
 
+	"github.com/dogmatiq/projectionkit/sql/internal/drivertest"
+
 	pksql "github.com/dogmatiq/projectionkit/sql"
 	"github.com/dogmatiq/projectionkit/sql/mysql"
 	"github.com/dogmatiq/projectionkit/sql/postgres"
@@ -32,4 +34,9 @@ var _ = Describe("func NewDriver()", func() {
 		Entry("postgres", "postgres", "host=localhost", &postgres.Driver{}),
 		Entry("sqlite", "sqlite3", ":memory:", &sqlite.Driver{}),
 	)
+
+	It("returns an error if the driver is unrecognised", func() {
+		_, err := pksql.NewDriver(drivertest.MockDB())
+		Expect(err).Should(HaveOccurred())
+	})
 })

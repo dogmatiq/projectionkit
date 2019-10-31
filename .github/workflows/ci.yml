@@ -45,9 +45,16 @@ jobs:
       id: go
     - name: Checkout
       uses: actions/checkout@v1
-    - name: Make
+    - name: Make (with CGO)
       run: make ci
       env:
+        CGO_ENABLED: "1"
+        DOGMATIQ_TEST_MYSQL_DSN: "root:rootpass@tcp(127.0.0.1:${{ job.services.mariadb.ports['3306'] }})/dogmatiq"
+        DOGMATIQ_TEST_POSTGRES_DSN: "user=postgres password=rootpass sslmode=disable port=${{ job.services.postgres.ports['5432'] }}"
+    - name: Make (tests only, without CGO)
+      run: make test
+      env:
+        CGO_ENABLED: "0"
         DOGMATIQ_TEST_MYSQL_DSN: "root:rootpass@tcp(127.0.0.1:${{ job.services.mariadb.ports['3306'] }})/dogmatiq"
         DOGMATIQ_TEST_POSTGRES_DSN: "user=postgres password=rootpass sslmode=disable port=${{ job.services.postgres.ports['5432'] }}"
     - name: Upload Coverage Reports
