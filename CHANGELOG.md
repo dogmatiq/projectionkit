@@ -9,13 +9,17 @@ The format is based on [Keep a Changelog], and this project adheres to
 [Keep a Changelog]: https://keepachangelog.com/en/1.0.0/
 [Semantic Versioning]: https://semver.org/spec/v2.0.0.html
 
-## [Unreleased]
+## [0.3.0] - 2019-10-31
 
 ### Added
 
 - Add `mysql.IsCompatibleWith()`
 - Add `postgres.IsCompatibleWith()`
 - Add `sqlite.IsCompatibleWith()`
+
+### Changed
+
+- Bump EngineKit to v0.8.0
 
 ### Fixed
 
@@ -40,6 +44,7 @@ The format is based on [Keep a Changelog], and this project adheres to
 [Unreleased]: https://github.com/dogmatiq/projectionkit
 [0.1.0]: https://github.com/dogmatiq/projectionkit/releases/tag/v0.1.0
 [0.2.0]: https://github.com/dogmatiq/projectionkit/releases/tag/v0.2.0
+[0.3.0]: https://github.com/dogmatiq/projectionkit/releases/tag/v0.3.0
 
 <!-- version template
 ## [0.0.1] - YYYY-MM-DD
