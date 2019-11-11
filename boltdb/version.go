@@ -22,7 +22,7 @@ func updateVersion(
 	if len(c) == 0 {
 		// If the resource record already exists, that means the current version
 		// was not correct.
-		if v := b.Get(r); v == nil {
+		if v := b.Get(r); v != nil {
 			return false, nil
 		}
 		if err = b.Put(r, n); err != nil {
