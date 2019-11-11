@@ -25,12 +25,13 @@ func bucket(tx *bolt.Tx, bb ...string) (*bolt.Bucket, error) {
 			if bkt, err = tx.CreateBucketIfNotExists([]byte(b)); err != nil {
 				return nil, err
 			}
-		} else {
-			if bkt, err = bkt.CreateBucketIfNotExists([]byte(b)); err != nil {
-				return nil, err
-			}
+			continue
 		}
 
+		if bkt, err = bkt.CreateBucketIfNotExists([]byte(b)); err != nil {
+			return nil, err
+		}
 	}
+
 	return bkt, nil
 }

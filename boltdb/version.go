@@ -1,6 +1,7 @@
 package boltdb
 
 import (
+	"bytes"
 	"context"
 
 	bolt "go.etcd.io/bbolt"
@@ -17,32 +18,21 @@ func updateVersion(
 	if err != nil {
 		return false, err
 	}
-	// If the "current" version is empty, we assumed it's correct and that there
-	// is no existing entry for this resource.
-	if len(c) == 0 {
-		// If the resource record already exists, that means the current version
-		// was not correct.
-		if v := b.Get(r); v != nil {
-			return false, nil
-		}
-		if err = b.Put(r, n); err != nil {
-			return false, err
-		}
+
+	// If the "current" version is different to the value in the resource
+	// bucket, that means the current version was not correct.
+	if !bytes.Equal(b.Get(r), c) {
+		return false, nil
 	}
 
 	if len(n) == 0 {
 		// If the "next" version is empty, we can delete the bucket KV entry
 		// entirely.
-		if err = b.Delete(r); err != nil {
-			return false, err
-		}
-	} else {
-		if err = b.Put(r, n); err != nil {
-			return false, err
-		}
+		return true, b.Delete(r)
 	}
 
-	return true, nil
+	// We can finally update the next version.
+	return true, b.Put(r, n)
 }
 
 func queryVersion(
@@ -56,10 +46,12 @@ func queryVersion(
 		return nil, err
 	}
 	defer tx.Rollback()
+
 	b, err := bucket(tx, topBucket, h)
 	if err != nil {
 		return nil, err
 	}
+
 	return b.Get(r), nil
 }
 
@@ -83,5 +75,6 @@ func deleteResource(
 	if err = b.Delete(r); err != nil {
 		return err
 	}
+
 	return tx.Commit()
 }
