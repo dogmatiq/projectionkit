@@ -8,7 +8,7 @@ import (
 	"github.com/dogmatiq/projectionkit/internal/identity"
 )
 
-// adaptor is an implementation adapts an sql.ProjectionMessageHandler to the
+// adaptor adapts an sql.ProjectionMessageHandler to the
 // dogma.ProjectionMessageHandler interface.
 type adaptor struct {
 	MessageHandler
