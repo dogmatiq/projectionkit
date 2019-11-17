@@ -14,14 +14,15 @@ func updateVersion(
 	r, c, n []byte,
 ) (bool, error) {
 	// Retrieve/create the handler bucket.
-	b, err := bucket(tx, topBucket, h)
+	b, err := bucket(tx, TopBucket, h)
 	if err != nil {
 		return false, err
 	}
 
-	// If the "current" version is different to the value in the resource
-	// bucket, that means the current version was not correct.
-	if !bytes.Equal(b.Get(r), c) {
+	// If the "current" version is not nil (i.e. the first call for the handler)
+	// and different to the value in the resource bucket, that means the current
+	// version was not correct.
+	if c1 := b.Get(r); c1 != nil && !bytes.Equal(c, c1) {
 		return false, nil
 	}
 
@@ -47,7 +48,7 @@ func queryVersion(
 	}
 	defer tx.Rollback()
 
-	b, err := bucket(tx, topBucket, h)
+	b, err := bucket(tx, TopBucket, h)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +68,7 @@ func deleteResource(
 	}
 	defer tx.Rollback()
 
-	b, err := bucket(tx, topBucket, h)
+	b, err := bucket(tx, TopBucket, h)
 	if err != nil {
 		return err
 	}
