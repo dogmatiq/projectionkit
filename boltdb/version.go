@@ -14,7 +14,7 @@ func updateVersion(
 	r, c, n []byte,
 ) (bool, error) {
 	// Retrieve/create the handler bucket.
-	b, err := bucket(tx, topBucket, h)
+	b, err := mkBucketAll(tx, topBucket, h)
 	if err != nil {
 		return false, err
 	}

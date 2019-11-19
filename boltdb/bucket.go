@@ -2,6 +2,7 @@ package boltdb
 
 import (
 	"fmt"
+	"strings"
 
 	bolt "go.etcd.io/bbolt"
 )
@@ -12,47 +13,65 @@ const (
 	topBucket = "projection_occ"
 )
 
-// bucket retrieves the deepest bucket at a given bucket hierarchy. Slice bb
-// represents the bucket hierarchy with the first element being the top level
-// bucket and the last being the bucket nested at len(bb) level.
+// mkBucketAll creates bucket hierarchy and returns the deepest bucket in it.
+// Slice bb represents the bucket hierarchy with the first element being the top
+// level bucket and the last being the bucket nested at len(bb) level.
 //
-// If tx is writable this function attempts to create any missing buckets in bb.
-// Otherwise, this function produces an error notifying about the first missing
-// bucket encountered in bb.
-func bucket(tx *bolt.Tx, bb ...string) (*bolt.Bucket, error) {
+// In order to successfully create a bucket hierarchy, tx must be writable or an
+// error is returned. If some or all buckets in bb already exist, this function
+// ignores creation.
+func mkBucketAll(tx *bolt.Tx, bb ...string) (*bolt.Bucket, error) {
+	// return if no buckets passed
+	if len(bb) == 0 {
+		return nil, nil
+	}
+
+	type bktcreator interface {
+		CreateBucketIfNotExists(name []byte) (*bolt.Bucket, error)
+	}
+
 	var (
-		bkt *bolt.Bucket
+		bc  bktcreator = tx
 		err error
 	)
 
 	for _, b := range bb {
-		if bkt == nil {
-			if tx.Writable() {
-				if bkt, err = tx.CreateBucketIfNotExists(
-					[]byte(b),
-				); err != nil {
-					return nil, err
-				}
-			} else {
-				if bkt = tx.Bucket([]byte(b)); bkt == nil {
-					return nil, fmt.Errorf("bucket '%s' not found", b)
-				}
-			}
-			continue
-		}
-
-		if tx.Writable() {
-			if bkt, err = bkt.CreateBucketIfNotExists(
-				[]byte(b),
-			); err != nil {
-				return nil, err
-			}
-		} else {
-			if bkt = bkt.Bucket([]byte(b)); bkt == nil {
-				return nil, fmt.Errorf("bucket '%s' not found", b)
-			}
+		if bc, err = bc.CreateBucketIfNotExists(
+			[]byte(b),
+		); err != nil {
+			return nil, err
 		}
 	}
 
-	return bkt, nil
+	return bc.(*bolt.Bucket), nil
+}
+
+// bucket retrieves the deepest bucket at a given bucket hierarchy. Slice bb
+// represents the bucket hierarchy with the first element being the top level
+// bucket and the last being the bucket nested at len(bb) level.
+//
+// if any of the buckets in bb don't exist, this function produces an error
+// notifying about the first missing bucket encountered in bb.
+func bucket(tx *bolt.Tx, bb ...string) (*bolt.Bucket, error) {
+	// return if no buckets passed
+	if len(bb) == 0 {
+		return nil, nil
+	}
+
+	type bktgetter interface {
+		Bucket(name []byte) *bolt.Bucket
+	}
+
+	var bg bktgetter = tx
+
+	for i, name := range bb {
+		if bg = bg.Bucket([]byte(name)); bg == nil {
+			return nil,
+				fmt.Errorf(
+					"bucket '%s' not found",
+					strings.Join(bb[i+1:], "."),
+				)
+		}
+	}
+	return bg.(*bolt.Bucket), nil
 }
