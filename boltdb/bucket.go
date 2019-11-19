@@ -7,9 +7,9 @@ import (
 )
 
 const (
-	// TopBucket is the bucket at the root level that contains all data related
+	// topBucket is the bucket at the root level that contains all data related
 	// to projection OCC.
-	TopBucket = "projection_occ"
+	topBucket = "projection_occ"
 )
 
 // bucket retrieves the deepest bucket at a given bucket hierarchy. Slice bb

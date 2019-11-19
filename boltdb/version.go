@@ -14,7 +14,7 @@ func updateVersion(
 	r, c, n []byte,
 ) (bool, error) {
 	// Retrieve/create the handler bucket.
-	b, err := bucket(tx, TopBucket, h)
+	b, err := bucket(tx, topBucket, h)
 	if err != nil {
 		return false, err
 	}
@@ -48,7 +48,7 @@ func queryVersion(
 	}
 	defer tx.Rollback()
 
-	b, err := bucket(tx, TopBucket, h)
+	b, err := bucket(tx, topBucket, h)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +68,7 @@ func deleteResource(
 	}
 	defer tx.Rollback()
 
-	b, err := bucket(tx, TopBucket, h)
+	b, err := bucket(tx, topBucket, h)
 	if err != nil {
 		return err
 	}
