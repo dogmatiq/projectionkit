@@ -19,10 +19,9 @@ func updateVersion(
 		return false, err
 	}
 
-	// If the "current" version is not nil (i.e. the first call for the handler)
-	// and different to the value in the resource bucket, that means the current
-	// version was not correct.
-	if c1 := b.Get(r); c1 != nil && !bytes.Equal(c, c1) {
+	// If the "current" version different to the value in the resource bucket,
+	// that means the current version was not correct.
+	if !bytes.Equal(b.Get(r), c) {
 		return false, nil
 	}
 
