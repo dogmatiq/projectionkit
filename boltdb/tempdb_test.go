@@ -1,4 +1,4 @@
-package internal
+package boltdb_test
 
 import (
 	"io/ioutil"
@@ -8,17 +8,16 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
-// TempDB is used to create a temporary instance of BoltDB to be used for
-// testing.
-type TempDB struct {
+// tempDB is used to create a temporary instance of BoltDB for testing.
+type tempDB struct {
 	DB *bolt.DB
 
 	fp string
 }
 
 // NewTempDB creates and returns an instance of TempDB.
-func NewTempDB() *TempDB {
-	t := &TempDB{}
+func newTempDB() *tempDB {
+	t := &tempDB{}
 	f, err := ioutil.TempFile("", "*.boltdb")
 	gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 
@@ -42,7 +41,7 @@ func NewTempDB() *TempDB {
 }
 
 // Close closes the temporary BoltDB database and removes the database file.
-func (t *TempDB) Close() {
+func (t *tempDB) Close() {
 	err := t.DB.Close()
 	gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 

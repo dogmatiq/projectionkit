@@ -7,16 +7,15 @@ import (
 	"github.com/dogmatiq/dogma"
 	"github.com/dogmatiq/enginekit/fixtures"
 	. "github.com/dogmatiq/projectionkit/boltdb"
-	"github.com/dogmatiq/projectionkit/boltdb/internal"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"go.etcd.io/bbolt"
+	bolt "go.etcd.io/bbolt"
 )
 
 var _ = Describe("type adaptor", func() {
 	var (
 		handler *messageHandlerMock
-		db      *internal.TempDB
+		db      *tempDB
 		adaptor dogma.ProjectionMessageHandler
 	)
 
@@ -25,7 +24,7 @@ var _ = Describe("type adaptor", func() {
 		handler.ConfigureCall = func(c dogma.ProjectionConfigurer) {
 			c.Identity("<projection>", "<key>")
 		}
-		db = internal.NewTempDB()
+		db = newTempDB()
 		adaptor = New(db.DB, handler)
 	})
 
@@ -103,7 +102,7 @@ var _ = Describe("type adaptor", func() {
 
 			handler.HandleEventCall = func(
 				context.Context,
-				*bbolt.Tx,
+				*bolt.Tx,
 				dogma.ProjectionEventScope,
 				dogma.Message,
 			) error {
