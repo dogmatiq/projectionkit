@@ -13,40 +13,36 @@ import (
 	"go.etcd.io/bbolt"
 )
 
-var _ = Describe("MessageHandler Adaptor", func() {
+var _ = Describe("type adaptor", func() {
 	var (
-		mh *internal.MessageHandlerMock
-		db *internal.TempDB
+		handler *internal.MessageHandlerMock
+		db      *internal.TempDB
+		adaptor dogma.ProjectionMessageHandler
 	)
 
 	BeforeEach(func() {
-		mh = &internal.MessageHandlerMock{}
-		mh.ConfigureCall = func(c dogma.ProjectionConfigurer) {
+		handler = &internal.MessageHandlerMock{}
+		handler.ConfigureCall = func(c dogma.ProjectionConfigurer) {
 			c.Identity("<projection>", "<key>")
 		}
 		db = internal.NewTempDB()
+		adaptor = New(db.DB, handler)
 	})
 
 	AfterEach(func() {
 		db.Close()
 	})
 
-	Context("HandleEvent method", func() {
-
+	Context("func HandleEvent()", func() {
 		It("executes as expected", func() {
-			ctx := context.TODO()
-			a := New(db.DB, mh)
-			r := []byte("<resource>")
-			c := []byte{}
-			n := []byte("<version 01>")
 
-			By("peristing the correct initial version")
+			By("persisting the initial resource version")
 
-			ok, err := a.HandleEvent(
-				ctx,
-				r,
-				c,
-				n,
+			ok, err := adaptor.HandleEvent(
+				context.Background(),
+				[]byte("<resource>"),
+				nil,
+				[]byte("<version 01>"),
 				nil,
 				fixtures.MessageA1,
 			)
@@ -54,20 +50,20 @@ var _ = Describe("MessageHandler Adaptor", func() {
 			Expect(ok).Should(BeTrue())
 			Expect(err).ShouldNot(HaveOccurred())
 
-			v, err := a.ResourceVersion(ctx, r)
+			v, err := adaptor.ResourceVersion(
+				context.Background(),
+				[]byte("<resource>"),
+			)
 			Expect(err).ShouldNot(HaveOccurred())
-			Expect(v).To(Equal(n))
+			Expect(v).To(Equal([]byte("<version 01>")))
 
-			By("peristing the next correct version")
+			By("persisting the next resource version")
 
-			c = n
-			n = []byte("<version 02>")
-
-			ok, err = a.HandleEvent(
-				ctx,
-				r,
-				c,
-				n,
+			ok, err = adaptor.HandleEvent(
+				context.Background(),
+				[]byte("<resource>"),
+				[]byte("<version 01>"),
+				[]byte("<version 02>"),
 				nil,
 				fixtures.MessageA2,
 			)
@@ -75,19 +71,18 @@ var _ = Describe("MessageHandler Adaptor", func() {
 			Expect(ok).Should(BeTrue())
 			Expect(err).ShouldNot(HaveOccurred())
 
-			v, err = a.ResourceVersion(ctx, r)
+			v, err = adaptor.ResourceVersion(
+				context.Background(),
+				[]byte("<resource>"),
+			)
 			Expect(err).ShouldNot(HaveOccurred())
-			Expect(v).To(Equal(n))
+			Expect(v).To(Equal([]byte("<version 02>")))
 
-			By("deleting resource if the next version is empty")
-
-			c = n
-			n = []byte{}
-
-			ok, err = a.HandleEvent(
-				ctx,
-				r,
-				c,
+			By("discarding a resource if the next resource version is empty")
+			ok, err = adaptor.HandleEvent(
+				context.Background(),
+				[]byte("<resource>"),
+				[]byte("<version 02>"),
 				nil,
 				nil,
 				fixtures.MessageA3,
@@ -95,20 +90,18 @@ var _ = Describe("MessageHandler Adaptor", func() {
 			Expect(ok).Should(BeTrue())
 			Expect(err).ShouldNot(HaveOccurred())
 
-			v, err = a.ResourceVersion(ctx, r)
+			v, err = adaptor.ResourceVersion(
+				context.Background(),
+				[]byte("<resource>"),
+			)
 			Expect(err).ShouldNot(HaveOccurred())
-			Expect(v).To(BeNil())
+			Expect(v).To(BeEmpty())
 		})
 
 		It("returns an error if MessageHandler's HandleEvent method fails", func() {
-			ctx := context.TODO()
-			a := New(db.DB, mh)
-			r := []byte("<resource>")
-			c := []byte{}
-			n := []byte("<version 01>")
 			terr := errors.New("handle event test error")
 
-			mh.HandleEventCall = func(
+			handler.HandleEventCall = func(
 				context.Context,
 				*bbolt.Tx,
 				dogma.ProjectionEventScope,
@@ -117,11 +110,11 @@ var _ = Describe("MessageHandler Adaptor", func() {
 				return terr
 			}
 
-			ok, err := a.HandleEvent(
-				ctx,
-				r,
-				c,
-				n,
+			ok, err := adaptor.HandleEvent(
+				context.Background(),
+				[]byte("<resource>"),
+				nil,
+				[]byte("<version 01>"),
 				nil,
 				fixtures.MessageA1,
 			)
@@ -130,18 +123,12 @@ var _ = Describe("MessageHandler Adaptor", func() {
 			Expect(err).Should(HaveOccurred())
 		})
 
-		It("returns false if the currect version in the database is incorrect", func() {
-			ctx := context.TODO()
-			a := New(db.DB, mh)
-			r := []byte("<resource>")
-			c := []byte{}
-			n := []byte("<version 01>")
-
-			ok, err := a.HandleEvent(
-				ctx,
-				r,
-				c,
-				n,
+		It("returns false if the currect resource version in the database is incorrect", func() {
+			ok, err := adaptor.HandleEvent(
+				context.Background(),
+				[]byte("<resource>"),
+				nil,
+				[]byte("<version 01>"),
 				nil,
 				fixtures.MessageA1,
 			)
@@ -149,14 +136,11 @@ var _ = Describe("MessageHandler Adaptor", func() {
 			Expect(ok).Should(BeTrue())
 			Expect(err).ShouldNot(HaveOccurred())
 
-			c = []byte("<incorrect current version>")
-			n = []byte("<version 02>")
-
-			ok, err = a.HandleEvent(
-				ctx,
-				r,
-				c,
-				n,
+			ok, err = adaptor.HandleEvent(
+				context.Background(),
+				[]byte("<resource>"),
+				[]byte("<incorrect current version>"),
+				[]byte("<version 02>"),
 				nil,
 				fixtures.MessageA2,
 			)
@@ -166,43 +150,37 @@ var _ = Describe("MessageHandler Adaptor", func() {
 		})
 	})
 
-	Context("ResourceVersion method", func() {
-		It("returns the correct resource version", func() {
-			ctx := context.TODO()
-			a := New(db.DB, mh)
-			r := []byte("<resource>")
-			c := []byte{}
-			n := []byte("<version 01>")
+	Context("func ResourceVersion()", func() {
+		It("returns a resource version", func() {
 
-			ok, err := a.HandleEvent(
-				ctx,
-				r,
-				c,
-				n,
+			ok, err := adaptor.HandleEvent(
+				context.Background(),
+				[]byte("<resource>"),
 				nil,
-				fixtures.MessageA2,
+				[]byte("<version 01>"),
+				nil,
+				fixtures.MessageA1,
 			)
 
 			Expect(ok).Should(BeTrue())
 			Expect(err).ShouldNot(HaveOccurred())
 
-			v, err := a.ResourceVersion(ctx, r)
+			v, err := adaptor.ResourceVersion(
+				context.Background(),
+				[]byte("<resource>"),
+			)
 			Expect(err).ShouldNot(HaveOccurred())
-			Expect(v).To(Equal(n))
+			Expect(v).To(Equal([]byte("<version 01>")))
 		})
+	})
 
-		It("CloseResource method", func() {
-			ctx := context.TODO()
-			a := New(db.DB, mh)
-			r := []byte("<resource>")
-			c := []byte{}
-			n := []byte("<version 01>")
-
-			ok, err := a.HandleEvent(
-				ctx,
-				r,
-				c,
-				n,
+	Context("func CloseResource()", func() {
+		It("removes a resource version", func() {
+			ok, err := adaptor.HandleEvent(
+				context.Background(),
+				[]byte("<resource>"),
+				nil,
+				[]byte("<version 01>"),
 				nil,
 				fixtures.MessageA2,
 			)
@@ -210,12 +188,18 @@ var _ = Describe("MessageHandler Adaptor", func() {
 			Expect(ok).Should(BeTrue())
 			Expect(err).ShouldNot(HaveOccurred())
 
-			err = a.CloseResource(ctx, r)
+			err = adaptor.CloseResource(
+				context.Background(),
+				[]byte("<resource>"),
+			)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			v, err := a.ResourceVersion(ctx, r)
+			v, err := adaptor.ResourceVersion(
+				context.Background(),
+				[]byte("<resource>"),
+			)
 			Expect(err).ShouldNot(HaveOccurred())
-			Expect(v).To(BeNil())
+			Expect(v).To(BeEmpty())
 		})
 	})
 })
