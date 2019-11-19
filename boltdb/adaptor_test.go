@@ -15,13 +15,13 @@ import (
 
 var _ = Describe("type adaptor", func() {
 	var (
-		handler *internal.MessageHandlerMock
+		handler *messageHandlerMock
 		db      *internal.TempDB
 		adaptor dogma.ProjectionMessageHandler
 	)
 
 	BeforeEach(func() {
-		handler = &internal.MessageHandlerMock{}
+		handler = &messageHandlerMock{}
 		handler.ConfigureCall = func(c dogma.ProjectionConfigurer) {
 			c.Identity("<projection>", "<key>")
 		}
