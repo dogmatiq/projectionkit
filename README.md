@@ -1,4 +1,4 @@
-# Dogma Projection Kit
+# Dogma Projection Toolkit
 
 [![Build Status](https://github.com/dogmatiq/projectionkit/workflows/CI/badge.svg)](https://github.com/dogmatiq/projectionkit/actions?workflow=CI)
 [![Code Coverage](https://img.shields.io/codecov/c/github/dogmatiq/projectionkit/master.svg)](https://codecov.io/github/dogmatiq/projectionkit)
