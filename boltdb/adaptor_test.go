@@ -122,7 +122,7 @@ var _ = Describe("type adaptor", func() {
 			Expect(err).Should(HaveOccurred())
 		})
 
-		It("returns false if the currect resource version in the database is incorrect", func() {
+		It("returns false if the correct resource version in the database is incorrect", func() {
 			ok, err := adaptor.HandleEvent(
 				context.Background(),
 				[]byte("<resource>"),
