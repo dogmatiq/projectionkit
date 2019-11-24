@@ -45,7 +45,6 @@ var _ = Describe("type adaptor", func() {
 				nil,
 				fixtures.MessageA1,
 			)
-
 			Expect(ok).Should(BeTrue())
 			Expect(err).ShouldNot(HaveOccurred())
 
@@ -66,7 +65,6 @@ var _ = Describe("type adaptor", func() {
 				nil,
 				fixtures.MessageA2,
 			)
-
 			Expect(ok).Should(BeTrue())
 			Expect(err).ShouldNot(HaveOccurred())
 
@@ -78,6 +76,7 @@ var _ = Describe("type adaptor", func() {
 			Expect(v).To(Equal([]byte("<version 02>")))
 
 			By("discarding a resource if the next resource version is empty")
+			
 			ok, err = adaptor.HandleEvent(
 				context.Background(),
 				[]byte("<resource>"),
@@ -117,7 +116,6 @@ var _ = Describe("type adaptor", func() {
 				nil,
 				fixtures.MessageA1,
 			)
-
 			Expect(ok).Should(BeFalse())
 			Expect(err).Should(HaveOccurred())
 		})
@@ -131,7 +129,6 @@ var _ = Describe("type adaptor", func() {
 				nil,
 				fixtures.MessageA1,
 			)
-
 			Expect(ok).Should(BeTrue())
 			Expect(err).ShouldNot(HaveOccurred())
 
@@ -143,7 +140,6 @@ var _ = Describe("type adaptor", func() {
 				nil,
 				fixtures.MessageA2,
 			)
-
 			Expect(ok).Should(BeFalse())
 			Expect(err).ShouldNot(HaveOccurred())
 		})
@@ -151,7 +147,6 @@ var _ = Describe("type adaptor", func() {
 
 	Context("func ResourceVersion()", func() {
 		It("returns a resource version", func() {
-
 			ok, err := adaptor.HandleEvent(
 				context.Background(),
 				[]byte("<resource>"),
@@ -160,7 +155,6 @@ var _ = Describe("type adaptor", func() {
 				nil,
 				fixtures.MessageA1,
 			)
-
 			Expect(ok).Should(BeTrue())
 			Expect(err).ShouldNot(HaveOccurred())
 
@@ -183,7 +177,6 @@ var _ = Describe("type adaptor", func() {
 				nil,
 				fixtures.MessageA2,
 			)
-
 			Expect(ok).Should(BeTrue())
 			Expect(err).ShouldNot(HaveOccurred())
 
