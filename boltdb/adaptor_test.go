@@ -76,7 +76,7 @@ var _ = Describe("type adaptor", func() {
 			Expect(v).To(Equal([]byte("<version 02>")))
 
 			By("discarding a resource if the next resource version is empty")
-			
+
 			ok, err = adaptor.HandleEvent(
 				context.Background(),
 				[]byte("<resource>"),
@@ -96,7 +96,7 @@ var _ = Describe("type adaptor", func() {
 			Expect(v).To(BeEmpty())
 		})
 
-		It("returns an error if MessageHandler's HandleEvent method fails", func() {
+		It("returns an error if the application's message handler fails", func() {
 			terr := errors.New("handle event test error")
 
 			handler.HandleEventCall = func(
@@ -120,7 +120,7 @@ var _ = Describe("type adaptor", func() {
 			Expect(err).Should(HaveOccurred())
 		})
 
-		It("returns false if the correct resource version in the database is incorrect", func() {
+		It("returns false if supplied resource version is not the current version", func() {
 			ok, err := adaptor.HandleEvent(
 				context.Background(),
 				[]byte("<resource>"),
