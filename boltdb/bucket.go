@@ -1,9 +1,6 @@
 package boltdb
 
 import (
-	"fmt"
-	"strings"
-
 	bolt "go.etcd.io/bbolt"
 )
 
@@ -13,65 +10,32 @@ const (
 	topBucket = "projection_occ"
 )
 
-// mkBucketAll creates bucket hierarchy and returns the deepest bucket in it.
-// Slice bb represents the bucket hierarchy with the first element being the top
-// level bucket and the last being the bucket nested at len(bb) level.
+// makeHandlerBucket creates a bucket for a given handler key if it has not been
+// created yet.
 //
-// In order to successfully create a bucket hierarchy, tx must be writable or an
-// error is returned. If some or all buckets in bb already exist, this function
-// ignores creation.
-func mkBucketAll(tx *bolt.Tx, bb ...string) (*bolt.Bucket, error) {
-	// return if no buckets passed
-	if len(bb) == 0 {
-		return nil, nil
+// This function returns an error it tx is not writable. This function panics if
+// the passed handler's key is an empty string.
+func makeHandlerBucket(tx *bolt.Tx, hk string) (*bolt.Bucket, error) {
+	tb, err := tx.CreateBucketIfNotExists([]byte(topBucket))
+	if err != nil {
+		return nil, err
 	}
 
-	type bktcreator interface {
-		CreateBucketIfNotExists(name []byte) (*bolt.Bucket, error)
+	hb, err := tb.CreateBucketIfNotExists([]byte(hk))
+	if err != nil {
+		return nil, err
 	}
 
-	var (
-		bc  bktcreator = tx
-		err error
-	)
-
-	for _, b := range bb {
-		if bc, err = bc.CreateBucketIfNotExists(
-			[]byte(b),
-		); err != nil {
-			return nil, err
-		}
-	}
-
-	return bc.(*bolt.Bucket), nil
+	return hb, nil
 }
 
-// bucket retrieves the deepest bucket at a given bucket hierarchy. Slice bb
-// represents the bucket hierarchy with the first element being the top level
-// bucket and the last being the bucket nested at len(bb) level.
-//
-// if any of the buckets in bb don't exist, this function produces an error
-// notifying about the first missing bucket encountered in bb.
-func bucket(tx *bolt.Tx, bb ...string) (*bolt.Bucket, error) {
-	// return if no buckets passed
-	if len(bb) == 0 {
-		return nil, nil
+// handlerBucket retrieves a bucket for a given handler key. If a bucket with
+// a given handler key does not exist, this function returns nil.
+func handlerBucket(tx *bolt.Tx, hk string) *bolt.Bucket {
+	tb := tx.Bucket([]byte(topBucket))
+	if tb == nil {
+		return nil
 	}
 
-	type bktgetter interface {
-		Bucket(name []byte) *bolt.Bucket
-	}
-
-	var bg bktgetter = tx
-
-	for i, name := range bb {
-		if bg = bg.Bucket([]byte(name)); bg == nil {
-			return nil,
-				fmt.Errorf(
-					"bucket '%s' not found",
-					strings.Join(bb[i+1:], "."),
-				)
-		}
-	}
-	return bg.(*bolt.Bucket), nil
+	return tb.Bucket([]byte(hk))
 }
