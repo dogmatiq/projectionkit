@@ -7,21 +7,18 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
-// updateVersion updates a resource's version within a BoltDB transaction using
-// a handler key, resource name, current and next resource version.
+// updateVersion updates a resource's version within a BoltDB transaction.
 //
-// This function discards a resource version record in the database if the
-// next version is empty.
+// It deletes the resource from the database if n is empty.
 //
-// This function returns an error if a current resource version does not match
-// the version value persisted in the database.
+// It returns false if the current version c does not match the version in the
+// database.
 func updateVersion(
 	ctx context.Context,
 	tx *bolt.Tx,
 	hk string,
 	r, c, n []byte,
 ) (bool, error) {
-	// Retrieve/create a handler bucket.
 	b, err := makeHandlerBucket(tx, hk)
 	if err != nil {
 		return false, err
@@ -42,10 +39,9 @@ func updateVersion(
 	return true, b.Put(r, n)
 }
 
-// queryVersion queries the resource version from the database with a given
-// handler key and resource name.
+// queryVersion returns the current version of a resource from the database.
 //
-// If there is no version persisted for a given resource, a nil is returned.
+// It returns nil if there is no version persisted for the resource.
 func queryVersion(
 	ctx context.Context,
 	db *bolt.DB,
@@ -65,8 +61,7 @@ func queryVersion(
 	return nil, nil
 }
 
-// deleteResource discards a resource version record from the database using a
-// handler key and resource name.
+// deleteResource ensures that a resource does not exist in the database.
 func deleteResource(
 	ctx context.Context,
 	db *bolt.DB,
@@ -80,7 +75,7 @@ func deleteResource(
 	defer tx.Rollback()
 
 	if b := handlerBucket(tx, hk); b != nil {
-		if err = b.Delete(r); err != nil {
+		if err := b.Delete(r); err != nil {
 			return err
 		}
 	}
