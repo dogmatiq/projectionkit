@@ -46,9 +46,8 @@ var _ = Describe("type adaptor", func() {
 		os.Remove(tmpfile)
 	})
 
-	Context("func HandleEvent()", func() {
+	Describe("func HandleEvent()", func() {
 		It("does not produce errors when OCC parameters are supplied correctly", func() {
-
 			By("persisting the initial resource version")
 
 			ok, err := adaptor.HandleEvent(
@@ -159,7 +158,7 @@ var _ = Describe("type adaptor", func() {
 		})
 	})
 
-	Context("func ResourceVersion()", func() {
+	Describe("func ResourceVersion()", func() {
 		It("returns a resource version", func() {
 			ok, err := adaptor.HandleEvent(
 				context.Background(),
@@ -181,7 +180,7 @@ var _ = Describe("type adaptor", func() {
 		})
 	})
 
-	Context("func CloseResource()", func() {
+	Describe("func CloseResource()", func() {
 		It("removes a resource version", func() {
 			ok, err := adaptor.HandleEvent(
 				context.Background(),
