@@ -17,6 +17,8 @@ var (
 func makeHandlerBucket(tx *bolt.Tx, hk string) (*bolt.Bucket, error) {
 	tb, err := tx.CreateBucketIfNotExists(topBucket)
 	if err != nil {
+		// CODE COVERAGE: This branch can not be easily covered without somehow
+		// breaking the BoltDB connection or the database file in some way.
 		return nil, err
 	}
 

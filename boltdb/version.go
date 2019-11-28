@@ -21,6 +21,8 @@ func updateVersion(
 ) (bool, error) {
 	b, err := makeHandlerBucket(tx, hk)
 	if err != nil {
+		// CODE COVERAGE: This branch can not be easily covered without somehow
+		// breaking the BoltDB connection or the database file in some way.
 		return false, err
 	}
 
@@ -50,6 +52,8 @@ func queryVersion(
 ) ([]byte, error) {
 	tx, err := db.Begin(false)
 	if err != nil {
+		// CODE COVERAGE: This branch can not be easily covered without somehow
+		// breaking the BoltDB connection or the database file in some way.
 		return nil, err
 	}
 	defer tx.Rollback()
@@ -70,12 +74,17 @@ func deleteResource(
 ) error {
 	tx, err := db.Begin(true)
 	if err != nil {
+		// CODE COVERAGE: This branch can not be easily covered without somehow
+		// breaking the BoltDB connection or the database file in some way.
 		return err
 	}
 	defer tx.Rollback()
 
 	if b := handlerBucket(tx, hk); b != nil {
 		if err := b.Delete(r); err != nil {
+			// CODE COVERAGE: This branch can not be easily covered without
+			// somehow breaking the BoltDB connection or the database file in
+			// some way.
 			return err
 		}
 	}

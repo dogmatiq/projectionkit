@@ -38,6 +38,8 @@ func (a *adaptor) HandleEvent(
 ) (bool, error) {
 	tx, err := a.db.Begin(true)
 	if err != nil {
+		// CODE COVERAGE: This branch can not be easily covered without somehow
+		// breaking the BoltDB connection or the database file in some way.
 		return false, err
 	}
 	defer tx.Rollback()

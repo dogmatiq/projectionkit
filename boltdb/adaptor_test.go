@@ -178,6 +178,14 @@ var _ = Describe("type adaptor", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(v).To(Equal([]byte("<version 01>")))
 		})
+		It("returns nil if no current resource version present in the database", func() {
+			v, err := adaptor.ResourceVersion(
+				context.Background(),
+				[]byte("<resource>"),
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(v).To(BeEmpty())
+		})
 	})
 
 	Describe("func CloseResource()", func() {
