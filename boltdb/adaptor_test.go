@@ -33,7 +33,7 @@ var _ = Describe("type adaptor", func() {
 	})
 
 	Context("func HandleEvent()", func() {
-		It("executes as expected", func() {
+		It("does not produce errors when OCC parameters are supplied correctly", func() {
 
 			By("persisting the initial resource version")
 
