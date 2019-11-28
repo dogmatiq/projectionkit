@@ -4,10 +4,10 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
-const (
+var (
 	// topBucket is the bucket at the root level that contains all data related
 	// to projection OCC.
-	topBucket = "projection_occ"
+	topBucket = []byte("projection_occ")
 )
 
 // makeHandlerBucket creates a bucket for the given handler key if it has not
@@ -15,7 +15,7 @@ const (
 //
 // This function returns an error it tx is not writable.
 func makeHandlerBucket(tx *bolt.Tx, hk string) (*bolt.Bucket, error) {
-	tb, err := tx.CreateBucketIfNotExists([]byte(topBucket))
+	tb, err := tx.CreateBucketIfNotExists(topBucket)
 	if err != nil {
 		return nil, err
 	}
@@ -26,7 +26,7 @@ func makeHandlerBucket(tx *bolt.Tx, hk string) (*bolt.Bucket, error) {
 // handlerBucket retrieves a bucket for the given handler key. If a bucket with
 // the given handler key does not exist, this function returns nil.
 func handlerBucket(tx *bolt.Tx, hk string) *bolt.Bucket {
-	tb := tx.Bucket([]byte(topBucket))
+	tb := tx.Bucket(topBucket)
 	if tb == nil {
 		return nil
 	}
