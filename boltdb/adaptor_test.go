@@ -3,11 +3,14 @@ package boltdb_test
 import (
 	"context"
 	"errors"
+	"io/ioutil"
+	"os"
 
 	"github.com/dogmatiq/dogma"
 	"github.com/dogmatiq/enginekit/fixtures"
 	. "github.com/dogmatiq/projectionkit/boltdb"
 	. "github.com/onsi/ginkgo"
+	"github.com/onsi/gomega"
 	. "github.com/onsi/gomega"
 	bolt "go.etcd.io/bbolt"
 )
@@ -15,21 +18,32 @@ import (
 var _ = Describe("type adaptor", func() {
 	var (
 		handler *messageHandlerMock
-		db      *tempDB
+		db      *bolt.DB
+		tmpfile string
 		adaptor dogma.ProjectionMessageHandler
 	)
 
 	BeforeEach(func() {
+		f, err := ioutil.TempFile("", "*.boltdb")
+		gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+		f.Close()
+
+		tmpfile = f.Name()
+
+		db, err = bolt.Open(tmpfile, 0600, bolt.DefaultOptions)
+		gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+
 		handler = &messageHandlerMock{}
 		handler.ConfigureCall = func(c dogma.ProjectionConfigurer) {
 			c.Identity("<projection>", "<key>")
 		}
-		db = newTempDB()
-		adaptor = New(db.DB, handler)
+
+		adaptor = New(db, handler)
 	})
 
 	AfterEach(func() {
 		db.Close()
+		os.Remove(tmpfile)
 	})
 
 	Context("func HandleEvent()", func() {
