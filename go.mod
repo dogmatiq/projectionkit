@@ -4,7 +4,6 @@ go 1.13
 
 require (
 	github.com/dogmatiq/dogma v0.6.2
-	github.com/dogmatiq/enginekit v0.8.0
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/lib/pq v1.2.0
 	github.com/mattn/go-sqlite3 v1.13.0
