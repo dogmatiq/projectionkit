@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/dogmatiq/dogma"
-	"github.com/dogmatiq/enginekit/fixtures"
+	. "github.com/dogmatiq/dogma/fixtures"
 	. "github.com/dogmatiq/projectionkit/boltdb"
 	. "github.com/onsi/ginkgo"
 	"github.com/onsi/gomega"
@@ -56,7 +56,7 @@ var _ = Describe("type adaptor", func() {
 				nil,
 				[]byte("<version 01>"),
 				nil,
-				fixtures.MessageA1,
+				MessageA1,
 			)
 			Expect(ok).Should(BeTrue())
 			Expect(err).ShouldNot(HaveOccurred())
@@ -76,7 +76,7 @@ var _ = Describe("type adaptor", func() {
 				[]byte("<version 01>"),
 				[]byte("<version 02>"),
 				nil,
-				fixtures.MessageA2,
+				MessageA2,
 			)
 			Expect(ok).Should(BeTrue())
 			Expect(err).ShouldNot(HaveOccurred())
@@ -96,7 +96,7 @@ var _ = Describe("type adaptor", func() {
 				[]byte("<version 02>"),
 				nil,
 				nil,
-				fixtures.MessageA3,
+				MessageA3,
 			)
 			Expect(ok).Should(BeTrue())
 			Expect(err).ShouldNot(HaveOccurred())
@@ -127,7 +127,7 @@ var _ = Describe("type adaptor", func() {
 				nil,
 				[]byte("<version 01>"),
 				nil,
-				fixtures.MessageA1,
+				MessageA1,
 			)
 			Expect(ok).Should(BeFalse())
 			Expect(err).Should(HaveOccurred())
@@ -140,7 +140,7 @@ var _ = Describe("type adaptor", func() {
 				nil,
 				[]byte("<version 01>"),
 				nil,
-				fixtures.MessageA1,
+				MessageA1,
 			)
 			Expect(ok).Should(BeTrue())
 			Expect(err).ShouldNot(HaveOccurred())
@@ -151,7 +151,7 @@ var _ = Describe("type adaptor", func() {
 				[]byte("<incorrect current version>"),
 				[]byte("<version 02>"),
 				nil,
-				fixtures.MessageA2,
+				MessageA2,
 			)
 			Expect(ok).Should(BeFalse())
 			Expect(err).ShouldNot(HaveOccurred())
@@ -166,7 +166,7 @@ var _ = Describe("type adaptor", func() {
 				nil,
 				[]byte("<version 01>"),
 				nil,
-				fixtures.MessageA1,
+				MessageA1,
 			)
 			Expect(ok).Should(BeTrue())
 			Expect(err).ShouldNot(HaveOccurred())
@@ -196,7 +196,7 @@ var _ = Describe("type adaptor", func() {
 				nil,
 				[]byte("<version 01>"),
 				nil,
-				fixtures.MessageA2,
+				MessageA2,
 			)
 			Expect(ok).Should(BeTrue())
 			Expect(err).ShouldNot(HaveOccurred())
