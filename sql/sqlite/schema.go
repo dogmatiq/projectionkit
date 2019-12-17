@@ -5,7 +5,7 @@ import (
 	"database/sql"
 )
 
-// CreateSchema creates the schema elements required by the PostgreSQL driver.
+// CreateSchema creates the schema elements required by the SQLite driver.
 func CreateSchema(ctx context.Context, db *sql.DB) error {
 	_, err := db.ExecContext(
 		ctx,
@@ -20,7 +20,7 @@ func CreateSchema(ctx context.Context, db *sql.DB) error {
 	return err
 }
 
-// DropSchema drops the schema elements required by the PostgreSQL driver.
+// DropSchema drops the schema elements required by the SQLite driver.
 func DropSchema(ctx context.Context, db *sql.DB) error {
 	_, err := db.ExecContext(ctx, `DROP TABLE IF EXISTS projection_occ`)
 	return err
