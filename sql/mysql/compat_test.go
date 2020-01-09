@@ -12,7 +12,7 @@ import (
 
 var _ = Describe("func IsCompatibleWith()", func() {
 	It("returns true if the driver is recognized", func() {
-		db, err := sql.Open("mysql", "localhost")
+		db, err := sql.Open("mysql", "tcp(127.0.0.1)/mysql")
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(IsCompatibleWith(db)).To(BeTrue())
 	})
