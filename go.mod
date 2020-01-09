@@ -10,5 +10,4 @@ require (
 	github.com/onsi/ginkgo v1.11.0
 	github.com/onsi/gomega v1.8.1
 	go.etcd.io/bbolt v1.3.3
-	google.golang.org/appengine v1.6.5 // indirect
 )

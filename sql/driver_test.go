@@ -30,7 +30,7 @@ var _ = Describe("func NewDriver()", func() {
 
 			Expect(d).To(Equal(expected))
 		},
-		Entry("mysql", "mysql", "localhost", &mysql.Driver{}),
+		Entry("mysql", "mysql", "tcp(127.0.0.1)/mysql", &mysql.Driver{}),
 		Entry("postgres", "postgres", "host=localhost", &postgres.Driver{}),
 		Entry("sqlite", "sqlite3", ":memory:", &sqlite.Driver{}),
 	)
