@@ -1,5 +1,7 @@
 github.com/dogmatiq/dogma v0.6.2 h1:srGSGAu8ZpQ+c23EUVq35mDn47HZbbLr5Q9PhGRH7NE=
 github.com/dogmatiq/dogma v0.6.2/go.mod h1:8TdjQ5jjV2DcCPb/jjHPgSrqU66H6092yMEIF5HGx0g=
+github.com/dogmatiq/dogma v0.6.3 h1:owkM3lOFmLmwaFpYogO46taVuPJU5sF5YApICZr4ljk=
+github.com/dogmatiq/dogma v0.6.3/go.mod h1:8TdjQ5jjV2DcCPb/jjHPgSrqU66H6092yMEIF5HGx0g=
 github.com/fsnotify/fsnotify v1.4.7 h1:IXs+QLmnXW2CcXuY+8Mzv/fWEsPGWxqefPtCP5CnV9I=
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
 github.com/go-sql-driver/mysql v1.5.0 h1:ozyZYNQW3x3HtqT1jira07DN2PArx2v7/mN66gGcHOs=
