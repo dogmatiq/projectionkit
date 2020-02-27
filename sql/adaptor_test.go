@@ -18,7 +18,6 @@ var _ = Describe("type adaptor", func() {
 	var (
 		db      *sql.DB
 		handler *fixtures.MessageHandler
-		adaptor dogma.ProjectionMessageHandler
 	)
 
 	BeforeSuite(func() {
@@ -41,7 +40,7 @@ var _ = Describe("type adaptor", func() {
 
 			handler = &fixtures.MessageHandler{}
 
-			adaptor, err = New(db, handler, nil)
+			adaptor, err := New(db, handler, nil)
 			Expect(err).ShouldNot(HaveOccurred())
 
 			return adaptor
