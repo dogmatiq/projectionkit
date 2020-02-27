@@ -9,6 +9,7 @@ import (
 	"github.com/dogmatiq/dogma"
 	. "github.com/dogmatiq/dogma/fixtures"
 	. "github.com/dogmatiq/projectionkit/boltdb"
+	"github.com/dogmatiq/projectionkit/boltdb/fixtures" // can't dot-import due to conflict
 	. "github.com/onsi/ginkgo"
 	"github.com/onsi/gomega"
 	. "github.com/onsi/gomega"
@@ -17,7 +18,7 @@ import (
 
 var _ = Describe("type adaptor", func() {
 	var (
-		handler *messageHandlerMock
+		handler *fixtures.MessageHandler
 		db      *bolt.DB
 		tmpfile string
 		adaptor dogma.ProjectionMessageHandler
@@ -33,8 +34,8 @@ var _ = Describe("type adaptor", func() {
 		db, err = bolt.Open(tmpfile, 0600, bolt.DefaultOptions)
 		gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 
-		handler = &messageHandlerMock{}
-		handler.ConfigureCall = func(c dogma.ProjectionConfigurer) {
+		handler = &fixtures.MessageHandler{}
+		handler.ConfigureFunc = func(c dogma.ProjectionConfigurer) {
 			c.Identity("<projection>", "<key>")
 		}
 
@@ -112,7 +113,7 @@ var _ = Describe("type adaptor", func() {
 		It("returns an error if the application's message handler fails", func() {
 			terr := errors.New("handle event test error")
 
-			handler.HandleEventCall = func(
+			handler.HandleEventFunc = func(
 				context.Context,
 				*bolt.Tx,
 				dogma.ProjectionEventScope,
