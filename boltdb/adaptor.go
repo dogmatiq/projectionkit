@@ -66,3 +66,46 @@ func (a *adaptor) ResourceVersion(ctx context.Context, r []byte) ([]byte, error)
 func (a *adaptor) CloseResource(ctx context.Context, r []byte) error {
 	return deleteResource(ctx, a.db, a.key, r)
 }
+
+// StoreResourceVersion sets the version of the resource r to v
+func (a *adaptor) StoreResourceVersion(ctx context.Context, r, v []byte) error {
+	tx, err := a.db.Begin(true)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if err := storeVersion(ctx, tx, a.key, r, v); err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+
+// UpdateResourceVersion updates the version of the resource r to n without
+// handling any event.
+//
+// If c is not the current version of r, it returns false and no update occurs.
+func (a *adaptor) UpdateResourceVersion(
+	ctx context.Context,
+	r, c, n []byte,
+) (ok bool, err error) {
+	tx, err := a.db.Begin(true)
+	if err != nil {
+		return false, err
+	}
+	defer tx.Rollback()
+
+	ok, err = updateVersion(ctx, tx, a.key, r, c, n)
+	if !ok || err != nil {
+		return ok, err
+	}
+
+	return true, tx.Commit()
+}
+
+// DeleteResource removes all information about the resource r from the
+// handler's data store.
+func (a *adaptor) DeleteResource(ctx context.Context, r []byte) error {
+	return deleteResource(ctx, a.db, a.key, r)
+}
