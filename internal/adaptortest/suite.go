@@ -42,12 +42,14 @@ func Declare(setup func(context.Context) dogma.ProjectionMessageHandler) {
 					[]byte("<resource>"),
 					[]byte("<version>"),
 				)
+
 				gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 
 				ver, err := adaptor.ResourceVersion(
 					ctx,
 					[]byte("<resource>"),
 				)
+
 				gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 				gomega.Expect(ver).To(gomega.Equal([]byte("<version>")))
 			})
@@ -62,6 +64,7 @@ func Declare(setup func(context.Context) dogma.ProjectionMessageHandler) {
 						current,
 						[]byte("<version>"),
 					)
+
 					gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 					gomega.Expect(ok).To(gomega.BeTrue())
 
@@ -69,6 +72,7 @@ func Declare(setup func(context.Context) dogma.ProjectionMessageHandler) {
 						ctx,
 						[]byte("<resource>"),
 					)
+
 					gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 					gomega.Expect(ver).To(gomega.Equal([]byte("<version>")))
 				},
