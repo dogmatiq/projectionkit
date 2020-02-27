@@ -8,6 +8,34 @@ import (
 // Driver is an implementation of sql.Driver for SQLite.
 type Driver struct{}
 
+// StoreVersion unconditionally updates the version for a specific handler
+// and resource.
+func (*Driver) StoreVersion(
+	ctx context.Context,
+	db *sql.DB,
+	h string,
+	r, v []byte,
+) error {
+	_, err := db.ExecContext(
+		ctx,
+		`INSERT INTO projection_occ (
+			handler,
+			resource,
+			version
+		) VALUES (
+			?,
+			?,
+			?
+		) ON CONFLICT (handler, resource) DO UPDATE SET
+			version = excluded.version`,
+		h,
+		r,
+		v,
+	)
+
+	return err
+}
+
 // UpdateVersion updates the version for a specific handler and resource.
 func (*Driver) UpdateVersion(
 	ctx context.Context,

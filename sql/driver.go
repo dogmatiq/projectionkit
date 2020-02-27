@@ -12,6 +12,17 @@ import (
 
 // Driver is an interface for database-specific projection drivers.
 type Driver interface {
+	// StoreVersion unconditionally updates the version for a specific handler
+	// and resource.
+	//
+	// v must be non-empty.
+	StoreVersion(
+		ctx context.Context,
+		db *sql.DB,
+		h string,
+		r, v []byte,
+	) error
+
 	// UpdateVersion updates the version for a specific handler and resource.
 	UpdateVersion(
 		ctx context.Context,

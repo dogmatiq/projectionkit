@@ -9,6 +9,36 @@ import (
 // such as MariaDB.
 type Driver struct{}
 
+// StoreVersion unconditionally updates the version for a specific handler
+// and resource.
+//
+// v must be non-empty.
+func (d *Driver) StoreVersion(
+	ctx context.Context,
+	db *sql.DB,
+	h string,
+	r, v []byte,
+) error {
+	_, err := db.ExecContext(
+		ctx,
+		`INSERT INTO projection_occ (
+			handler,
+			resource,
+			version
+		) VALUES (
+			?,
+			?,
+			?
+		) ON DUPLICATE KEY UPDATE
+			version = VALUES(version)`,
+		h,
+		r,
+		v,
+	)
+
+	return err
+}
+
 // UpdateVersion updates the version for a specific handler and resource.
 func (*Driver) UpdateVersion(
 	ctx context.Context,
