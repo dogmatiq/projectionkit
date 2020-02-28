@@ -57,6 +57,7 @@ func Declare(
 				[]byte("<resource>"),
 				[]byte("<version>"),
 			)
+
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 
 			ver, err := d.QueryVersion(
@@ -164,6 +165,7 @@ func Declare(
 				[]byte("<resource>"),
 				[]byte("<version>"),
 			)
+
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 
 			ver, err := d.QueryVersion(
