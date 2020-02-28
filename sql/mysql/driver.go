@@ -12,7 +12,7 @@ type Driver struct{}
 // StoreVersion unconditionally updates the version for a specific handler
 // and resource.
 //
-// v must be non-empty.
+// v must be non-empty, to set an empty version, use DeleteResource().
 func (d *Driver) StoreVersion(
 	ctx context.Context,
 	db *sql.DB,
