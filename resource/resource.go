@@ -29,12 +29,14 @@ func StoreVersion(
 		return s.StoreResourceVersion(ctx, r, v)
 	}
 
-	// Otherwise, load the resource version and attempt to update it in a loop.
+	// If doesn't support the updater interface there's nothing more we can do.
 	u, ok := h.(updater)
 	if !ok {
 		return ErrNotSupported
 	}
 
+	// Otherwise, load the resource version and perform a regular update,
+	// retrying until we "win" (i.e, there is no OCC failure).
 	for {
 		c, err := h.ResourceVersion(ctx, r)
 		if err != nil {
