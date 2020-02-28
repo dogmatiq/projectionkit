@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/dogmatiq/dogma"
 	. "github.com/dogmatiq/dogma/fixtures"
 	. "github.com/dogmatiq/projectionkit/resource"
 	. "github.com/onsi/ginkgo"
@@ -13,7 +14,7 @@ import (
 var _ = Describe("func StoreVersion()", func() {
 	Context("when the handler implements the storer interface", func() {
 		It("uses the storer interface", func() {
-			d := &storerDecorator{
+			d := &mockStorer{
 				StoreResourceVersionFunc: func(
 					_ context.Context,
 					r, v []byte,
@@ -37,7 +38,7 @@ var _ = Describe("func StoreVersion()", func() {
 
 	Context("when the handler implements the updater interface", func() {
 		It("propagates errors when reading the current version", func() {
-			d := &updaterDecorator{
+			d := &mockUpdater{
 				ProjectionMessageHandler: &ProjectionMessageHandler{
 					ResourceVersionFunc: func(ctx context.Context, r []byte) ([]byte, error) {
 						return nil, errors.New("<error>")
@@ -56,7 +57,7 @@ var _ = Describe("func StoreVersion()", func() {
 		})
 
 		It("first reads the version, then performs an update", func() {
-			d := &updaterDecorator{
+			d := &mockUpdater{
 				ProjectionMessageHandler: &ProjectionMessageHandler{
 					ResourceVersionFunc: func(ctx context.Context, r []byte) ([]byte, error) {
 						return []byte("<current>"), nil
@@ -85,7 +86,7 @@ var _ = Describe("func StoreVersion()", func() {
 
 		It("retries after an OCC failure", func() {
 			var isRetry bool
-			d := &updaterDecorator{
+			d := &mockUpdater{
 				ProjectionMessageHandler: &ProjectionMessageHandler{
 					ResourceVersionFunc: func(ctx context.Context, r []byte) ([]byte, error) {
 						if isRetry {
@@ -140,7 +141,7 @@ var _ = Describe("func StoreVersion()", func() {
 var _ = Describe("func UpdateVersion()", func() {
 	Context("when the handler implements the updater interface", func() {
 		It("uses the updater interface", func() {
-			d := &updaterDecorator{
+			d := &mockUpdater{
 				UpdateResourceVersionFunc: func(
 					_ context.Context,
 					r, c, n []byte,
@@ -181,7 +182,7 @@ var _ = Describe("func UpdateVersion()", func() {
 var _ = Describe("func DeleteResource()", func() {
 	Context("when the handler implements the deleter interface", func() {
 		It("uses the deleter interface", func() {
-			d := &deleterDecorator{
+			d := &mockDeleter{
 				DeleteResourceFunc: func(
 					_ context.Context,
 					r []byte,
@@ -211,3 +212,39 @@ var _ = Describe("func DeleteResource()", func() {
 		Expect(err).To(Equal(ErrNotSupported))
 	})
 })
+
+// mockStorer wraps a message handler and adds the necessary methods to satisfy
+// the storer interface.
+type mockStorer struct {
+	dogma.ProjectionMessageHandler
+
+	StoreResourceVersionFunc func(ctx context.Context, r, v []byte) error
+}
+
+func (s mockStorer) StoreResourceVersion(ctx context.Context, r, v []byte) error {
+	return s.StoreResourceVersionFunc(ctx, r, v)
+}
+
+// mockUpdater wraps a message handler and adds the necessary methods to satisfy
+// the updater interface.
+type mockUpdater struct {
+	dogma.ProjectionMessageHandler
+
+	UpdateResourceVersionFunc func(ctx context.Context, r, c, n []byte) (bool, error)
+}
+
+func (u mockUpdater) UpdateResourceVersion(ctx context.Context, r, c, n []byte) (bool, error) {
+	return u.UpdateResourceVersionFunc(ctx, r, c, n)
+}
+
+// mockDeleter wraps a message handler and adds the necessary methods to satisfy
+// the deleter interface.
+type mockDeleter struct {
+	dogma.ProjectionMessageHandler
+
+	DeleteResourceFunc func(ctx context.Context, r []byte) error
+}
+
+func (d mockDeleter) DeleteResource(ctx context.Context, r []byte) error {
+	return d.DeleteResourceFunc(ctx, r)
+}
