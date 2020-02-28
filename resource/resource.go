@@ -7,7 +7,8 @@ import (
 	"github.com/dogmatiq/dogma"
 )
 
-// ErrNotSupported indicates that the handler does not a low-level operation.
+// ErrNotSupported indicates that the handler does not support a low-level
+// resource operation.
 var ErrNotSupported = errors.New("the handler does not support this operation")
 
 // StoreVersion sets the version of the resource r to v.
