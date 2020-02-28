@@ -11,7 +11,7 @@ import (
 	"github.com/onsi/gomega"
 )
 
-// Declare decalres generic behavioral tests for a specific adaptor
+// Declare declares generic behavioral tests for a specific adaptor
 // implementation.
 func Declare(setup func(context.Context) dogma.ProjectionMessageHandler) {
 	var (
