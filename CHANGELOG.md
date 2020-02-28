@@ -11,9 +11,10 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 ## [Unreleased]
 
-## Added
+### Added
 
 - Add test fixtures for BoltDB and SQL based message handlers
+- Add the `resource` package for manually manipulating resource versions
 
 ## [0.3.1] - 2019-12-24
 

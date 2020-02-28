@@ -11,7 +11,7 @@ import (
 	"github.com/onsi/gomega"
 )
 
-// Declare decalres generic behavioral tests for a specific driver
+// Declare declares generic behavioral tests for a specific driver
 // implementation.
 func Declare(
 	d pksql.Driver,
@@ -47,6 +47,28 @@ func Declare(
 
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 			gomega.Expect(ver).To(gomega.BeEmpty())
+		})
+
+		ginkgo.It("stores the version", func() {
+			err := d.StoreVersion(
+				ctx,
+				db,
+				"<handler>",
+				[]byte("<resource>"),
+				[]byte("<version>"),
+			)
+
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+
+			ver, err := d.QueryVersion(
+				ctx,
+				db,
+				"<handler>",
+				[]byte("<resource>"),
+			)
+
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+			gomega.Expect(ver).To(gomega.Equal([]byte("<version>")))
 		})
 
 		table.DescribeTable(
@@ -124,6 +146,28 @@ func Declare(
 		})
 
 		ginkgo.It("reports the expected version", func() {
+			ver, err := d.QueryVersion(
+				ctx,
+				db,
+				"<handler>",
+				[]byte("<resource>"),
+			)
+
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+			gomega.Expect(ver).To(gomega.Equal([]byte("<version>")))
+		})
+
+		ginkgo.It("stores the version", func() {
+			err := d.StoreVersion(
+				ctx,
+				db,
+				"<handler>",
+				[]byte("<resource>"),
+				[]byte("<version>"),
+			)
+
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+
 			ver, err := d.QueryVersion(
 				ctx,
 				db,

@@ -7,6 +7,32 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
+// storeVersion unconditionally updates a resource's version within a BoltDB
+// transaction.
+//
+// It deletes the resource from the database if v is empty.
+func storeVersion(
+	ctx context.Context,
+	tx *bolt.Tx,
+	hk string,
+	r, v []byte,
+) error {
+	b, err := makeHandlerBucket(tx, hk)
+	if err != nil {
+		// CODE COVERAGE: This branch can not be easily covered without somehow
+		// breaking the BoltDB connection or the database file in some way.
+		return err
+	}
+
+	if len(v) == 0 {
+		// If the version is empty, we can delete the bucket KV entry.
+		return b.Delete(r)
+	}
+
+	// We can finally update the version.
+	return b.Put(r, v)
+}
+
 // updateVersion updates a resource's version within a BoltDB transaction.
 //
 // It deletes the resource from the database if n is empty.

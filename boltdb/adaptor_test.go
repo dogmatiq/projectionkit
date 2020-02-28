@@ -10,8 +10,8 @@ import (
 	. "github.com/dogmatiq/dogma/fixtures"
 	. "github.com/dogmatiq/projectionkit/boltdb"
 	"github.com/dogmatiq/projectionkit/boltdb/fixtures" // can't dot-import due to conflict
+	"github.com/dogmatiq/projectionkit/internal/adaptortest"
 	. "github.com/onsi/ginkgo"
-	"github.com/onsi/gomega"
 	. "github.com/onsi/gomega"
 	bolt "go.etcd.io/bbolt"
 )
@@ -26,13 +26,13 @@ var _ = Describe("type adaptor", func() {
 
 	BeforeEach(func() {
 		f, err := ioutil.TempFile("", "*.boltdb")
-		gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+		Expect(err).ShouldNot(HaveOccurred())
 		f.Close()
 
 		tmpfile = f.Name()
 
 		db, err = bolt.Open(tmpfile, 0600, bolt.DefaultOptions)
-		gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+		Expect(err).ShouldNot(HaveOccurred())
 
 		handler = &fixtures.MessageHandler{}
 		handler.ConfigureFunc = func(c dogma.ProjectionConfigurer) {
@@ -43,9 +43,20 @@ var _ = Describe("type adaptor", func() {
 	})
 
 	AfterEach(func() {
-		db.Close()
-		os.Remove(tmpfile)
+		if db != nil {
+			db.Close()
+		}
+
+		if tmpfile != "" {
+			os.Remove(tmpfile)
+		}
 	})
+
+	adaptortest.Declare(
+		func(ctx context.Context) dogma.ProjectionMessageHandler {
+			return adaptor
+		},
+	)
 
 	Describe("func HandleEvent()", func() {
 		It("does not produce errors when OCC parameters are supplied correctly", func() {
@@ -179,6 +190,7 @@ var _ = Describe("type adaptor", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(v).To(Equal([]byte("<version 01>")))
 		})
+
 		It("returns nil if no current resource version present in the database", func() {
 			v, err := adaptor.ResourceVersion(
 				context.Background(),
