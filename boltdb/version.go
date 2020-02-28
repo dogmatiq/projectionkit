@@ -7,9 +7,10 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
-// storeVersion updates a resource's version within a BoltDB transaction.
+// storeVersion unconditionally updates a resource's version within a BoltDB
+// transaction.
 //
-// It deletes the resource from the database if n is empty.
+// It deletes the resource from the database if v is empty.
 func storeVersion(
 	ctx context.Context,
 	tx *bolt.Tx,
