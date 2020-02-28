@@ -9,7 +9,7 @@ The format is based on [Keep a Changelog], and this project adheres to
 [Keep a Changelog]: https://keepachangelog.com/en/1.0.0/
 [Semantic Versioning]: https://semver.org/spec/v2.0.0.html
 
-## [Unreleased]
+## [0.3.2] - 2020-02-28
 
 ### Added
 
@@ -59,6 +59,7 @@ The format is based on [Keep a Changelog], and this project adheres to
 [0.2.0]: https://github.com/dogmatiq/projectionkit/releases/tag/v0.2.0
 [0.3.0]: https://github.com/dogmatiq/projectionkit/releases/tag/v0.3.0
 [0.3.1]: https://github.com/dogmatiq/projectionkit/releases/tag/v0.3.1
+[0.3.2]: https://github.com/dogmatiq/projectionkit/releases/tag/v0.3.2
 
 <!-- version template
 ## [0.0.1] - YYYY-MM-DD
