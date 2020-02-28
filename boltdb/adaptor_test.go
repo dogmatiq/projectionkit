@@ -31,7 +31,7 @@ var _ = Describe("type adaptor", func() {
 
 		tmpfile = f.Name()
 
-		db, err := bolt.Open(tmpfile, 0600, bolt.DefaultOptions)
+		db, err = bolt.Open(tmpfile, 0600, bolt.DefaultOptions)
 		Expect(err).ShouldNot(HaveOccurred())
 
 		handler = &fixtures.MessageHandler{}
