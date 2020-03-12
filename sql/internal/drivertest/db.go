@@ -2,11 +2,13 @@ package drivertest
 
 import (
 	"database/sql"
+	"fmt"
 	"os"
 
 	_ "github.com/go-sql-driver/mysql" // keep driver import near code that uses it
-	_ "github.com/lib/pq"              // keep driver import near code that uses it
-	_ "github.com/mattn/go-sqlite3"    // keep driver import near code that uses it
+	"github.com/google/uuid"
+	_ "github.com/lib/pq"           // keep driver import near code that uses it
+	_ "github.com/mattn/go-sqlite3" // keep driver import near code that uses it
 
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/gomega"
@@ -22,7 +24,10 @@ func DSN(driver string) string {
 		dsn = "root:rootpass@tcp(127.0.0.1:3306)/dogmatiq"
 	case "sqlite3":
 		env = "DOGMATIQ_TEST_SQLITE_DSN"
-		dsn = ":memory:"
+		dsn = fmt.Sprintf(
+			"file:sqlite-%s.db?cache=shared&mode=memory",
+			uuid.New().String(),
+		)
 	case "postgres":
 		env = "DOGMATIQ_TEST_POSTGRES_DSN"
 		dsn = "user=postgres password=rootpass sslmode=disable"
@@ -43,13 +48,6 @@ func Open(driver string) *sql.DB {
 
 	db, err := sql.Open(driver, dsn)
 	gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
-
-	if driver == "sqlite3" && dsn == ":memory:" {
-		// Ensure that we only ever have one "connection" to the memory
-		// database, otherwise each connection obtained from the pool works on
-		// its own in-memory data store.
-		db.SetMaxOpenConns(1)
-	}
 
 	return db
 }
