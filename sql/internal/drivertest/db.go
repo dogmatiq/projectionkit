@@ -44,7 +44,7 @@ func Open(driver string) *sql.DB {
 	db, err := sql.Open(driver, dsn)
 	gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 
-	if driver == "sqlite" && dsn == ":memory:" {
+	if driver == "sqlite3" && dsn == ":memory:" {
 		// Ensure that we only ever have one "connection" to the memory
 		// database, otherwise each connection obtained from the pool works on
 		// its own in-memory data store.
