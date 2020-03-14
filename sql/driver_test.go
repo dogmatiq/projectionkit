@@ -3,9 +3,8 @@ package sql_test
 import (
 	"database/sql"
 
+	. "github.com/dogmatiq/projectionkit/sql"
 	"github.com/dogmatiq/projectionkit/sql/internal/drivertest"
-
-	pksql "github.com/dogmatiq/projectionkit/sql"
 	"github.com/dogmatiq/projectionkit/sql/mysql"
 	"github.com/dogmatiq/projectionkit/sql/postgres"
 	"github.com/dogmatiq/projectionkit/sql/sqlite"
@@ -20,12 +19,12 @@ import (
 var _ = Describe("func NewDriver()", func() {
 	DescribeTable(
 		"it returns the expected driver",
-		func(name, dsn string, expected pksql.Driver) {
+		func(name, dsn string, expected Driver) {
 			db, err := sql.Open(name, dsn)
 			Expect(err).ShouldNot(HaveOccurred())
 			defer db.Close()
 
-			d, err := pksql.NewDriver(db)
+			d, err := NewDriver(db)
 			Expect(err).ShouldNot(HaveOccurred())
 
 			Expect(d).To(Equal(expected))
@@ -36,7 +35,7 @@ var _ = Describe("func NewDriver()", func() {
 	)
 
 	It("returns an error if the driver is unrecognised", func() {
-		_, err := pksql.NewDriver(drivertest.MockDB())
+		_, err := NewDriver(drivertest.MockDB())
 		Expect(err).Should(HaveOccurred())
 	})
 })
