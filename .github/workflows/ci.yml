@@ -58,7 +58,7 @@ jobs:
         DOGMATIQ_TEST_MYSQL_DSN: "root:rootpass@tcp(127.0.0.1:${{ job.services.mariadb.ports['3306'] }})/dogmatiq"
         DOGMATIQ_TEST_POSTGRES_DSN: "user=postgres password=rootpass sslmode=disable port=${{ job.services.postgres.ports['5432'] }}"
     - name: Upload Coverage Reports
-      if: success()
+      if: success() && !github.head_ref
       run: |
         test ! -z "$TOKEN"
         bash <(curl -s https://codecov.io/bash) -t "$TOKEN" -B "${{ github.ref }}"
