@@ -9,6 +9,6 @@ require (
 	github.com/lib/pq v1.5.2
 	github.com/mattn/go-sqlite3 v1.13.0
 	github.com/onsi/ginkgo v1.12.0
-	github.com/onsi/gomega v1.9.0
+	github.com/onsi/gomega v1.10.0
 	go.etcd.io/bbolt v1.3.4
 )
