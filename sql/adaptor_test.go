@@ -42,10 +42,21 @@ var _ = Describe("type adaptor", func() {
 
 			handler = &fixtures.MessageHandler{}
 
-			adaptor, err := New(db, handler, nil)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			return adaptor
+			return MustNew(db, handler, nil)
 		},
 	)
+})
+
+var _ = Describe("func MustNew()", func() {
+	It("panics on failure", func() {
+		Expect(func() {
+			MustNew(
+				drivertest.MockDB(),
+				&fixtures.MessageHandler{},
+				nil,
+			)
+		}).To(PanicWith(
+			MatchError("can not deduce the appropriate SQL projection driver for *drivertest.MockDriver"),
+		))
+	})
 })

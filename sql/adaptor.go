@@ -44,6 +44,23 @@ func New(
 	return a, nil
 }
 
+// MustNew returns a new projection message handler that uses the given database
+// or panics if unable to do so.
+//
+// If d is nil, the appropriate default driver for db is used, if recognized.
+func MustNew(
+	db *sql.DB,
+	h MessageHandler,
+	d Driver,
+) dogma.ProjectionMessageHandler {
+	a, err := New(db, h, d)
+	if err != nil {
+		panic(err)
+	}
+
+	return a
+}
+
 // HandleEvent updates the projection to reflect the occurrence of an event.
 func (a *adaptor) HandleEvent(
 	ctx context.Context,

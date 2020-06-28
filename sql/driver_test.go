@@ -36,6 +36,6 @@ var _ = Describe("func NewDriver()", func() {
 
 	It("returns an error if the driver is unrecognised", func() {
 		_, err := NewDriver(drivertest.MockDB())
-		Expect(err).Should(HaveOccurred())
+		Expect(err).To(MatchError("can not deduce the appropriate SQL projection driver for *drivertest.MockDriver"))
 	})
 })
