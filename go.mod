@@ -3,7 +3,7 @@ module github.com/dogmatiq/projectionkit
 go 1.13
 
 require (
-	github.com/dogmatiq/dogma v0.6.3
+	github.com/dogmatiq/dogma v0.8.0
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/google/uuid v1.1.2
 	github.com/lib/pq v1.8.0
