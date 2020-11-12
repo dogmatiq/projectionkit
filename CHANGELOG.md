@@ -9,6 +9,17 @@ The format is based on [Keep a Changelog], and this project adheres to
 [Keep a Changelog]: https://keepachangelog.com/en/1.0.0/
 [Semantic Versioning]: https://semver.org/spec/v2.0.0.html
 
+## [Unreleased]
+
+### Changed
+
+- **[BC]** Update to Dogma v0.10.0
+
+### Added
+
+- **[BC]** Add `sql.MessageHandler.Compact()`
+- **[BC]** Add `boltdb.MessageHandler.Compact()`
+
 ## [0.4.0] - 2020-06-29
 
 ### Added

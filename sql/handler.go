@@ -62,4 +62,19 @@ type MessageHandler interface {
 	// a duration shorter than the hint is NOT RECOMMENDED, as this will likely
 	// lead to repeated message handling failures.
 	TimeoutHint(m dogma.Message) time.Duration
+
+	// Compact reduces the size of the projection's data.
+	//
+	// The implementation SHOULD attempt to decrease the size of the
+	// projection's data by whatever means available. For example, it may delete
+	// any unused data, or collapse multiple data sets into one.
+	//
+	// The context MAY have a deadline. The implementation SHOULD compact data
+	// using multiple small transactions, such that if the deadline is reached a
+	// future call to Compact() does not need to compact the same data.
+	//
+	// The engine SHOULD call Compact() repeatedly throughout the lifetime of
+	// the projection. The precise scheduling of calls to Compact() are
+	// engine-defined. It MAY be called concurrently with any other method.
+	Compact(ctx context.Context, db *sql.DB, s dogma.ProjectionCompactScope) error
 }
