@@ -13,6 +13,7 @@ import (
 	"github.com/dogmatiq/projectionkit/internal/adaptortest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"go.etcd.io/bbolt"
 	bolt "go.etcd.io/bbolt"
 )
 
@@ -226,6 +227,25 @@ var _ = Describe("type adaptor", func() {
 			)
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(v).To(BeEmpty())
+		})
+	})
+
+	Describe("func Closure()", func() {
+		It("forwards to the handler", func() {
+			handler.CompactFunc = func(
+				_ context.Context,
+				d *bbolt.DB,
+				_ dogma.ProjectionCompactScope,
+			) error {
+				Expect(d).To(BeIdenticalTo(db))
+				return errors.New("<error>")
+			}
+
+			err := adaptor.Compact(
+				context.Background(),
+				nil, // scope
+			)
+			Expect(err).To(MatchError("<error>"))
 		})
 	})
 })

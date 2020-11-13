@@ -5,6 +5,7 @@ package sql_test
 import (
 	"context"
 	"database/sql"
+	"errors"
 
 	"github.com/dogmatiq/dogma"
 	"github.com/dogmatiq/projectionkit/internal/adaptortest"
@@ -20,10 +21,16 @@ var _ = Describe("type adaptor", func() {
 	var (
 		db      *sql.DB
 		handler *fixtures.MessageHandler
+		adaptor dogma.ProjectionMessageHandler
 	)
 
 	BeforeSuite(func() {
 		db = drivertest.Open("sqlite3")
+	})
+
+	BeforeEach(func() {
+		handler = &fixtures.MessageHandler{}
+		adaptor = MustNew(db, handler, nil)
 	})
 
 	AfterSuite(func() {
@@ -40,11 +47,28 @@ var _ = Describe("type adaptor", func() {
 			err = sqlite.CreateSchema(context.Background(), db)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			handler = &fixtures.MessageHandler{}
-
-			return MustNew(db, handler, nil)
+			return adaptor
 		},
 	)
+
+	Describe("func Closure()", func() {
+		It("forwards to the handler", func() {
+			handler.CompactFunc = func(
+				_ context.Context,
+				d *sql.DB,
+				_ dogma.ProjectionCompactScope,
+			) error {
+				Expect(d).To(BeIdenticalTo(db))
+				return errors.New("<error>")
+			}
+
+			err := adaptor.Compact(
+				context.Background(),
+				nil, // scope
+			)
+			Expect(err).To(MatchError("<error>"))
+		})
+	})
 })
 
 var _ = Describe("func MustNew()", func() {

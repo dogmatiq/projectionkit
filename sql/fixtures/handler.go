@@ -13,6 +13,7 @@ type MessageHandler struct {
 	ConfigureFunc   func(dogma.ProjectionConfigurer)
 	HandleEventFunc func(context.Context, *sql.Tx, dogma.ProjectionEventScope, dogma.Message) error
 	TimeoutHintFunc func(dogma.Message) time.Duration
+	CompactFunc     func(context.Context, *sql.DB, dogma.ProjectionCompactScope) error
 }
 
 // Configure configures the behavior of the engine as it relates to this
@@ -56,4 +57,16 @@ func (h *MessageHandler) TimeoutHint(m dogma.Message) time.Duration {
 	}
 
 	return 0
+}
+
+// Compact reduces the size of the projection's data.
+//
+// If h.CompactFunc is non-nil it returns h.CompactFunc(ctx,db,s), otherwise it
+// returns nil.
+func (h *MessageHandler) Compact(ctx context.Context, db *sql.DB, s dogma.ProjectionCompactScope) error {
+	if h.CompactFunc != nil {
+		return h.CompactFunc(ctx, db, s)
+	}
+
+	return nil
 }

@@ -133,3 +133,8 @@ func (a *adaptor) UpdateResourceVersion(
 func (a *adaptor) DeleteResource(ctx context.Context, r []byte) error {
 	return a.driver.DeleteResource(ctx, a.db, a.key, r)
 }
+
+// Compact reduces the size of the projection's data.
+func (a *adaptor) Compact(ctx context.Context, s dogma.ProjectionCompactScope) error {
+	return a.MessageHandler.Compact(ctx, a.db, s)
+}
