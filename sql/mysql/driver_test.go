@@ -11,15 +11,18 @@ import (
 )
 
 var _ = Describe("type Driver", func() {
-	var db *sql.DB
+	var (
+		db      *sql.DB
+		closeDB func()
+	)
 
 	BeforeSuite(func() {
-		db = drivertest.Open("mysql")
+		db, _, closeDB = drivertest.Open("mysql")
 	})
 
 	AfterSuite(func() {
-		if db != nil {
-			db.Close()
+		if closeDB != nil {
+			closeDB()
 		}
 	})
 

@@ -20,12 +20,13 @@ import (
 var _ = Describe("type adaptor", func() {
 	var (
 		db      *sql.DB
+		closeDB func()
 		handler *fixtures.MessageHandler
 		adaptor dogma.ProjectionMessageHandler
 	)
 
 	BeforeSuite(func() {
-		db = drivertest.Open("sqlite3")
+		db, _, closeDB = drivertest.Open("sqlite3")
 	})
 
 	BeforeEach(func() {
@@ -34,8 +35,8 @@ var _ = Describe("type adaptor", func() {
 	})
 
 	AfterSuite(func() {
-		if db != nil {
-			db.Close()
+		if closeDB != nil {
+			closeDB()
 		}
 	})
 
