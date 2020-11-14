@@ -14,7 +14,7 @@ The format is based on [Keep a Changelog], and this project adheres to
 ### Added
 
 - Add support for `github.com/jackc/pgx` PostgreSQL driver
-- Add embeddable `NoCompactBehavior` for boltdb and sql
+- Add `sql.NoCompactBehavior` and `boltdb.NoCompactBehavior` embeddable structs
 
 ## [0.5.0] - 2020-11-13
 
