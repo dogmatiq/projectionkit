@@ -23,7 +23,7 @@ func Declare(
 		cancel func()
 	)
 
-	ginkgo.BeforeEach(func() {
+	ginkgo.JustBeforeEach(func() {
 		ctx, cancel = context.WithTimeout(
 			context.Background(),
 			3*time.Second,
@@ -125,7 +125,7 @@ func Declare(
 	})
 
 	ginkgo.When("the resource exists", func() {
-		ginkgo.BeforeEach(func() {
+		ginkgo.JustBeforeEach(func() {
 			tx, err := db.BeginTx(ctx, nil)
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 			defer tx.Rollback()

@@ -50,13 +50,15 @@ jobs:
       env:
         CGO_ENABLED: "1"
         DOGMATIQ_TEST_MYSQL_DSN: "root:rootpass@tcp(127.0.0.1:${{ job.services.mariadb.ports['3306'] }})/dogmatiq"
-        DOGMATIQ_TEST_POSTGRES_DSN: "user=postgres password=rootpass sslmode=disable port=${{ job.services.postgres.ports['5432'] }}"
+        DOGMATIQ_TEST_POSTGRES_PQ_DSN: "user=postgres password=rootpass sslmode=disable port=${{ job.services.postgres.ports['5432'] }}"
+        DOGMATIQ_TEST_POSTGRES_PGX_DSN: "postgres://postgres:rootpass@127.0.0.1:${{ job.services.postgres.ports['5432'] }}/?sslmode=disable"
     - name: Make (tests only, without CGO)
       run: make test
       env:
         CGO_ENABLED: "0"
         DOGMATIQ_TEST_MYSQL_DSN: "root:rootpass@tcp(127.0.0.1:${{ job.services.mariadb.ports['3306'] }})/dogmatiq"
-        DOGMATIQ_TEST_POSTGRES_DSN: "user=postgres password=rootpass sslmode=disable port=${{ job.services.postgres.ports['5432'] }}"
+        DOGMATIQ_TEST_POSTGRES_PQ_DSN: "user=postgres password=rootpass sslmode=disable port=${{ job.services.postgres.ports['5432'] }}"
+        DOGMATIQ_TEST_POSTGRES_PGX_DSN: "postgres://postgres:rootpass@127.0.0.1:${{ job.services.postgres.ports['5432'] }}/?sslmode=disable"
     - name: Upload Coverage Reports
       if: success()
       run: |

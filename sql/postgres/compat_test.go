@@ -11,8 +11,14 @@ import (
 )
 
 var _ = Describe("func IsCompatibleWith()", func() {
-	It("returns true if the driver is recognized", func() {
+	It("returns true if passed a 'postgres' connection", func() {
 		db, err := sql.Open("postgres", "host=localhost")
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(IsCompatibleWith(db)).To(BeTrue())
+	})
+
+	It("returns true if passed a 'pgx' connection", func() {
+		db, err := sql.Open("pgx", "postgres://localhost")
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(IsCompatibleWith(db)).To(BeTrue())
 	})

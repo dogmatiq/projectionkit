@@ -31,6 +31,7 @@ var _ = Describe("func NewDriver()", func() {
 		},
 		Entry("mysql", "mysql", "tcp(127.0.0.1)/mysql", &mysql.Driver{}),
 		Entry("postgres", "postgres", "host=localhost", &postgres.Driver{}),
+		Entry("pgx", "pgx", "postgres://localhost", &postgres.Driver{}),
 		Entry("sqlite", "sqlite3", ":memory:", &sqlite.Driver{}),
 	)
 
