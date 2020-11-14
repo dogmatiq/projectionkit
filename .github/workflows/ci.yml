@@ -52,6 +52,14 @@ jobs:
           POSTGRES_PASSWORD: rootpass
         ports:
         - 5432/tcp
+      cockroachdb:
+        image: cockroachdb/cockroach:latest-v20.2
+        options: >-
+          --
+          start-single-node
+          --insecure
+        ports:
+        - 26257/tcp
     steps:
     - name: Set up Go
       uses: actions/setup-go@v1
@@ -68,6 +76,8 @@ jobs:
         DOGMATIQ_TEST_DSN_MARIADB_MYSQL: "root:rootpass@tcp(127.0.0.1:${{ job.services.mariadb.ports['3306'] }})/dogmatiq"
         DOGMATIQ_TEST_DSN_POSTGRESQL_POSTGRES: "user=postgres password=rootpass sslmode=disable port=${{ job.services.postgres.ports['5432'] }}"
         DOGMATIQ_TEST_DSN_POSTGRESQL_PGX: "postgres://postgres:rootpass@127.0.0.1:${{ job.services.postgres.ports['5432'] }}/?sslmode=disable"
+        DOGMATIQ_TEST_DSN_COCKROACHDB_POSTGRES: "user=postgres password=rootpass sslmode=disable port=${{ job.services.postgres.ports['26257'] }}"
+        DOGMATIQ_TEST_DSN_COCKROACHDB_PGX: "postgres://postgres:rootpass@127.0.0.1:${{ job.services.postgres.ports['26257'] }}/?sslmode=disable"
     - name: Make (tests only, without CGO)
       run: make test
       env:
@@ -76,6 +86,8 @@ jobs:
         DOGMATIQ_TEST_DSN_MARIADB_MYSQL: "root:rootpass@tcp(127.0.0.1:${{ job.services.mariadb.ports['3306'] }})/dogmatiq"
         DOGMATIQ_TEST_DSN_POSTGRESQL_POSTGRES: "user=postgres password=rootpass sslmode=disable port=${{ job.services.postgres.ports['5432'] }}"
         DOGMATIQ_TEST_DSN_POSTGRESQL_PGX: "postgres://postgres:rootpass@127.0.0.1:${{ job.services.postgres.ports['5432'] }}/?sslmode=disable"
+        DOGMATIQ_TEST_DSN_COCKROACHDB_POSTGRES: "user=postgres password=rootpass sslmode=disable port=${{ job.services.postgres.ports['26257'] }}"
+        DOGMATIQ_TEST_DSN_COCKROACHDB_PGX: "postgres://postgres:rootpass@127.0.0.1:${{ job.services.postgres.ports['26257'] }}/?sslmode=disable"
     - name: Upload Coverage Reports
       if: success()
       run: |

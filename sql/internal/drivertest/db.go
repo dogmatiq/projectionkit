@@ -18,6 +18,9 @@ import (
 type Product string
 
 const (
+	// CockroachDB is the product enumeration value for CockroachDB.
+	CockroachDB Product = "cockroachdb"
+
 	// MySQL is the product enumeration value for MariaDB.
 	MySQL Product = "mysql"
 
@@ -58,6 +61,10 @@ func DSN(prod Product, driver string) (string, func()) {
 		return "user=postgres password=rootpass sslmode=disable", func() {}
 	case "DOGMATIQ_TEST_DSN_POSTGRESQL_PGX":
 		return "postgres://postgres:rootpass@127.0.0.1:5432/?sslmode=disable", func() {}
+	case "DOGMATIQ_TEST_DSN_COCKROACHDB_POSTGRES":
+		return "user=root sslmode=disable port=26257", func() {}
+	case "DOGMATIQ_TEST_DSN_COCKROACHDB_PGX":
+		return "postgres://root@127.0.0.1:26257/?sslmode=disable", func() {}
 	case "DOGMATIQ_TEST_DSN_SQLITE_SQLITE3":
 		file, close := tempFile()
 		return fmt.Sprintf("file:%s?mode=rwc", file), close

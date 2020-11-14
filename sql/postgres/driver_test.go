@@ -3,6 +3,7 @@ package postgres_test
 import (
 	"context"
 	"database/sql"
+	"fmt"
 
 	"github.com/dogmatiq/projectionkit/sql/internal/drivertest"
 	. "github.com/dogmatiq/projectionkit/sql/postgres"
@@ -11,45 +12,57 @@ import (
 )
 
 var _ = Describe("type Driver", func() {
-	var (
-		driver  string
-		db      *sql.DB
-		closeDB func()
-	)
-
-	JustBeforeEach(func() {
-		db, _, closeDB = drivertest.Open(drivertest.PostgreSQL, driver)
-	})
-
-	AfterEach(func() {
-		if closeDB != nil {
-			closeDB()
-		}
-	})
-
-	setup := func(ctx context.Context) *sql.DB {
-		err := DropSchema(ctx, db)
-		Expect(err).ShouldNot(HaveOccurred())
-
-		err = CreateSchema(ctx, db)
-		Expect(err).ShouldNot(HaveOccurred())
-
-		return db
+	products := []drivertest.Product{
+		drivertest.PostgreSQL,
+		drivertest.CockroachDB,
 	}
 
-	When("using the 'postgres' driver", func() {
-		BeforeEach(func() {
-			driver = "postgres"
-		})
+	drivers := []string{
+		"postgres",
+		"pgx",
+	}
 
-		drivertest.Declare(&Driver{}, setup)
-	})
+	for _, product := range products {
+		for _, driver := range drivers {
+			product := product // capture loop variable
+			driver := driver   // capture loop variable
 
-	When("using the 'pgx' driver", func() {
-		BeforeEach(func() {
-			driver = "pgx"
-		})
+			When(
+				fmt.Sprintf(
+					"using the '%s' driver with %s",
+					driver,
+					product,
+				),
+				func() {
+					var (
+						db      *sql.DB
+						closeDB func()
+					)
 
-		drivertest.Declare(&Driver{}, setup)
-	})
+					BeforeEach(func() {
+						db, _, closeDB = drivertest.Open(product, driver)
+					})
+
+					AfterEach(func() {
+						if closeDB != nil {
+							closeDB()
+						}
+					})
+
+					drivertest.Declare(
+						&Driver{},
+						func(ctx context.Context) *sql.DB {
+							err := DropSchema(ctx, db)
+							Expect(err).ShouldNot(HaveOccurred())
+
+							err = CreateSchema(ctx, db)
+							Expect(err).ShouldNot(HaveOccurred())
+
+							return db
+						},
+					)
+				},
+			)
+		}
+	}
 })

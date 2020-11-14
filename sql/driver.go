@@ -55,7 +55,7 @@ type Driver interface {
 //
 // MySQL and MariaDB via the "mysql" ("github.com/go-sql-driver/mysql") driver.
 //
-// PostgreSQL via the "postgres" (github.com/lib/pq) and "pgx"
+// PostgreSQL and CockroachDB via the "postgres" (github.com/lib/pq) and "pgx"
 // (github.com/jackc/pgx) drivers.
 //
 // SQLite via the "sqlite3" (github.com/mattn/go-sqlite3) driver (requires CGO).
