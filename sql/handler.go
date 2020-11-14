@@ -78,3 +78,19 @@ type MessageHandler interface {
 	// engine-defined. It MAY be called concurrently with any other method.
 	Compact(ctx context.Context, db *sql.DB, s dogma.ProjectionCompactScope) error
 }
+
+// NoCompactBehavior can be embedded in MessageHandler implementations
+// to indicate that the projection does not require its data to be compacted.
+//
+// It provides an implementation of MessageHandler.Compact() that
+// always returns a nil error.
+type NoCompactBehavior struct{}
+
+// Compact returns nil.
+func (NoCompactBehavior) Compact(
+	ctx context.Context,
+	db *sql.DB,
+	s dogma.ProjectionCompactScope,
+) error {
+	return nil
+}
