@@ -18,7 +18,7 @@ var _ = Describe("type Driver", func() {
 	)
 
 	BeforeEach(func() {
-		db, _, closeDB = drivertest.Open("sqlite3")
+		db, _, closeDB = drivertest.Open(drivertest.SQLite, "sqlite3")
 	})
 
 	AfterEach(func() {

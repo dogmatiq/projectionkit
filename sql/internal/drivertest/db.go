@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 	"sync"
 
 	_ "github.com/go-sql-driver/mysql" // keep driver import near code that uses it
@@ -13,26 +14,50 @@ import (
 	_ "github.com/mattn/go-sqlite3"    // keep driver import near code that uses it
 )
 
-// DSN returns the DSN for the test database to use with the given SQL driver.
+// Product is an enumeration of supported database products.
+type Product string
+
+const (
+	// MariaDB is the product enumeration value for MariaDB.
+	MariaDB Product = "mariadb"
+
+	// PostgreSQL is the product enumeration value for PostgreSQL.
+	PostgreSQL Product = "postgresql"
+
+	// SQLite is the product enumeration value for SQLite.
+	SQLite Product = "sqlite"
+)
+
+// DSN returns the DSN for the test database to use with the given database
+// product and SQL driver.
 //
 // The returned function must be used to cleanup any data created for the DSN,
 // such as temporary on-disk databases.
-func DSN(driver string) (string, func()) {
-	dsn := dsnFromEnv(driver)
-	if dsn != "" {
+func DSN(prod Product, driver string) (string, func()) {
+	key := strings.ToUpper(
+		fmt.Sprintf(
+			"DOGMATIQ_TEST_DSN_%s_%s",
+			prod,
+			driver,
+		),
+	)
+
+	if dsn := os.Getenv(key); dsn != "" {
 		return dsn, func() {}
 	}
 
-	switch driver {
-	case "mysql":
+	switch key {
+	case "DOGMATIQ_TEST_DSN_MARIADB_MYSQL":
 		return "root:rootpass@tcp(127.0.0.1:3306)/dogmatiq", func() {}
-	case "postgres":
+	case "DOGMATIQ_TEST_DSN_POSTGRESQL_POSTGRES":
 		return "user=postgres password=rootpass sslmode=disable", func() {}
-	case "pgx":
+	case "DOGMATIQ_TEST_DSN_POSTGRESQL_PGX":
 		return "postgres://postgres:rootpass@127.0.0.1:5432/?sslmode=disable", func() {}
-	default:
+	case "DOGMATIQ_TEST_DSN_SQLITE_SQLITE3":
 		file, close := tempFile()
 		return fmt.Sprintf("file:%s?mode=rwc", file), close
+	default:
+		panic(fmt.Sprintf("unsupported product (%s) or driver (%s)", prod, driver))
 	}
 }
 
@@ -41,13 +66,14 @@ func DSN(driver string) (string, func()) {
 // The returned function must be used to close the database, instead of
 // DB.Close().
 func Open(
+	prod Product,
 	driver string,
 ) (
 	db *sql.DB,
 	dsn string,
 	close func(),
 ) {
-	dsn, closeDSN := DSN(driver)
+	dsn, closeDSN := DSN(prod, driver)
 
 	db, err := sql.Open(driver, dsn)
 	if err != nil {
@@ -57,22 +83,6 @@ func Open(
 	return db, dsn, func() {
 		db.Close()
 		closeDSN()
-	}
-}
-
-// dsnFromEnv returns a DSN for the given driver from an environment variable.
-func dsnFromEnv(driver string) string {
-	switch driver {
-	case "mysql":
-		return os.Getenv("DOGMATIQ_TEST_MYSQL_DSN")
-	case "postgres":
-		return os.Getenv("DOGMATIQ_TEST_POSTGRES_PQ_DSN")
-	case "pgx":
-		return os.Getenv("DOGMATIQ_TEST_POSTGRES_PGX_DSN")
-	case "sqlite3":
-		return os.Getenv("DOGMATIQ_TEST_SQLITE_DSN")
-	default:
-		panic("unsupported driver: " + driver)
 	}
 }
 

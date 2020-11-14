@@ -18,7 +18,7 @@ var _ = Describe("type Driver", func() {
 	)
 
 	JustBeforeEach(func() {
-		db, _, closeDB = drivertest.Open(driver)
+		db, _, closeDB = drivertest.Open(drivertest.PostgreSQL, driver)
 	})
 
 	AfterEach(func() {
@@ -27,23 +27,22 @@ var _ = Describe("type Driver", func() {
 		}
 	})
 
+	setup := func(ctx context.Context) *sql.DB {
+		err := DropSchema(ctx, db)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		err = CreateSchema(ctx, db)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		return db
+	}
+
 	When("using the 'postgres' driver", func() {
 		BeforeEach(func() {
 			driver = "postgres"
 		})
 
-		drivertest.Declare(
-			&Driver{},
-			func(ctx context.Context) *sql.DB {
-				err := DropSchema(ctx, db)
-				Expect(err).ShouldNot(HaveOccurred())
-
-				err = CreateSchema(ctx, db)
-				Expect(err).ShouldNot(HaveOccurred())
-
-				return db
-			},
-		)
+		drivertest.Declare(&Driver{}, setup)
 	})
 
 	When("using the 'pgx' driver", func() {
@@ -51,17 +50,6 @@ var _ = Describe("type Driver", func() {
 			driver = "pgx"
 		})
 
-		drivertest.Declare(
-			&Driver{},
-			func(ctx context.Context) *sql.DB {
-				err := DropSchema(ctx, db)
-				Expect(err).ShouldNot(HaveOccurred())
-
-				err = CreateSchema(ctx, db)
-				Expect(err).ShouldNot(HaveOccurred())
-
-				return db
-			},
-		)
+		drivertest.Declare(&Driver{}, setup)
 	})
 })
