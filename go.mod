@@ -1,6 +1,6 @@
 module github.com/dogmatiq/projectionkit
 
-go 1.13
+go 1.15
 
 require (
 	github.com/dogmatiq/dogma v0.10.0
