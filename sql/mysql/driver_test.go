@@ -3,6 +3,7 @@ package mysql_test
 import (
 	"context"
 	"database/sql"
+	"fmt"
 
 	"github.com/dogmatiq/projectionkit/sql/internal/drivertest"
 	. "github.com/dogmatiq/projectionkit/sql/mysql"
@@ -11,31 +12,48 @@ import (
 )
 
 var _ = Describe("type Driver", func() {
-	var (
-		db      *sql.DB
-		closeDB func()
-	)
+	products := []drivertest.Product{
+		drivertest.MySQL,
+		drivertest.MariaDB,
+	}
 
-	BeforeEach(func() {
-		db, _, closeDB = drivertest.Open(drivertest.MariaDB, "mysql")
-	})
+	for _, product := range products {
+		product := product // capture loop variable
 
-	AfterEach(func() {
-		if closeDB != nil {
-			closeDB()
-		}
-	})
+		When(
+			fmt.Sprintf(
+				"using the 'mysql' driver with %s",
+				product,
+			),
+			func() {
+				var (
+					db      *sql.DB
+					closeDB func()
+				)
 
-	drivertest.Declare(
-		&Driver{},
-		func(ctx context.Context) *sql.DB {
-			err := DropSchema(ctx, db)
-			Expect(err).ShouldNot(HaveOccurred())
+				BeforeEach(func() {
+					db, _, closeDB = drivertest.Open(product, "mysql")
+				})
 
-			err = CreateSchema(ctx, db)
-			Expect(err).ShouldNot(HaveOccurred())
+				AfterEach(func() {
+					if closeDB != nil {
+						closeDB()
+					}
+				})
 
-			return db
-		},
-	)
+				drivertest.Declare(
+					&Driver{},
+					func(ctx context.Context) *sql.DB {
+						err := DropSchema(ctx, db)
+						Expect(err).ShouldNot(HaveOccurred())
+
+						err = CreateSchema(ctx, db)
+						Expect(err).ShouldNot(HaveOccurred())
+
+						return db
+					},
+				)
+			},
+		)
+	}
 })
