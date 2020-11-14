@@ -25,7 +25,7 @@ var _ = Describe("type adaptor", func() {
 		adaptor dogma.ProjectionMessageHandler
 	)
 
-	BeforeSuite(func() {
+	BeforeEach(func() {
 		db, _, closeDB = drivertest.Open("sqlite3")
 	})
 
@@ -34,7 +34,7 @@ var _ = Describe("type adaptor", func() {
 		adaptor = MustNew(db, handler, nil)
 	})
 
-	AfterSuite(func() {
+	AfterEach(func() {
 		if closeDB != nil {
 			closeDB()
 		}

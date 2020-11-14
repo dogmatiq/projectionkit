@@ -16,11 +16,11 @@ var _ = Describe("type Driver", func() {
 		closeDB func()
 	)
 
-	BeforeSuite(func() {
+	BeforeEach(func() {
 		db, _, closeDB = drivertest.Open("mysql")
 	})
 
-	AfterSuite(func() {
+	AfterEach(func() {
 		if closeDB != nil {
 			closeDB()
 		}
