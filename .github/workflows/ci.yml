@@ -11,6 +11,21 @@ jobs:
     name: Continuous Integration
     runs-on: ubuntu-latest
     services:
+      mysql:
+        image: mysql:8
+        options: >-
+          --mount type=tmpfs,destination=/var/lib/mysql
+          --health-cmd="mysqladmin ping --host 127.0.0.1 --port 3306 --user root --password=rootpass"
+          --health-interval 2s
+          --health-timeout 10s
+          --health-retries 10
+        ports:
+        - 3306/tcp
+        env:
+          MYSQL_ROOT_PASSWORD: rootpass
+          MYSQL_DATABASE: dogmatiq
+          MYSQL_USER: dogmatiq
+          MYSQL_PASSWORD: dogmatiq
       mariadb:
         image: mariadb:10.4
         options: >-
@@ -49,6 +64,7 @@ jobs:
       run: make ci
       env:
         CGO_ENABLED: "1"
+        DOGMATIQ_TEST_DSN_MYSQL_MYSQL: "root:rootpass@tcp(127.0.0.1:${{ job.services.mysql.ports['3306'] }})/dogmatiq"
         DOGMATIQ_TEST_DSN_MARIADB_MYSQL: "root:rootpass@tcp(127.0.0.1:${{ job.services.mariadb.ports['3306'] }})/dogmatiq"
         DOGMATIQ_TEST_DSN_POSTGRESQL_POSTGRES: "user=postgres password=rootpass sslmode=disable port=${{ job.services.postgres.ports['5432'] }}"
         DOGMATIQ_TEST_DSN_POSTGRESQL_PGX: "postgres://postgres:rootpass@127.0.0.1:${{ job.services.postgres.ports['5432'] }}/?sslmode=disable"
@@ -56,6 +72,7 @@ jobs:
       run: make test
       env:
         CGO_ENABLED: "0"
+        DOGMATIQ_TEST_DSN_MYSQL_MYSQL: "root:rootpass@tcp(127.0.0.1:${{ job.services.mysql.ports['3306'] }})/dogmatiq"
         DOGMATIQ_TEST_DSN_MARIADB_MYSQL: "root:rootpass@tcp(127.0.0.1:${{ job.services.mariadb.ports['3306'] }})/dogmatiq"
         DOGMATIQ_TEST_DSN_POSTGRESQL_POSTGRES: "user=postgres password=rootpass sslmode=disable port=${{ job.services.postgres.ports['5432'] }}"
         DOGMATIQ_TEST_DSN_POSTGRESQL_PGX: "postgres://postgres:rootpass@127.0.0.1:${{ job.services.postgres.ports['5432'] }}/?sslmode=disable"

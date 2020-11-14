@@ -18,6 +18,9 @@ import (
 type Product string
 
 const (
+	// MySQL is the product enumeration value for MariaDB.
+	MySQL Product = "mysql"
+
 	// MariaDB is the product enumeration value for MariaDB.
 	MariaDB Product = "mariadb"
 
@@ -47,8 +50,10 @@ func DSN(prod Product, driver string) (string, func()) {
 	}
 
 	switch key {
-	case "DOGMATIQ_TEST_DSN_MARIADB_MYSQL":
+	case "DOGMATIQ_TEST_DSN_MYSQL_MYSQL":
 		return "root:rootpass@tcp(127.0.0.1:3306)/dogmatiq", func() {}
+	case "DOGMATIQ_TEST_DSN_MARIADB_MYSQL":
+		return "root:rootpass@tcp(127.0.0.1:3307)/dogmatiq", func() {}
 	case "DOGMATIQ_TEST_DSN_POSTGRESQL_POSTGRES":
 		return "user=postgres password=rootpass sslmode=disable", func() {}
 	case "DOGMATIQ_TEST_DSN_POSTGRESQL_PGX":

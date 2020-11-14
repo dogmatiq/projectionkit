@@ -50,6 +50,15 @@ type Driver interface {
 
 // NewDriver returns the appropriate driver implementation to use with the given
 // database.
+//
+// The following database products and SQL drivers are officially supported:
+//
+// MySQL and MariaDB via the "mysql" ("github.com/go-sql-driver/mysql") driver.
+//
+// PostgreSQL via the "postgres" (github.com/lib/pq) and "pgx"
+// (github.com/jackc/pgx) drivers.
+//
+// SQLite via the "sqlite3" (github.com/mattn/go-sqlite3) driver (requires CGO).
 func NewDriver(db *sql.DB) (Driver, error) {
 	if mysql.IsCompatibleWith(db) {
 		return &mysql.Driver{}, nil
