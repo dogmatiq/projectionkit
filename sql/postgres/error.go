@@ -3,6 +3,7 @@ package postgres
 import (
 	"errors"
 
+	"github.com/jackc/pgconn"
 	"github.com/lib/pq"
 )
 
@@ -13,9 +14,18 @@ const (
 // isDuplicateEntry returns true if err represents a PostgreSQL unique
 // constraint violation.
 func isDuplicateEntry(err error) bool {
-	var e *pq.Error
-	if errors.As(err, &e) {
-		return e.Code == codeUniqueViolation
+	{
+		var e *pq.Error
+		if errors.As(err, &e) {
+			return e.Code == codeUniqueViolation
+		}
+	}
+
+	{
+		var e *pgconn.PgError
+		if errors.As(err, &e) {
+			return e.Code == codeUniqueViolation
+		}
 	}
 
 	return false

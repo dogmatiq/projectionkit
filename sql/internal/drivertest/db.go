@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	_ "github.com/go-sql-driver/mysql" // keep driver import near code that uses it
+	_ "github.com/jackc/pgx/v4/stdlib" // keep driver import near code that uses it
 	_ "github.com/lib/pq"              // keep driver import near code that uses it
 	_ "github.com/mattn/go-sqlite3"    // keep driver import near code that uses it
 )
@@ -27,6 +28,8 @@ func DSN(driver string) (string, func()) {
 		return "root:rootpass@tcp(127.0.0.1:3306)/dogmatiq", func() {}
 	case "postgres":
 		return "user=postgres password=rootpass sslmode=disable", func() {}
+	case "pgx":
+		return "postgres://postgres:rootpass@127.0.0.1:5432/?sslmode=disable", func() {}
 	default:
 		file, close := tempFile()
 		return fmt.Sprintf("file:%s?mode=rwc", file), close
@@ -63,7 +66,9 @@ func dsnFromEnv(driver string) string {
 	case "mysql":
 		return os.Getenv("DOGMATIQ_TEST_MYSQL_DSN")
 	case "postgres":
-		return os.Getenv("DOGMATIQ_TEST_POSTGRES_DSN")
+		return os.Getenv("DOGMATIQ_TEST_POSTGRES_PQ_DSN")
+	case "pgx":
+		return os.Getenv("DOGMATIQ_TEST_POSTGRES_PGX_DSN")
 	case "sqlite3":
 		return os.Getenv("DOGMATIQ_TEST_SQLITE_DSN")
 	default:
