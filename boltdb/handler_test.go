@@ -7,7 +7,7 @@ import (
 	. "github.com/dogmatiq/projectionkit/boltdb"
 )
 
-func TestNoCompactBehaviorBehavior_Compact_ReturnsNil(t *testing.T) {
+func TestNoCompactBehavior_Compact_ReturnsNil(t *testing.T) {
 	var v NoCompactBehavior
 
 	err := v.Compact(context.Background(), nil, nil)
