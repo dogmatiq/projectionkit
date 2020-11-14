@@ -26,7 +26,7 @@ var _ = Describe("type adaptor", func() {
 	)
 
 	BeforeEach(func() {
-		db, _, closeDB = drivertest.Open("sqlite3")
+		db, _, closeDB = drivertest.Open(drivertest.SQLite, "sqlite3")
 	})
 
 	BeforeEach(func() {

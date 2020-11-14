@@ -17,7 +17,7 @@ var _ = Describe("type Driver", func() {
 	)
 
 	BeforeEach(func() {
-		db, _, closeDB = drivertest.Open("mysql")
+		db, _, closeDB = drivertest.Open(drivertest.MariaDB, "mysql")
 	})
 
 	AfterEach(func() {
