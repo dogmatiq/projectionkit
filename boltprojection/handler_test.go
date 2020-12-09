@@ -1,10 +1,10 @@
-package boltdb_test
+package boltprojection_test
 
 import (
 	"context"
 	"testing"
 
-	. "github.com/dogmatiq/projectionkit/boltdb"
+	. "github.com/dogmatiq/projectionkit/boltprojection"
 )
 
 func TestNoCompactBehavior_Compact_ReturnsNil(t *testing.T) {

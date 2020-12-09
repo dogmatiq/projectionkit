@@ -1,4 +1,4 @@
-package boltdb
+package boltprojection
 
 import (
 	"bytes"
