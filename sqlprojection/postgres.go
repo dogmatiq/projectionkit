@@ -16,6 +16,17 @@ var PostgresDriver Driver = postgresDriver{}
 
 type postgresDriver struct{}
 
+func (postgresDriver) IsCompatibleWith(db *sql.DB) bool {
+	switch db.Driver().(type) {
+	case *pq.Driver:
+		return true
+	case *stdlib.Driver:
+		return true
+	default:
+		return false
+	}
+}
+
 func (postgresDriver) CreateSchema(ctx context.Context, db *sql.DB) error {
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
@@ -46,17 +57,6 @@ func (postgresDriver) CreateSchema(ctx context.Context, db *sql.DB) error {
 func (postgresDriver) DropSchema(ctx context.Context, db *sql.DB) error {
 	_, err := db.ExecContext(ctx, `DROP SCHEMA IF EXISTS projection CASCADE`)
 	return err
-}
-
-func (postgresDriver) IsCompatibleWith(db *sql.DB) bool {
-	switch db.Driver().(type) {
-	case *pq.Driver:
-		return true
-	case *stdlib.Driver:
-		return true
-	default:
-		return false
-	}
 }
 
 func (postgresDriver) StoreVersion(
