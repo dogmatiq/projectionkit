@@ -1,16 +1,16 @@
-package postgres_test
+package sqlprojection_test
 
 import (
 	"context"
 	"database/sql"
 
+	. "github.com/dogmatiq/projectionkit/sqlprojection"
 	"github.com/dogmatiq/projectionkit/sqlprojection/internal/drivertest"
-	. "github.com/dogmatiq/projectionkit/sqlprojection/postgres"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("type Driver", func() {
+var _ = Describe("var PostgresDriver", func() {
 	var (
 		driver  string
 		db      *sql.DB
@@ -28,10 +28,10 @@ var _ = Describe("type Driver", func() {
 	})
 
 	setup := func(ctx context.Context) *sql.DB {
-		err := DropSchema(ctx, db)
+		err := PostgresDriver.DropSchema(ctx, db)
 		Expect(err).ShouldNot(HaveOccurred())
 
-		err = CreateSchema(ctx, db)
+		err = PostgresDriver.CreateSchema(ctx, db)
 		Expect(err).ShouldNot(HaveOccurred())
 
 		return db
@@ -42,7 +42,7 @@ var _ = Describe("type Driver", func() {
 			driver = "postgres"
 		})
 
-		drivertest.Declare(&Driver{}, setup)
+		drivertest.Declare(PostgresDriver, setup)
 	})
 
 	When("using the 'pgx' driver", func() {
@@ -50,6 +50,6 @@ var _ = Describe("type Driver", func() {
 			driver = "pgx"
 		})
 
-		drivertest.Declare(&Driver{}, setup)
+		drivertest.Declare(PostgresDriver, setup)
 	})
 })

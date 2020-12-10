@@ -1,17 +1,17 @@
-package mysql_test
+package sqlprojection_test
 
 import (
 	"context"
 	"database/sql"
 	"fmt"
 
+	. "github.com/dogmatiq/projectionkit/sqlprojection"
 	"github.com/dogmatiq/projectionkit/sqlprojection/internal/drivertest"
-	. "github.com/dogmatiq/projectionkit/sqlprojection/mysql"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("type Driver", func() {
+var _ = Describe("var MySQLDriver", func() {
 	products := []drivertest.Product{
 		drivertest.MySQL,
 		drivertest.MariaDB,
@@ -42,12 +42,12 @@ var _ = Describe("type Driver", func() {
 				})
 
 				drivertest.Declare(
-					&Driver{},
+					MySQLDriver,
 					func(ctx context.Context) *sql.DB {
-						err := DropSchema(ctx, db)
+						err := MySQLDriver.DropSchema(ctx, db)
 						Expect(err).ShouldNot(HaveOccurred())
 
-						err = CreateSchema(ctx, db)
+						err = MySQLDriver.CreateSchema(ctx, db)
 						Expect(err).ShouldNot(HaveOccurred())
 
 						return db

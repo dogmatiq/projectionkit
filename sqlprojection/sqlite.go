@@ -1,18 +1,42 @@
-package sqlite
+package sqlprojection
 
 import (
 	"context"
 	"database/sql"
+
+	"github.com/mattn/go-sqlite3"
 )
 
-// Driver is an implementation of sql.Driver for SQLite.
-type Driver struct{}
+// SQLiteDriver is Driver for SQLite.
+var SQLiteDriver Driver = sqliteDriver{}
 
-// StoreVersion unconditionally updates the version for a specific handler
-// and resource.
-//
-// v must be non-empty, to set an empty version, use DeleteResource().
-func (*Driver) StoreVersion(
+type sqliteDriver struct{}
+
+func (sqliteDriver) IsCompatibleWith(db *sql.DB) bool {
+	_, ok := db.Driver().(*sqlite3.SQLiteDriver)
+	return ok
+}
+
+func (sqliteDriver) CreateSchema(ctx context.Context, db *sql.DB) error {
+	_, err := db.ExecContext(
+		ctx,
+		`CREATE TABLE projection_occ (
+			handler  BINARY NOT NULL,
+			resource BINARY NOT NULL,
+			version  BINARY NOT NULL,
+
+			PRIMARY KEY (handler, resource)
+		)`,
+	)
+	return err
+}
+
+func (sqliteDriver) DropSchema(ctx context.Context, db *sql.DB) error {
+	_, err := db.ExecContext(ctx, `DROP TABLE IF EXISTS projection_occ`)
+	return err
+}
+
+func (sqliteDriver) StoreVersion(
 	ctx context.Context,
 	db *sql.DB,
 	h string,
@@ -38,8 +62,7 @@ func (*Driver) StoreVersion(
 	return err
 }
 
-// UpdateVersion updates the version for a specific handler and resource.
-func (*Driver) UpdateVersion(
+func (d sqliteDriver) UpdateVersion(
 	ctx context.Context,
 	tx *sql.Tx,
 	h string,
@@ -66,7 +89,7 @@ func (*Driver) UpdateVersion(
 
 		// If this results in a duplicate key error, that means the current
 		// version was not correct.
-		if isDuplicateEntry(err) {
+		if d.isDup(err) {
 			return false, nil
 		}
 
@@ -116,8 +139,7 @@ func (*Driver) UpdateVersion(
 	return count != 0, err
 }
 
-// QueryVersion returns the version for a specific handler and resource.
-func (*Driver) QueryVersion(
+func (sqliteDriver) QueryVersion(
 	ctx context.Context,
 	db *sql.DB,
 	h string,
@@ -144,8 +166,7 @@ func (*Driver) QueryVersion(
 	return v, err
 }
 
-// DeleteResource removes the version for a specific handler and resource.
-func (*Driver) DeleteResource(
+func (sqliteDriver) DeleteResource(
 	ctx context.Context,
 	db *sql.DB,
 	h string,

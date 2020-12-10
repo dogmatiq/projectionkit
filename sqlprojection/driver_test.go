@@ -5,9 +5,6 @@ import (
 
 	. "github.com/dogmatiq/projectionkit/sqlprojection"
 	"github.com/dogmatiq/projectionkit/sqlprojection/internal/drivertest"
-	"github.com/dogmatiq/projectionkit/sqlprojection/mysql"
-	"github.com/dogmatiq/projectionkit/sqlprojection/postgres"
-	"github.com/dogmatiq/projectionkit/sqlprojection/sqlite"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
@@ -29,10 +26,10 @@ var _ = Describe("func NewDriver()", func() {
 
 			Expect(d).To(Equal(expected))
 		},
-		Entry("mysql", "mysql", "tcp(127.0.0.1)/mysql", &mysql.Driver{}),
-		Entry("postgres", "postgres", "host=localhost", &postgres.Driver{}),
-		Entry("pgx", "pgx", "postgres://localhost", &postgres.Driver{}),
-		Entry("sqlite", "sqlite3", ":memory:", &sqlite.Driver{}),
+		Entry("mysql", "mysql", "tcp(127.0.0.1)/mysql", MySQLDriver),
+		Entry("postgres", "postgres", "host=localhost", PostgresDriver),
+		Entry("pgx", "pgx", "postgres://localhost", PostgresDriver),
+		Entry("sqlite", "sqlite3", ":memory:", SQLiteDriver),
 	)
 
 	It("returns an error if the driver is unrecognised", func() {
