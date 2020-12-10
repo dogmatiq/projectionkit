@@ -11,11 +11,22 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- **[BC]** Add `CreateSchema()` and `DropSchema()` methods to `sqlprojection.Driver`
+- **[BC]** Add `IsCompatibleWith()` method to `sqlprojection.Driver`
+
 ### Changed
 
 - **[BC]** Rename `boltdb` package to `boltprojection`
 - **[BC]** Rename `sql` package to `sqlprojection`
 - `boltprojection.New()` and `sqlprojection.New()` now explicitly accept a `nil` database
+
+### Removed
+
+- **[BC]** Remove the `sql/mysql` package
+- **[BC]** Remove the `sql/postgres` package
+- **[BC]** Remove the `sql/sqlite` package
 
 ## [0.5.1] - 2020-11-14
 
