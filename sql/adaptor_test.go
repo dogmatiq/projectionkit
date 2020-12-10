@@ -52,7 +52,20 @@ var _ = Describe("type adaptor", func() {
 		},
 	)
 
-	Describe("func Closure()", func() {
+	Describe("func New()", func() {
+		It("returns an unbound handler if the database is nil", func() {
+			adaptor, err := New(nil, handler, nil)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			err = adaptor.Compact(
+				context.Background(),
+				nil, // scope
+			)
+			Expect(err).To(MatchError("projection handler has not been bound to a database"))
+		})
+	})
+
+	Describe("func Compact()", func() {
 		It("forwards to the handler", func() {
 			handler.CompactFunc = func(
 				_ context.Context,

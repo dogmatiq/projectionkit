@@ -6,6 +6,7 @@ import (
 
 	"github.com/dogmatiq/dogma"
 	"github.com/dogmatiq/projectionkit/internal/identity"
+	"github.com/dogmatiq/projectionkit/internal/unboundhandler"
 )
 
 // adaptor adapts an sql.ProjectionMessageHandler to the
@@ -18,14 +19,23 @@ type adaptor struct {
 	driver Driver
 }
 
-// New returns a new projection message handler that uses the given database.
+// New returns a new Dogma projection message handler by binding an SQL-specific
+// projection handler to an SQL database.
 //
-// If d is nil, the appropriate default driver for db is used, if recognized.
+// If db is nil the returned handler will return an error whenever an operation
+// that requires the database is performed.
+//
+// If d is nil, the appropriate default driver is selected automatically if
+// possible.
 func New(
 	db *sql.DB,
 	h MessageHandler,
 	d Driver,
 ) (dogma.ProjectionMessageHandler, error) {
+	if db == nil {
+		return unboundhandler.New(h), nil
+	}
+
 	if d == nil {
 		var err error
 		d, err = NewDriver(db)
