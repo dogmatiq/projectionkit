@@ -1,15 +1,15 @@
-package sql
+package boltprojection
 
 import (
 	"context"
-	"database/sql"
 	"time"
 
 	"github.com/dogmatiq/dogma"
+	"go.etcd.io/bbolt"
 )
 
 // MessageHandler is a specialization of dogma.ProjectionMessageHandler that
-// persists to an SQL database.
+// persists to a BoltDB database.
 type MessageHandler interface {
 	// Configure produces a configuration for this handler by calling methods on
 	// the configurer c.
@@ -50,7 +50,7 @@ type MessageHandler interface {
 	// UnexpectedMessage value.
 	//
 	// The engine MAY call HandleEvent() from multiple goroutines concurrently.
-	HandleEvent(ctx context.Context, tx *sql.Tx, s dogma.ProjectionEventScope, m dogma.Message) error
+	HandleEvent(ctx context.Context, tx *bbolt.Tx, s dogma.ProjectionEventScope, m dogma.Message) error
 
 	// TimeoutHint returns a duration that is suitable for computing a deadline
 	// for the handling of the given message by this handler.
@@ -76,7 +76,7 @@ type MessageHandler interface {
 	// The engine SHOULD call Compact() repeatedly throughout the lifetime of
 	// the projection. The precise scheduling of calls to Compact() are
 	// engine-defined. It MAY be called concurrently with any other method.
-	Compact(ctx context.Context, db *sql.DB, s dogma.ProjectionCompactScope) error
+	Compact(ctx context.Context, db *bbolt.DB, s dogma.ProjectionCompactScope) error
 }
 
 // NoCompactBehavior can be embedded in MessageHandler implementations
@@ -89,7 +89,7 @@ type NoCompactBehavior struct{}
 // Compact returns nil.
 func (NoCompactBehavior) Compact(
 	ctx context.Context,
-	db *sql.DB,
+	db *bbolt.DB,
 	s dogma.ProjectionCompactScope,
 ) error {
 	return nil

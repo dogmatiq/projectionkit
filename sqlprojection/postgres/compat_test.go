@@ -3,8 +3,8 @@ package postgres_test
 import (
 	"database/sql"
 
-	"github.com/dogmatiq/projectionkit/sql/internal/drivertest"
-	. "github.com/dogmatiq/projectionkit/sql/postgres"
+	"github.com/dogmatiq/projectionkit/sqlprojection/internal/drivertest"
+	. "github.com/dogmatiq/projectionkit/sqlprojection/postgres"
 	_ "github.com/lib/pq"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

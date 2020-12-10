@@ -13,7 +13,9 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 ### Changed
 
-- `boltdb.New()` and `sql.New()` now explicitly accept a `nil` database
+- **[BC]** Rename `boltdb` package to `boltprojection`
+- **[BC]** Rename `sql` package to `sqlprojection`
+- `boltprojection.New()` and `sqlprojection.New()` now explicitly accept a `nil` database
 
 ## [0.5.1] - 2020-11-14
 

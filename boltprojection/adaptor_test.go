@@ -1,4 +1,4 @@
-package boltdb_test
+package boltprojection_test
 
 import (
 	"context"
@@ -8,8 +8,8 @@ import (
 
 	"github.com/dogmatiq/dogma"
 	. "github.com/dogmatiq/dogma/fixtures"
-	. "github.com/dogmatiq/projectionkit/boltdb"
-	"github.com/dogmatiq/projectionkit/boltdb/fixtures" // can't dot-import due to conflict
+	. "github.com/dogmatiq/projectionkit/boltprojection"
+	"github.com/dogmatiq/projectionkit/boltprojection/fixtures" // can't dot-import due to conflict
 	"github.com/dogmatiq/projectionkit/internal/adaptortest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

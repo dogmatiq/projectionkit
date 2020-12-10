@@ -1,4 +1,4 @@
-package boltdb_test
+package boltprojection_test
 
 import (
 	"reflect"

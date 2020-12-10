@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"strings"
 
-	"github.com/dogmatiq/projectionkit/sql/internal/drivertest"
-	. "github.com/dogmatiq/projectionkit/sql/sqlite"
+	"github.com/dogmatiq/projectionkit/sqlprojection/internal/drivertest"
+	. "github.com/dogmatiq/projectionkit/sqlprojection/sqlite"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
