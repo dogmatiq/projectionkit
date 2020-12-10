@@ -7,9 +7,7 @@ import (
 	"time"
 
 	. "github.com/dogmatiq/projectionkit/sqlprojection"
-	"github.com/dogmatiq/projectionkit/sqlprojection/internal/drivertest"
 	"github.com/dogmatiq/sqltest"
-	"github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo"
 	"github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
@@ -17,9 +15,9 @@ import (
 
 var _ = Describe("type Driver (implementations)", func() {
 	Describe("func NewDriver()", func() {
-		It("returns an error if the driver is unrecognised", func() {
-			_, err := NewDriver(drivertest.MockDB())
-			Expect(err).To(MatchError("can not deduce the appropriate SQL projection driver for *drivertest.MockDriver"))
+		It("returns an error if the driver is unrecognized", func() {
+			_, err := NewDriver(unrecognizedDB())
+			Expect(err).To(MatchError("can not deduce the appropriate SQL projection driver for *sqlprojection_test.mockDriver"))
 		})
 	})
 
@@ -62,7 +60,9 @@ var _ = Describe("type Driver (implementations)", func() {
 					err := driver.DropSchema(ctx, db)
 					Expect(err).ShouldNot(HaveOccurred())
 
-					database.Close()
+					err = database.Close()
+					Expect(err).ShouldNot(HaveOccurred())
+
 					cancel()
 				})
 
@@ -155,7 +155,7 @@ var _ = Describe("type Driver (implementations)", func() {
 				})
 
 				When("the resource exists", func() {
-					ginkgo.JustBeforeEach(func() {
+					BeforeEach(func() {
 						tx, err := db.BeginTx(ctx, nil)
 						Expect(err).ShouldNot(HaveOccurred())
 						defer tx.Rollback()
