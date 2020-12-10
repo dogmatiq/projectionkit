@@ -6,7 +6,7 @@ import (
 	"github.com/dogmatiq/dogma"
 	"github.com/dogmatiq/projectionkit/internal/identity"
 	"github.com/dogmatiq/projectionkit/internal/unboundhandler"
-	bolt "go.etcd.io/bbolt"
+	"go.etcd.io/bbolt"
 )
 
 // adaptor adapts a boltdb.ProjectionMessageHandler to the
@@ -14,7 +14,7 @@ import (
 type adaptor struct {
 	MessageHandler
 
-	db  *bolt.DB
+	db  *bbolt.DB
 	key string
 }
 
@@ -24,7 +24,7 @@ type adaptor struct {
 // If db is nil the returned handler will return an error whenever an operation
 // that requires the database is performed.
 func New(
-	db *bolt.DB,
+	db *bbolt.DB,
 	h MessageHandler,
 ) dogma.ProjectionMessageHandler {
 	if db == nil {

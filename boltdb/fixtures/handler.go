@@ -5,15 +5,15 @@ import (
 	"time"
 
 	"github.com/dogmatiq/dogma"
-	bolt "go.etcd.io/bbolt"
+	"go.etcd.io/bbolt"
 )
 
 // MessageHandler is a test implementation of boltdb.MessageHandler.
 type MessageHandler struct {
 	ConfigureFunc   func(c dogma.ProjectionConfigurer)
-	HandleEventFunc func(context.Context, *bolt.Tx, dogma.ProjectionEventScope, dogma.Message) error
+	HandleEventFunc func(context.Context, *bbolt.Tx, dogma.ProjectionEventScope, dogma.Message) error
 	TimeoutHintFunc func(m dogma.Message) time.Duration
-	CompactFunc     func(context.Context, *bolt.DB, dogma.ProjectionCompactScope) error
+	CompactFunc     func(context.Context, *bbolt.DB, dogma.ProjectionCompactScope) error
 }
 
 // Configure configures the behavior of the engine as it relates to this
@@ -35,7 +35,7 @@ func (h *MessageHandler) Configure(c dogma.ProjectionConfigurer) {
 // If h.HandleEventFunc is non-nil it returns h.HandleEventFunc(ctx, tx, s, m).
 func (h *MessageHandler) HandleEvent(
 	ctx context.Context,
-	tx *bolt.Tx,
+	tx *bbolt.Tx,
 	s dogma.ProjectionEventScope,
 	m dogma.Message,
 ) error {
@@ -63,7 +63,7 @@ func (h *MessageHandler) TimeoutHint(m dogma.Message) time.Duration {
 //
 // If h.CompactFunc is non-nil it returns h.CompactFunc(ctx,db,s), otherwise it
 // returns nil.
-func (h *MessageHandler) Compact(ctx context.Context, db *bolt.DB, s dogma.ProjectionCompactScope) error {
+func (h *MessageHandler) Compact(ctx context.Context, db *bbolt.DB, s dogma.ProjectionCompactScope) error {
 	if h.CompactFunc != nil {
 		return h.CompactFunc(ctx, db, s)
 	}

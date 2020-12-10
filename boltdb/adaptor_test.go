@@ -14,13 +14,12 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"go.etcd.io/bbolt"
-	bolt "go.etcd.io/bbolt"
 )
 
 var _ = Describe("type adaptor", func() {
 	var (
 		handler *fixtures.MessageHandler
-		db      *bolt.DB
+		db      *bbolt.DB
 		tmpfile string
 		adaptor dogma.ProjectionMessageHandler
 	)
@@ -32,7 +31,7 @@ var _ = Describe("type adaptor", func() {
 
 		tmpfile = f.Name()
 
-		db, err = bolt.Open(tmpfile, 0600, bolt.DefaultOptions)
+		db, err = bbolt.Open(tmpfile, 0600, bbolt.DefaultOptions)
 		Expect(err).ShouldNot(HaveOccurred())
 
 		handler = &fixtures.MessageHandler{}
@@ -139,7 +138,7 @@ var _ = Describe("type adaptor", func() {
 
 			handler.HandleEventFunc = func(
 				context.Context,
-				*bolt.Tx,
+				*bbolt.Tx,
 				dogma.ProjectionEventScope,
 				dogma.Message,
 			) error {

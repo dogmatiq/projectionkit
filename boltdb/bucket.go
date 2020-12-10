@@ -1,8 +1,6 @@
 package boltdb
 
-import (
-	bolt "go.etcd.io/bbolt"
-)
+import "go.etcd.io/bbolt"
 
 var (
 	// topBucket is the bucket at the root level that contains all data related
@@ -14,7 +12,7 @@ var (
 // been created yet.
 //
 // This function returns an error it tx is not writable.
-func makeHandlerBucket(tx *bolt.Tx, hk string) (*bolt.Bucket, error) {
+func makeHandlerBucket(tx *bbolt.Tx, hk string) (*bbolt.Bucket, error) {
 	tb, err := tx.CreateBucketIfNotExists(topBucket)
 	if err != nil {
 		// CODE COVERAGE: This branch can not be easily covered without somehow
@@ -27,7 +25,7 @@ func makeHandlerBucket(tx *bolt.Tx, hk string) (*bolt.Bucket, error) {
 
 // handlerBucket retrieves a bucket for the given handler key. If a bucket with
 // the given handler key does not exist, this function returns nil.
-func handlerBucket(tx *bolt.Tx, hk string) *bolt.Bucket {
+func handlerBucket(tx *bbolt.Tx, hk string) *bbolt.Bucket {
 	tb := tx.Bucket(topBucket)
 	if tb == nil {
 		return nil

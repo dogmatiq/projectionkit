@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 
-	bolt "go.etcd.io/bbolt"
+	"go.etcd.io/bbolt"
 )
 
 // storeVersion unconditionally updates a resource's version within a BoltDB
@@ -13,7 +13,7 @@ import (
 // It deletes the resource from the database if v is empty.
 func storeVersion(
 	ctx context.Context,
-	tx *bolt.Tx,
+	tx *bbolt.Tx,
 	hk string,
 	r, v []byte,
 ) error {
@@ -41,7 +41,7 @@ func storeVersion(
 // database.
 func updateVersion(
 	ctx context.Context,
-	tx *bolt.Tx,
+	tx *bbolt.Tx,
 	hk string,
 	r, c, n []byte,
 ) (bool, error) {
@@ -72,7 +72,7 @@ func updateVersion(
 // It returns nil if there is no version persisted for the resource.
 func queryVersion(
 	ctx context.Context,
-	db *bolt.DB,
+	db *bbolt.DB,
 	hk string,
 	r []byte,
 ) ([]byte, error) {
@@ -94,7 +94,7 @@ func queryVersion(
 // deleteResource ensures that a resource does not exist in the database.
 func deleteResource(
 	ctx context.Context,
-	db *bolt.DB,
+	db *bbolt.DB,
 	hk string,
 	r []byte,
 ) error {
