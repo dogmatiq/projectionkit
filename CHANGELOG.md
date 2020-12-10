@@ -9,6 +9,12 @@ The format is based on [Keep a Changelog], and this project adheres to
 [Keep a Changelog]: https://keepachangelog.com/en/1.0.0/
 [Semantic Versioning]: https://semver.org/spec/v2.0.0.html
 
+## [Unreleased]
+
+### Changed
+
+- `boltdb.New()` and `sql.New()` now explicitly accept a `nil` database
+
 ## [0.5.1] - 2020-11-14
 
 ### Added
