@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"time"
 
-	pksql "github.com/dogmatiq/projectionkit/sqlprojection"
+	"github.com/dogmatiq/projectionkit/sqlprojection"
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/ginkgo/extensions/table"
 	"github.com/onsi/gomega"
@@ -14,7 +14,7 @@ import (
 // Declare declares generic behavioral tests for a specific driver
 // implementation.
 func Declare(
-	d pksql.Driver,
+	d sqlprojection.Driver,
 	setup func(context.Context) *sql.DB,
 ) {
 	var (
