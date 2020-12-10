@@ -1,17 +1,17 @@
-package sqlite_test
+package sqlprojection_test
 
 import (
 	"context"
 	"database/sql"
 	"strings"
 
+	. "github.com/dogmatiq/projectionkit/sqlprojection"
 	"github.com/dogmatiq/projectionkit/sqlprojection/internal/drivertest"
-	. "github.com/dogmatiq/projectionkit/sqlprojection/sqlite"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("type Driver", func() {
+var _ = Describe("var SQLiteDriver", func() {
 	var (
 		db      *sql.DB
 		closeDB func()
@@ -28,15 +28,15 @@ var _ = Describe("type Driver", func() {
 	})
 
 	drivertest.Declare(
-		&Driver{},
+		SQLiteDriver,
 		func(ctx context.Context) *sql.DB {
-			err := DropSchema(ctx, db)
+			err := SQLiteDriver.DropSchema(ctx, db)
 			if err != nil && strings.Contains(err.Error(), "CGO_ENABLED") {
 				Skip(err.Error())
 			}
 			Expect(err).ShouldNot(HaveOccurred())
 
-			err = CreateSchema(ctx, db)
+			err = SQLiteDriver.CreateSchema(ctx, db)
 			Expect(err).ShouldNot(HaveOccurred())
 
 			return db

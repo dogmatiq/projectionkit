@@ -1,18 +1,53 @@
-package postgres
+package sqlprojection
 
 import (
 	"context"
 	"database/sql"
+	"errors"
+
+	"github.com/jackc/pgconn"
+	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v4/stdlib"
+	"github.com/lib/pq"
 )
 
-// Driver is an implementation of sql.Driver for PostgreSQL.
-type Driver struct{}
+// PostgresDriver is a Driver for PostgreSQL.
+var PostgresDriver Driver = postgresDriver{}
 
-// StoreVersion unconditionally updates the version for a specific handler
-// and resource.
-//
-// v must be non-empty, to set an empty version, use DeleteResource().
-func (*Driver) StoreVersion(
+type postgresDriver struct{}
+
+func (postgresDriver) CreateSchema(ctx context.Context, db *sql.DB) error {
+	_, err := db.ExecContext(
+		ctx,
+		`CREATE SCHEMA projection;
+		CREATE TABLE projection.occ (
+			handler  BYTEA NOT NULL,
+			resource BYTEA NOT NULL,
+			version  BYTEA NOT NULL,
+
+			PRIMARY KEY (handler, resource)
+		);`,
+	)
+	return err
+}
+
+func (postgresDriver) DropSchema(ctx context.Context, db *sql.DB) error {
+	_, err := db.ExecContext(ctx, `DROP SCHEMA IF EXISTS projection CASCADE`)
+	return err
+}
+
+func (postgresDriver) IsCompatibleWith(db *sql.DB) bool {
+	switch db.Driver().(type) {
+	case *pq.Driver:
+		return true
+	case *stdlib.Driver:
+		return true
+	default:
+		return false
+	}
+}
+
+func (postgresDriver) StoreVersion(
 	ctx context.Context,
 	db *sql.DB,
 	h string,
@@ -38,8 +73,7 @@ func (*Driver) StoreVersion(
 	return err
 }
 
-// UpdateVersion updates the version for a specific handler and resource.
-func (*Driver) UpdateVersion(
+func (d postgresDriver) UpdateVersion(
 	ctx context.Context,
 	tx *sql.Tx,
 	h string,
@@ -66,7 +100,7 @@ func (*Driver) UpdateVersion(
 
 		// If this results in a duplicate key error, that means the current
 		// version was not correct.
-		if isDuplicateEntry(err) {
+		if d.isDup(err) {
 			return false, nil
 		}
 
@@ -116,8 +150,7 @@ func (*Driver) UpdateVersion(
 	return count != 0, err
 }
 
-// QueryVersion returns the version for a specific handler and resource.
-func (*Driver) QueryVersion(
+func (postgresDriver) QueryVersion(
 	ctx context.Context,
 	db *sql.DB,
 	h string,
@@ -144,8 +177,7 @@ func (*Driver) QueryVersion(
 	return v, err
 }
 
-// DeleteResource removes the version for a specific handler and resource.
-func (*Driver) DeleteResource(
+func (postgresDriver) DeleteResource(
 	ctx context.Context,
 	db *sql.DB,
 	h string,
@@ -161,4 +193,22 @@ func (*Driver) DeleteResource(
 	)
 
 	return err
+}
+
+func (postgresDriver) isDup(err error) bool {
+	{
+		var e *pq.Error
+		if errors.As(err, &e) {
+			return e.Code == pgerrcode.UniqueViolation
+		}
+	}
+
+	{
+		var e *pgconn.PgError
+		if errors.As(err, &e) {
+			return e.Code == pgerrcode.UniqueViolation
+		}
+	}
+
+	return false
 }

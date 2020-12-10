@@ -12,7 +12,6 @@ import (
 	. "github.com/dogmatiq/projectionkit/sqlprojection"
 	"github.com/dogmatiq/projectionkit/sqlprojection/fixtures" // can't dot-import due to conflict
 	"github.com/dogmatiq/projectionkit/sqlprojection/internal/drivertest"
-	"github.com/dogmatiq/projectionkit/sqlprojection/sqlite"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -42,10 +41,10 @@ var _ = Describe("type adaptor", func() {
 
 	adaptortest.Declare(
 		func(ctx context.Context) dogma.ProjectionMessageHandler {
-			err := sqlite.DropSchema(context.Background(), db)
+			err := SQLiteDriver.DropSchema(context.Background(), db)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			err = sqlite.CreateSchema(context.Background(), db)
+			err = SQLiteDriver.CreateSchema(context.Background(), db)
 			Expect(err).ShouldNot(HaveOccurred())
 
 			return adaptor

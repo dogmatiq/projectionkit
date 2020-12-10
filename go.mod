@@ -7,6 +7,7 @@ require (
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/gofrs/uuid v3.3.0+incompatible // indirect
 	github.com/jackc/pgconn v1.8.0
+	github.com/jackc/pgerrcode v0.0.0-20201024163028-a0d42d470451
 	github.com/jackc/pgx/v4 v4.10.0
 	github.com/lib/pq v1.9.0
 	github.com/mattn/go-sqlite3 v1.14.2

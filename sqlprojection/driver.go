@@ -4,14 +4,20 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-
-	"github.com/dogmatiq/projectionkit/sqlprojection/mysql"
-	"github.com/dogmatiq/projectionkit/sqlprojection/postgres"
-	"github.com/dogmatiq/projectionkit/sqlprojection/sqlite"
 )
 
 // Driver is an interface for database-specific projection drivers.
 type Driver interface {
+	// IsCompatibleWith returns true if this driver can be used to store
+	// projections on db.
+	IsCompatibleWith(db *sql.DB) bool
+
+	// CreateSchema creates the schema elements required by the driver.
+	CreateSchema(ctx context.Context, db *sql.DB) error
+
+	// DropSchema drops the schema elements required by the driver.
+	DropSchema(ctx context.Context, db *sql.DB) error
+
 	// StoreVersion unconditionally updates the version for a specific handler
 	// and resource.
 	//
@@ -48,6 +54,13 @@ type Driver interface {
 	) error
 }
 
+// drivers is a list of the built-in drivers.
+var drivers = []Driver{
+	MySQLDriver,
+	PostgresDriver,
+	SQLiteDriver,
+}
+
 // NewDriver returns the appropriate driver implementation to use with the given
 // database.
 //
@@ -60,16 +73,10 @@ type Driver interface {
 //
 // SQLite via the "sqlite3" (github.com/mattn/go-sqlite3) driver (requires CGO).
 func NewDriver(db *sql.DB) (Driver, error) {
-	if mysql.IsCompatibleWith(db) {
-		return &mysql.Driver{}, nil
-	}
-
-	if postgres.IsCompatibleWith(db) {
-		return &postgres.Driver{}, nil
-	}
-
-	if sqlite.IsCompatibleWith(db) {
-		return &sqlite.Driver{}, nil
+	for _, d := range drivers {
+		if d.IsCompatibleWith(db) {
+			return d, nil
+		}
 	}
 
 	return nil, fmt.Errorf(

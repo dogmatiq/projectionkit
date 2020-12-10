@@ -1,19 +1,43 @@
-package mysql
+package sqlprojection
 
 import (
 	"context"
 	"database/sql"
+	"errors"
+
+	"github.com/go-sql-driver/mysql"
 )
 
-// Driver is an implementation of sql.Driver for MySQL and compatible databases
-// such as MariaDB.
-type Driver struct{}
+// MySQLDriver is a Driver for MySQL and compatible databases such as MariaDB.
+var MySQLDriver Driver = mysqlDriver{}
 
-// StoreVersion unconditionally updates the version for a specific handler
-// and resource.
-//
-// v must be non-empty, to set an empty version, use DeleteResource().
-func (d *Driver) StoreVersion(
+type mysqlDriver struct{}
+
+func (mysqlDriver) IsCompatibleWith(db *sql.DB) bool {
+	_, ok := db.Driver().(*mysql.MySQLDriver)
+	return ok
+}
+
+func (mysqlDriver) CreateSchema(ctx context.Context, db *sql.DB) error {
+	_, err := db.ExecContext(
+		ctx,
+		`CREATE TABLE projection_occ (
+			handler  VARBINARY(255) NOT NULL,
+			resource VARBINARY(255) NOT NULL,
+			version  VARBINARY(255) NOT NULL,
+
+			PRIMARY KEY (handler, resource)
+		) ENGINE=InnoDB ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=4;`,
+	)
+	return err
+}
+
+func (mysqlDriver) DropSchema(ctx context.Context, db *sql.DB) error {
+	_, err := db.ExecContext(ctx, `DROP TABLE IF EXISTS projection_occ`)
+	return err
+}
+
+func (mysqlDriver) StoreVersion(
 	ctx context.Context,
 	db *sql.DB,
 	h string,
@@ -39,8 +63,7 @@ func (d *Driver) StoreVersion(
 	return err
 }
 
-// UpdateVersion updates the version for a specific handler and resource.
-func (*Driver) UpdateVersion(
+func (d mysqlDriver) UpdateVersion(
 	ctx context.Context,
 	tx *sql.Tx,
 	h string,
@@ -67,7 +90,7 @@ func (*Driver) UpdateVersion(
 
 		// If this results in a duplicate key error, that means the current
 		// version was not correct.
-		if isDuplicateEntry(err) {
+		if d.isDup(err) {
 			return false, nil
 		}
 
@@ -117,8 +140,7 @@ func (*Driver) UpdateVersion(
 	return count != 0, err
 }
 
-// QueryVersion returns the version for a specific handler and resource.
-func (*Driver) QueryVersion(
+func (mysqlDriver) QueryVersion(
 	ctx context.Context,
 	db *sql.DB,
 	h string,
@@ -145,8 +167,7 @@ func (*Driver) QueryVersion(
 	return v, err
 }
 
-// DeleteResource removes the version for a specific handler and resource.
-func (*Driver) DeleteResource(
+func (mysqlDriver) DeleteResource(
 	ctx context.Context,
 	db *sql.DB,
 	h string,
@@ -162,4 +183,14 @@ func (*Driver) DeleteResource(
 	)
 
 	return err
+}
+
+func (mysqlDriver) isDup(err error) bool {
+	var e *mysql.MySQLError
+	if errors.As(err, &e) {
+		// https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
+		return e.Number == 1062
+	}
+
+	return false
 }
