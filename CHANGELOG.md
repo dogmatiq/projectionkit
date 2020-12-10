@@ -20,6 +20,9 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 - **[BC]** Rename `boltdb` package to `boltprojection`
 - **[BC]** Rename `sql` package to `sqlprojection`
+- **[BC]** `sqlprojection.New()` no longer returns an error
+- **[BC]** `sqlprojection.New()` no longer accepts a `Driver` argument
+- **[BC]** `sqlprojection.NewDriver()` now requires a context
 - `boltprojection.New()` and `sqlprojection.New()` now explicitly accept a `nil` database
 
 ### Removed
@@ -27,6 +30,7 @@ The format is based on [Keep a Changelog], and this project adheres to
 - **[BC]** Remove the `sql/mysql` package
 - **[BC]** Remove the `sql/postgres` package
 - **[BC]** Remove the `sql/sqlite` package
+- **[BC]** Removed `sqlprojection.MustNew()`
 
 ## [0.5.1] - 2020-11-14
 

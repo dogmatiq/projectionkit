@@ -72,7 +72,7 @@ var drivers = []Driver{
 // (github.com/jackc/pgx) drivers.
 //
 // SQLite via the "sqlite3" (github.com/mattn/go-sqlite3) driver (requires CGO).
-func NewDriver(db *sql.DB) (Driver, error) {
+func NewDriver(ctx context.Context, db *sql.DB) (Driver, error) {
 	for _, d := range drivers {
 		if d.IsCompatibleWith(db) {
 			return d, nil

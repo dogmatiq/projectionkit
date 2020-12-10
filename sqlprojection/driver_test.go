@@ -16,7 +16,7 @@ import (
 var _ = Describe("type Driver (implementations)", func() {
 	Describe("func NewDriver()", func() {
 		It("returns an error if the driver is unrecognized", func() {
-			_, err := NewDriver(unrecognizedDB())
+			_, err := NewDriver(context.Background(), unrecognizedDB())
 			Expect(err).To(MatchError("can not deduce the appropriate SQL projection driver for *sqlprojection_test.mockDriver"))
 		})
 	})
@@ -49,7 +49,7 @@ var _ = Describe("type Driver (implementations)", func() {
 					db, err = database.Open()
 					Expect(err).ShouldNot(HaveOccurred())
 
-					driver, err = NewDriver(db)
+					driver, err = NewDriver(ctx, db)
 					Expect(err).ShouldNot(HaveOccurred())
 
 					err = driver.CreateSchema(ctx, db)
