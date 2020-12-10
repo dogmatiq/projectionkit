@@ -17,18 +17,30 @@ var PostgresDriver Driver = postgresDriver{}
 type postgresDriver struct{}
 
 func (postgresDriver) CreateSchema(ctx context.Context, db *sql.DB) error {
-	_, err := db.ExecContext(
-		ctx,
-		`CREATE SCHEMA projection;
-		CREATE TABLE projection.occ (
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	_, err = tx.ExecContext(ctx, `CREATE SCHEMA projection`)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.ExecContext(ctx, `CREATE TABLE projection.occ (
 			handler  BYTEA NOT NULL,
 			resource BYTEA NOT NULL,
 			version  BYTEA NOT NULL,
 
 			PRIMARY KEY (handler, resource)
-		);`,
+		)`,
 	)
-	return err
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit()
 }
 
 func (postgresDriver) DropSchema(ctx context.Context, db *sql.DB) error {
