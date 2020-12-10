@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"time"
 
-	pksql "github.com/dogmatiq/projectionkit/sql"
+	pksql "github.com/dogmatiq/projectionkit/sqlprojection"
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/ginkgo/extensions/table"
 	"github.com/onsi/gomega"

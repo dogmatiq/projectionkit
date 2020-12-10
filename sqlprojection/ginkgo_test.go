@@ -1,4 +1,4 @@
-package sql_test
+package sqlprojection_test
 
 import (
 	"reflect"

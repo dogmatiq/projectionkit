@@ -3,8 +3,8 @@ package mysql_test
 import (
 	"database/sql"
 
-	"github.com/dogmatiq/projectionkit/sql/internal/drivertest"
-	. "github.com/dogmatiq/projectionkit/sql/mysql"
+	"github.com/dogmatiq/projectionkit/sqlprojection/internal/drivertest"
+	. "github.com/dogmatiq/projectionkit/sqlprojection/mysql"
 	_ "github.com/go-sql-driver/mysql"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

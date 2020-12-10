@@ -1,13 +1,13 @@
-package sql
+package sqlprojection
 
 import (
 	"context"
 	"database/sql"
 	"fmt"
 
-	"github.com/dogmatiq/projectionkit/sql/mysql"
-	"github.com/dogmatiq/projectionkit/sql/postgres"
-	"github.com/dogmatiq/projectionkit/sql/sqlite"
+	"github.com/dogmatiq/projectionkit/sqlprojection/mysql"
+	"github.com/dogmatiq/projectionkit/sqlprojection/postgres"
+	"github.com/dogmatiq/projectionkit/sqlprojection/sqlite"
 )
 
 // Driver is an interface for database-specific projection drivers.

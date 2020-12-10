@@ -1,6 +1,6 @@
 // +build cgo
 
-package sql_test
+package sqlprojection_test
 
 import (
 	"context"
@@ -9,10 +9,10 @@ import (
 
 	"github.com/dogmatiq/dogma"
 	"github.com/dogmatiq/projectionkit/internal/adaptortest"
-	. "github.com/dogmatiq/projectionkit/sql"
-	"github.com/dogmatiq/projectionkit/sql/fixtures" // can't dot-import due to conflict
-	"github.com/dogmatiq/projectionkit/sql/internal/drivertest"
-	"github.com/dogmatiq/projectionkit/sql/sqlite"
+	. "github.com/dogmatiq/projectionkit/sqlprojection"
+	"github.com/dogmatiq/projectionkit/sqlprojection/fixtures" // can't dot-import due to conflict
+	"github.com/dogmatiq/projectionkit/sqlprojection/internal/drivertest"
+	"github.com/dogmatiq/projectionkit/sqlprojection/sqlite"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )

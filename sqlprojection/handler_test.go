@@ -1,10 +1,10 @@
-package sql_test
+package sqlprojection_test
 
 import (
 	"context"
 	"testing"
 
-	. "github.com/dogmatiq/projectionkit/sql"
+	. "github.com/dogmatiq/projectionkit/sqlprojection"
 )
 
 func TestNoCompactBehavior_Compact_ReturnsNil(t *testing.T) {

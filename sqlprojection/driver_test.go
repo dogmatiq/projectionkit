@@ -1,13 +1,13 @@
-package sql_test
+package sqlprojection_test
 
 import (
 	"database/sql"
 
-	. "github.com/dogmatiq/projectionkit/sql"
-	"github.com/dogmatiq/projectionkit/sql/internal/drivertest"
-	"github.com/dogmatiq/projectionkit/sql/mysql"
-	"github.com/dogmatiq/projectionkit/sql/postgres"
-	"github.com/dogmatiq/projectionkit/sql/sqlite"
+	. "github.com/dogmatiq/projectionkit/sqlprojection"
+	"github.com/dogmatiq/projectionkit/sqlprojection/internal/drivertest"
+	"github.com/dogmatiq/projectionkit/sqlprojection/mysql"
+	"github.com/dogmatiq/projectionkit/sqlprojection/postgres"
+	"github.com/dogmatiq/projectionkit/sqlprojection/sqlite"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"

@@ -3,8 +3,8 @@ package sqlite_test
 import (
 	"database/sql"
 
-	"github.com/dogmatiq/projectionkit/sql/internal/drivertest"
-	. "github.com/dogmatiq/projectionkit/sql/sqlite"
+	"github.com/dogmatiq/projectionkit/sqlprojection/internal/drivertest"
+	. "github.com/dogmatiq/projectionkit/sqlprojection/sqlite"
 	_ "github.com/mattn/go-sqlite3"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
