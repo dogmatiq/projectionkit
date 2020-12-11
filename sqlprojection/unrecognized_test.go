@@ -1,23 +1,26 @@
 package sqlprojection_test
 
 import (
+	"context"
 	"database/sql"
 	"database/sql/driver"
+	"errors"
 )
 
-type unrecognizedConnector struct {
-	driver.Connector
+var unrecognizedDB = sql.OpenDB(fakeConnector{})
+
+type fakeConnector struct{}
+
+func (fakeConnector) Connect(context.Context) (driver.Conn, error) {
+	return nil, errors.New("fakeConnector: not implemented")
 }
 
-func (*unrecognizedConnector) Driver() driver.Driver {
-	return &mockDriver{}
+func (fakeConnector) Driver() driver.Driver {
+	return fakeDriver{}
 }
 
-type mockDriver struct {
-	driver.Driver
-}
+type fakeDriver struct{}
 
-// unrecognizedDB returns a database pool that uses an unrecognized connector.
-func unrecognizedDB() *sql.DB {
-	return sql.OpenDB(&unrecognizedConnector{})
+func (fakeDriver) Open(name string) (driver.Conn, error) {
+	return nil, errors.New("fakeDriver: not implemented")
 }

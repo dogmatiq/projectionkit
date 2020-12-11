@@ -14,8 +14,21 @@ var MySQLDriver Driver = mysqlDriver{}
 type mysqlDriver struct{}
 
 func (mysqlDriver) IsCompatibleWith(ctx context.Context, db *sql.DB) (bool, error) {
-	_, ok := db.Driver().(*mysql.MySQLDriver)
-	return ok, nil
+	// Verify both that we're on something compatible with MySQL and that InnoDB
+	// is available.
+	row := db.QueryRowContext(ctx, `SHOW VARIABLES LIKE "innodb_page_size"`)
+
+	var (
+		name  string // we have to scan the name, even though we don't need it
+		value int
+	)
+
+	err := row.Scan(&name, &value)
+	if err == sql.ErrNoRows {
+		err = nil
+	}
+
+	return value > 0, err
 }
 
 func (mysqlDriver) CreateSchema(ctx context.Context, db *sql.DB) error {

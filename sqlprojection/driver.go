@@ -83,15 +83,20 @@ func selectDriver(ctx context.Context, db *sql.DB, candidates []Driver) (Driver,
 
 	for _, d := range candidates {
 		ok, e := d.IsCompatibleWith(ctx, db)
-		if err != nil {
-			err = multierr.Append(err, e)
+		if e != nil {
+			err = multierr.Append(err, fmt.Errorf(
+				"%T is not compatible with %T: %w",
+				d,
+				db.Driver(),
+				e,
+			))
 		} else if ok {
 			return d, nil
 		}
 	}
 
 	return nil, multierr.Append(err, fmt.Errorf(
-		"can not deduce the appropriate SQL projection driver for %T",
+		"none of the candidate drivers are compatible with %T",
 		db.Driver(),
 	))
 }
