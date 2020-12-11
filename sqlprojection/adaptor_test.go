@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/dogmatiq/dogma"
+	. "github.com/dogmatiq/dogma/fixtures"
 	"github.com/dogmatiq/projectionkit/internal/adaptortest"
 	. "github.com/dogmatiq/projectionkit/sqlprojection"
 	"github.com/dogmatiq/projectionkit/sqlprojection/fixtures" // can't dot-import due to conflict
@@ -72,6 +73,32 @@ var _ = Describe("type adaptor", func() {
 				})
 
 				adaptortest.DescribeAdaptor(&ctx, &adaptor)
+
+				Describe("func HandleEvent()", func() {
+					It("returns an error if the application's message handler fails", func() {
+						terr := errors.New("handle event test error")
+
+						handler.HandleEventFunc = func(
+							context.Context,
+							*sql.Tx,
+							dogma.ProjectionEventScope,
+							dogma.Message,
+						) error {
+							return terr
+						}
+
+						ok, err := adaptor.HandleEvent(
+							context.Background(),
+							[]byte("<resource>"),
+							nil,
+							[]byte("<version 01>"),
+							nil,
+							MessageA1,
+						)
+						Expect(ok).Should(BeFalse())
+						Expect(err).Should(HaveOccurred())
+					})
+				})
 
 				Describe("func Compact()", func() {
 					It("forwards to the handler", func() {

@@ -57,81 +57,7 @@ var _ = Describe("type adaptor", func() {
 
 	adaptortest.DescribeAdaptor(&ctx, &adaptor)
 
-	Describe("func New()", func() {
-		It("returns an unbound handler if the database is nil", func() {
-			adaptor = New(nil, handler)
-
-			err := adaptor.Compact(
-				context.Background(),
-				nil, // scope
-			)
-			Expect(err).To(MatchError("projection handler has not been bound to a database"))
-		})
-	})
-
 	Describe("func HandleEvent()", func() {
-		It("does not produce errors when OCC parameters are supplied correctly", func() {
-			By("persisting the initial resource version")
-
-			ok, err := adaptor.HandleEvent(
-				context.Background(),
-				[]byte("<resource>"),
-				nil,
-				[]byte("<version 01>"),
-				nil,
-				MessageA1,
-			)
-			Expect(ok).Should(BeTrue())
-			Expect(err).ShouldNot(HaveOccurred())
-
-			v, err := adaptor.ResourceVersion(
-				context.Background(),
-				[]byte("<resource>"),
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(v).To(Equal([]byte("<version 01>")))
-
-			By("persisting the next resource version")
-
-			ok, err = adaptor.HandleEvent(
-				context.Background(),
-				[]byte("<resource>"),
-				[]byte("<version 01>"),
-				[]byte("<version 02>"),
-				nil,
-				MessageA2,
-			)
-			Expect(ok).Should(BeTrue())
-			Expect(err).ShouldNot(HaveOccurred())
-
-			v, err = adaptor.ResourceVersion(
-				context.Background(),
-				[]byte("<resource>"),
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(v).To(Equal([]byte("<version 02>")))
-
-			By("discarding a resource if the next resource version is empty")
-
-			ok, err = adaptor.HandleEvent(
-				context.Background(),
-				[]byte("<resource>"),
-				[]byte("<version 02>"),
-				nil,
-				nil,
-				MessageA3,
-			)
-			Expect(ok).Should(BeTrue())
-			Expect(err).ShouldNot(HaveOccurred())
-
-			v, err = adaptor.ResourceVersion(
-				context.Background(),
-				[]byte("<resource>"),
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(v).To(BeEmpty())
-		})
-
 		It("returns an error if the application's message handler fails", func() {
 			terr := errors.New("handle event test error")
 
@@ -155,88 +81,17 @@ var _ = Describe("type adaptor", func() {
 			Expect(ok).Should(BeFalse())
 			Expect(err).Should(HaveOccurred())
 		})
-
-		It("returns false if supplied resource version is not the current version", func() {
-			ok, err := adaptor.HandleEvent(
-				context.Background(),
-				[]byte("<resource>"),
-				nil,
-				[]byte("<version 01>"),
-				nil,
-				MessageA1,
-			)
-			Expect(ok).Should(BeTrue())
-			Expect(err).ShouldNot(HaveOccurred())
-
-			ok, err = adaptor.HandleEvent(
-				context.Background(),
-				[]byte("<resource>"),
-				[]byte("<incorrect current version>"),
-				[]byte("<version 02>"),
-				nil,
-				MessageA2,
-			)
-			Expect(ok).Should(BeFalse())
-			Expect(err).ShouldNot(HaveOccurred())
-		})
 	})
 
-	Describe("func ResourceVersion()", func() {
-		It("returns a resource version", func() {
-			ok, err := adaptor.HandleEvent(
-				context.Background(),
-				[]byte("<resource>"),
-				nil,
-				[]byte("<version 01>"),
-				nil,
-				MessageA1,
-			)
-			Expect(ok).Should(BeTrue())
-			Expect(err).ShouldNot(HaveOccurred())
+	Describe("func New()", func() {
+		It("returns an unbound handler if the database is nil", func() {
+			adaptor = New(nil, handler)
 
-			v, err := adaptor.ResourceVersion(
+			err := adaptor.Compact(
 				context.Background(),
-				[]byte("<resource>"),
+				nil, // scope
 			)
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(v).To(Equal([]byte("<version 01>")))
-		})
-
-		It("returns nil if no current resource version present in the database", func() {
-			v, err := adaptor.ResourceVersion(
-				context.Background(),
-				[]byte("<resource>"),
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(v).To(BeEmpty())
-		})
-	})
-
-	Describe("func CloseResource()", func() {
-		It("removes a resource version", func() {
-			ok, err := adaptor.HandleEvent(
-				context.Background(),
-				[]byte("<resource>"),
-				nil,
-				[]byte("<version 01>"),
-				nil,
-				MessageA2,
-			)
-			Expect(ok).Should(BeTrue())
-			Expect(err).ShouldNot(HaveOccurred())
-
-			err = adaptor.CloseResource(
-				context.Background(),
-				[]byte("<resource>"),
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			v, err := adaptor.ResourceVersion(
-				context.Background(),
-				[]byte("<resource>"),
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(v).To(BeEmpty())
+			Expect(err).To(MatchError("projection handler has not been bound to a database"))
 		})
 	})
 

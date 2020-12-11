@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/dogmatiq/dogma"
+	"github.com/dogmatiq/dogma/fixtures"
 	"github.com/dogmatiq/projectionkit/resource"
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/ginkgo/extensions/table"
@@ -24,6 +25,153 @@ func DescribeAdaptor(
 	ginkgo.BeforeEach(func() {
 		ctx = *ctxP
 		adaptor = *adaptorP
+	})
+
+	ginkgo.Describe("func HandleEvent()", func() {
+		ginkgo.It("does not produce errors when OCC parameters are supplied correctly", func() {
+			ginkgo.By("persisting the initial resource version")
+
+			ok, err := adaptor.HandleEvent(
+				context.Background(),
+				[]byte("<resource>"),
+				nil,
+				[]byte("<version 01>"),
+				nil,
+				fixtures.MessageA1,
+			)
+			gomega.Expect(ok).Should(gomega.BeTrue())
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+
+			v, err := adaptor.ResourceVersion(
+				context.Background(),
+				[]byte("<resource>"),
+			)
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+			gomega.Expect(v).To(gomega.Equal([]byte("<version 01>")))
+
+			ginkgo.By("persisting the next resource version")
+
+			ok, err = adaptor.HandleEvent(
+				context.Background(),
+				[]byte("<resource>"),
+				[]byte("<version 01>"),
+				[]byte("<version 02>"),
+				nil,
+				fixtures.MessageA2,
+			)
+			gomega.Expect(ok).Should(gomega.BeTrue())
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+
+			v, err = adaptor.ResourceVersion(
+				context.Background(),
+				[]byte("<resource>"),
+			)
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+			gomega.Expect(v).To(gomega.Equal([]byte("<version 02>")))
+
+			ginkgo.By("discarding a resource if the next resource version is empty")
+
+			ok, err = adaptor.HandleEvent(
+				context.Background(),
+				[]byte("<resource>"),
+				[]byte("<version 02>"),
+				nil,
+				nil,
+				fixtures.MessageA3,
+			)
+			gomega.Expect(ok).Should(gomega.BeTrue())
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+
+			v, err = adaptor.ResourceVersion(
+				context.Background(),
+				[]byte("<resource>"),
+			)
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+			gomega.Expect(v).To(gomega.BeEmpty())
+		})
+
+		ginkgo.It("returns false if supplied resource version is not the current version", func() {
+			ok, err := adaptor.HandleEvent(
+				context.Background(),
+				[]byte("<resource>"),
+				nil,
+				[]byte("<version 01>"),
+				nil,
+				fixtures.MessageA1,
+			)
+			gomega.Expect(ok).Should(gomega.BeTrue())
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+
+			ok, err = adaptor.HandleEvent(
+				context.Background(),
+				[]byte("<resource>"),
+				[]byte("<incorrect current version>"),
+				[]byte("<version 02>"),
+				nil,
+				fixtures.MessageA2,
+			)
+			gomega.Expect(ok).Should(gomega.BeFalse())
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+		})
+	})
+
+	ginkgo.Describe("func ResourceVersion()", func() {
+		ginkgo.It("returns a resource version", func() {
+			ok, err := adaptor.HandleEvent(
+				context.Background(),
+				[]byte("<resource>"),
+				nil,
+				[]byte("<version 01>"),
+				nil,
+				fixtures.MessageA1,
+			)
+			gomega.Expect(ok).Should(gomega.BeTrue())
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+
+			v, err := adaptor.ResourceVersion(
+				context.Background(),
+				[]byte("<resource>"),
+			)
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+			gomega.Expect(v).To(gomega.Equal([]byte("<version 01>")))
+		})
+
+		ginkgo.It("returns nil if no current resource version present in the database", func() {
+			v, err := adaptor.ResourceVersion(
+				context.Background(),
+				[]byte("<resource>"),
+			)
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+			gomega.Expect(v).To(gomega.BeEmpty())
+		})
+	})
+
+	ginkgo.Describe("func CloseResource()", func() {
+		ginkgo.It("removes a resource version", func() {
+			ok, err := adaptor.HandleEvent(
+				context.Background(),
+				[]byte("<resource>"),
+				nil,
+				[]byte("<version 01>"),
+				nil,
+				fixtures.MessageA2,
+			)
+			gomega.Expect(ok).Should(gomega.BeTrue())
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+
+			err = adaptor.CloseResource(
+				context.Background(),
+				[]byte("<resource>"),
+			)
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+
+			v, err := adaptor.ResourceVersion(
+				context.Background(),
+				[]byte("<resource>"),
+			)
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+			gomega.Expect(v).To(gomega.BeEmpty())
+		})
 	})
 
 	ginkgo.Context("low-level resource API", func() {
