@@ -73,7 +73,11 @@ var drivers = []Driver{
 //
 // SQLite via the "sqlite3" (github.com/mattn/go-sqlite3) driver (requires CGO).
 func NewDriver(ctx context.Context, db *sql.DB) (Driver, error) {
-	for _, d := range drivers {
+	return selectDriver(ctx, db, drivers)
+}
+
+func selectDriver(ctx context.Context, db *sql.DB, candidates []Driver) (Driver, error) {
+	for _, d := range candidates {
 		if d.IsCompatibleWith(db) {
 			return d, nil
 		}

@@ -19,9 +19,10 @@ type adaptor struct {
 	db  *sql.DB
 	key string
 
-	ready int32 // atomic bool, fast path
-	m     cosyne.Mutex
-	drv   Driver
+	m          cosyne.Mutex
+	resolved   int32 // atomic bool, fast path
+	candidates []Driver
+	selected   Driver
 }
 
 // New returns a new Dogma projection message handler by binding an SQL-specific
@@ -41,6 +42,7 @@ func New(
 		MessageHandler: h,
 		db:             db,
 		key:            identity.Key(h),
+		candidates:     drivers,
 	}
 }
 
@@ -162,28 +164,29 @@ func (a *adaptor) withTx(
 
 // driver returns the driver that should be used by the adaptor.
 func (a *adaptor) driver(ctx context.Context) (Driver, error) {
-	if atomic.LoadInt32(&a.ready) == 0 {
-		// If the ready flag is 0 then a.drv has not been populated yet. We have
-		// to initialize it so we try to acquire the mutex to ensure we're the
-		// only one doing so.
+	if atomic.LoadInt32(&a.resolved) == 0 {
+		// If the resolved flag is 0 then a.selected has not been populated yet.
+		// We acquire the mutex to ensure we're the only goroutine attempting
+		// selection.
 		if err := a.m.Lock(ctx); err != nil {
 			return nil, err
 		}
 		defer a.m.Unlock()
 
-		// Ensure that no another goroutine chose the driver while we were waiting
-		// to acquire the mutex.
-		if atomic.LoadInt32(&a.ready) == 0 {
-			// If not, it's our turn to try to work out what driver we need.
-			d, err := NewDriver(ctx, a.db)
+		// Ensure that no another goroutine selected the driver while we were
+		// waiting to acquire the mutex.
+		if atomic.LoadInt32(&a.resolved) == 0 {
+			// If not, it's our turn to try selection.
+			d, err := selectDriver(ctx, a.db, a.candidates)
 			if err != nil {
 				return nil, err
 			}
 
-			a.drv = d
-			atomic.StoreInt32(&a.ready, 1)
+			a.candidates = nil
+			a.selected = d
+			atomic.StoreInt32(&a.resolved, 1)
 		}
 	}
 
-	return a.drv, nil
+	return a.selected, nil
 }
