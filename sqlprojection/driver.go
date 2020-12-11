@@ -54,8 +54,8 @@ type Driver interface {
 	) error
 }
 
-// drivers is a list of the built-in drivers.
-var drivers = []Driver{
+// builtInDrivers is a list of the built-in drivers.
+var builtInDrivers = []Driver{
 	MySQLDriver,
 	PostgresDriver,
 	SQLiteDriver,
@@ -73,7 +73,7 @@ var drivers = []Driver{
 //
 // SQLite via the "sqlite3" (github.com/mattn/go-sqlite3) driver (requires CGO).
 func NewDriver(ctx context.Context, db *sql.DB) (Driver, error) {
-	return selectDriver(ctx, db, drivers)
+	return selectDriver(ctx, db, builtInDrivers)
 }
 
 func selectDriver(ctx context.Context, db *sql.DB, candidates []Driver) (Driver, error) {

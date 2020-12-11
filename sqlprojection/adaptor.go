@@ -33,17 +33,24 @@ type adaptor struct {
 func New(
 	db *sql.DB,
 	h MessageHandler,
+	options ...Option,
 ) dogma.ProjectionMessageHandler {
 	if db == nil {
 		return unboundhandler.New(h)
 	}
 
-	return &adaptor{
+	a := &adaptor{
 		MessageHandler: h,
 		db:             db,
 		key:            identity.Key(h),
-		candidates:     drivers,
+		candidates:     builtInDrivers,
 	}
+
+	for _, opt := range options {
+		opt.applyAdaptorOption(a)
+	}
+
+	return a
 }
 
 // HandleEvent updates the projection to reflect the occurrence of an event.

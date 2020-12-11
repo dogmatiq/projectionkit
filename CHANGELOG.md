@@ -15,13 +15,14 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 - **[BC]** Add `CreateSchema()` and `DropSchema()` methods to `sqlprojection.Driver`
 - **[BC]** Add `IsCompatibleWith()` method to `sqlprojection.Driver`
+- Add `sqlprojection.Option`
 
 ### Changed
 
 - **[BC]** Rename `boltdb` package to `boltprojection`
 - **[BC]** Rename `sql` package to `sqlprojection`
 - **[BC]** `sqlprojection.New()` no longer returns an error
-- **[BC]** `sqlprojection.New()` no longer accepts a `Driver` argument
+- **[BC]** `sqlprojection.New()` now accepts functional options instead of a single driver
 - **[BC]** `sqlprojection.NewDriver()` now requires a context
 - `boltprojection.New()` and `sqlprojection.New()` now explicitly accept a `nil` database
 
