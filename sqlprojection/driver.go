@@ -3,9 +3,6 @@ package sqlprojection
 import (
 	"context"
 	"database/sql"
-	"fmt"
-
-	"go.uber.org/multierr"
 )
 
 // Driver is an interface for database-specific projection drivers.
@@ -63,29 +60,4 @@ func BuiltInDrivers() []Driver {
 		PostgresDriver,
 		SQLiteDriver,
 	}
-}
-
-// SelectDriver returns the appropriate driver implementation to use with the
-// given database from a list of candidate drivers.
-func SelectDriver(ctx context.Context, db *sql.DB, candidates []Driver) (Driver, error) {
-	var err error
-
-	for _, d := range candidates {
-		e := d.IsCompatibleWith(ctx, db)
-		if e == nil {
-			return d, nil
-		}
-
-		err = multierr.Append(err, fmt.Errorf(
-			"%T is not compatible with %T: %w",
-			d,
-			db.Driver(),
-			e,
-		))
-	}
-
-	return nil, multierr.Append(err, fmt.Errorf(
-		"none of the candidate drivers are compatible with %T",
-		db.Driver(),
-	))
 }
