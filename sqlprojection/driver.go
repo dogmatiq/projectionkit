@@ -4,13 +4,15 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+
+	"go.uber.org/multierr"
 )
 
 // Driver is an interface for database-specific projection drivers.
 type Driver interface {
-	// IsCompatibleWith returns true if this driver can be used to store
+	// IsCompatibleWith returns nil if this driver can be used to store
 	// projections on db.
-	IsCompatibleWith(db *sql.DB) bool
+	IsCompatibleWith(ctx context.Context, db *sql.DB) error
 
 	// CreateSchema creates the schema elements required by the driver.
 	CreateSchema(ctx context.Context, db *sql.DB) error
@@ -54,33 +56,36 @@ type Driver interface {
 	) error
 }
 
-// drivers is a list of the built-in drivers.
-var drivers = []Driver{
-	MySQLDriver,
-	PostgresDriver,
-	SQLiteDriver,
+// BuiltInDrivers returns a list of the built-in drivers.
+func BuiltInDrivers() []Driver {
+	return []Driver{
+		MySQLDriver,
+		PostgresDriver,
+		SQLiteDriver,
+	}
 }
 
-// NewDriver returns the appropriate driver implementation to use with the given
-// database.
-//
-// The following database products and SQL drivers are officially supported:
-//
-// MySQL and MariaDB via the "mysql" ("github.com/go-sql-driver/mysql") driver.
-//
-// PostgreSQL via the "postgres" (github.com/lib/pq) and "pgx"
-// (github.com/jackc/pgx) drivers.
-//
-// SQLite via the "sqlite3" (github.com/mattn/go-sqlite3) driver (requires CGO).
-func NewDriver(db *sql.DB) (Driver, error) {
-	for _, d := range drivers {
-		if d.IsCompatibleWith(db) {
+// SelectDriver returns the appropriate driver implementation to use with the
+// given database from a list of candidate drivers.
+func SelectDriver(ctx context.Context, db *sql.DB, candidates []Driver) (Driver, error) {
+	var err error
+
+	for _, d := range candidates {
+		e := d.IsCompatibleWith(ctx, db)
+		if e == nil {
 			return d, nil
 		}
+
+		err = multierr.Append(err, fmt.Errorf(
+			"%T is not compatible with %T: %w",
+			d,
+			db.Driver(),
+			e,
+		))
 	}
 
-	return nil, fmt.Errorf(
-		"can not deduce the appropriate SQL projection driver for %T",
+	return nil, multierr.Append(err, fmt.Errorf(
+		"none of the candidate drivers are compatible with %T",
 		db.Driver(),
-	)
+	))
 }

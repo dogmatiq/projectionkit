@@ -3,8 +3,6 @@ package sqlprojection
 import (
 	"context"
 	"database/sql"
-
-	"github.com/mattn/go-sqlite3"
 )
 
 // SQLiteDriver is Driver for SQLite.
@@ -12,9 +10,14 @@ var SQLiteDriver Driver = sqliteDriver{}
 
 type sqliteDriver struct{}
 
-func (sqliteDriver) IsCompatibleWith(db *sql.DB) bool {
-	_, ok := db.Driver().(*sqlite3.SQLiteDriver)
-	return ok
+func (sqliteDriver) IsCompatibleWith(ctx context.Context, db *sql.DB) error {
+	// Verify that we're using PostgreSQL and that $1-style placeholders are
+	// supported.
+	return db.QueryRowContext(
+		ctx,
+		`SELECT sqlite_version() WHERE 1 = $1`,
+		1,
+	).Err()
 }
 
 func (sqliteDriver) CreateSchema(ctx context.Context, db *sql.DB) error {

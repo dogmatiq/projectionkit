@@ -13,9 +13,24 @@ var MySQLDriver Driver = mysqlDriver{}
 
 type mysqlDriver struct{}
 
-func (mysqlDriver) IsCompatibleWith(db *sql.DB) bool {
-	_, ok := db.Driver().(*mysql.MySQLDriver)
-	return ok
+func (mysqlDriver) IsCompatibleWith(ctx context.Context, db *sql.DB) error {
+	// Verify that ?-style placeholders are supported.
+	err := db.QueryRowContext(
+		ctx,
+		`SELECT 1 WHERE 1 = ?`,
+		1,
+	).Err()
+
+	if err != nil {
+		return err
+	}
+
+	// Verify that we're using something compatible with MySQL (because the SHOW
+	// VARIABLES syntax is supported) and that InnoDB is available.
+	return db.QueryRowContext(
+		ctx,
+		`SHOW VARIABLES LIKE "innodb_page_size"`,
+	).Err()
 }
 
 func (mysqlDriver) CreateSchema(ctx context.Context, db *sql.DB) error {

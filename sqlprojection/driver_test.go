@@ -11,13 +11,22 @@ import (
 	. "github.com/onsi/ginkgo"
 	"github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
+	"go.uber.org/multierr"
 )
 
 var _ = Describe("type Driver (implementations)", func() {
-	Describe("func NewDriver()", func() {
+	Describe("func SelectDriver()", func() {
 		It("returns an error if the driver is unrecognized", func() {
-			_, err := NewDriver(unrecognizedDB())
-			Expect(err).To(MatchError("can not deduce the appropriate SQL projection driver for *sqlprojection_test.mockDriver"))
+			_, err := SelectDriver(context.Background(), unrecognizedDB, BuiltInDrivers())
+
+			expect := "none of the candidate drivers are compatible with sqlprojection_test.fakeDriver"
+			for _, e := range multierr.Errors(err) {
+				if e.Error() == expect {
+					return
+				}
+			}
+
+			Expect(err).To(MatchError(expect))
 		})
 	})
 
@@ -49,7 +58,7 @@ var _ = Describe("type Driver (implementations)", func() {
 					db, err = database.Open()
 					Expect(err).ShouldNot(HaveOccurred())
 
-					driver, err = NewDriver(db)
+					driver, err = SelectDriver(ctx, db, BuiltInDrivers())
 					Expect(err).ShouldNot(HaveOccurred())
 
 					err = driver.CreateSchema(ctx, db)

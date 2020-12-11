@@ -52,13 +52,13 @@ var _ = Describe("type adaptor", func() {
 					db, err = database.Open()
 					Expect(err).ShouldNot(HaveOccurred())
 
-					driver, err = NewDriver(db)
+					driver, err = SelectDriver(ctx, db, BuiltInDrivers())
 					Expect(err).ShouldNot(HaveOccurred())
 
 					err = driver.CreateSchema(ctx, db)
 					Expect(err).ShouldNot(HaveOccurred())
 
-					adaptor = MustNew(db, handler, nil)
+					adaptor = New(db, handler)
 				})
 
 				AfterEach(func() {
@@ -71,14 +71,12 @@ var _ = Describe("type adaptor", func() {
 					cancel()
 				})
 
-				adaptortest.Declare(
-					func(ctx context.Context) dogma.ProjectionMessageHandler {
-						return adaptor
-					},
-				)
+				adaptortest.DescribeAdaptor(&ctx, &adaptor)
 
 				Describe("func Compact()", func() {
 					It("forwards to the handler", func() {
+						adaptor := New(db, handler)
+
 						handler.CompactFunc = func(
 							_ context.Context,
 							d *sql.DB,
@@ -101,28 +99,13 @@ var _ = Describe("type adaptor", func() {
 
 	Describe("func New()", func() {
 		It("returns an unbound handler if the database is nil", func() {
-			adaptor, err := New(nil, handler, nil)
-			Expect(err).ShouldNot(HaveOccurred())
+			adaptor := New(nil, handler)
 
-			err = adaptor.Compact(
+			err := adaptor.Compact(
 				context.Background(),
 				nil, // scope
 			)
 			Expect(err).To(MatchError("projection handler has not been bound to a database"))
-		})
-	})
-
-	Describe("func MustNew()", func() {
-		It("panics on failure", func() {
-			Expect(func() {
-				MustNew(
-					unrecognizedDB(),
-					&fixtures.MessageHandler{},
-					nil,
-				)
-			}).To(PanicWith(
-				MatchError("can not deduce the appropriate SQL projection driver for *sqlprojection_test.mockDriver"),
-			))
 		})
 	})
 })

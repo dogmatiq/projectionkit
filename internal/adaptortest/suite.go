@@ -2,7 +2,6 @@ package adaptortest
 
 import (
 	"context"
-	"time"
 
 	"github.com/dogmatiq/dogma"
 	"github.com/dogmatiq/projectionkit/resource"
@@ -11,26 +10,20 @@ import (
 	"github.com/onsi/gomega"
 )
 
-// Declare declares generic behavioral tests for a specific adaptor
+// DescribeAdaptor declares generic behavioral tests for a specific adaptor
 // implementation.
-func Declare(setup func(context.Context) dogma.ProjectionMessageHandler) {
+func DescribeAdaptor(
+	ctxP *context.Context,
+	adaptorP *dogma.ProjectionMessageHandler,
+) {
 	var (
 		ctx     context.Context
-		cancel  func()
 		adaptor dogma.ProjectionMessageHandler
 	)
 
 	ginkgo.BeforeEach(func() {
-		ctx, cancel = context.WithTimeout(
-			context.Background(),
-			3*time.Second,
-		)
-
-		adaptor = setup(ctx)
-	})
-
-	ginkgo.AfterEach(func() {
-		cancel()
+		ctx = *ctxP
+		adaptor = *adaptorP
 	})
 
 	ginkgo.Context("low-level resource API", func() {
