@@ -56,29 +56,18 @@ type Driver interface {
 	) error
 }
 
-// builtInDrivers is a list of the built-in drivers.
-var builtInDrivers = []Driver{
-	MySQLDriver,
-	PostgresDriver,
-	SQLiteDriver,
+// BuiltInDrivers returns a list of the built-in drivers.
+func BuiltInDrivers() []Driver {
+	return []Driver{
+		MySQLDriver,
+		PostgresDriver,
+		SQLiteDriver,
+	}
 }
 
-// NewDriver returns the appropriate driver implementation to use with the given
-// database.
-//
-// The following database products and SQL drivers are officially supported:
-//
-// MySQL and MariaDB via the "mysql" ("github.com/go-sql-driver/mysql") driver.
-//
-// PostgreSQL via the "postgres" (github.com/lib/pq) and "pgx"
-// (github.com/jackc/pgx) drivers.
-//
-// SQLite via the "sqlite3" (github.com/mattn/go-sqlite3) driver (requires CGO).
-func NewDriver(ctx context.Context, db *sql.DB) (Driver, error) {
-	return selectDriver(ctx, db, builtInDrivers)
-}
-
-func selectDriver(ctx context.Context, db *sql.DB, candidates []Driver) (Driver, error) {
+// SelectDriver returns the appropriate driver implementation to use with the
+// given database from a list of candidate drivers.
+func SelectDriver(ctx context.Context, db *sql.DB, candidates []Driver) (Driver, error) {
 	var err error
 
 	for _, d := range candidates {

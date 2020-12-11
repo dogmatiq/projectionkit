@@ -30,6 +30,9 @@ type adaptor struct {
 //
 // If db is nil the returned handler will return an error whenever an operation
 // that requires the database is performed.
+//
+// By default an appropriate Driver implementation is chosen from the built-in
+// drivers listed in the Drivers slice.
 func New(
 	db *sql.DB,
 	h MessageHandler,
@@ -43,7 +46,7 @@ func New(
 		MessageHandler: h,
 		db:             db,
 		key:            identity.Key(h),
-		candidates:     builtInDrivers,
+		candidates:     BuiltInDrivers(),
 	}
 
 	for _, opt := range options {
@@ -184,7 +187,7 @@ func (a *adaptor) driver(ctx context.Context) (Driver, error) {
 		// waiting to acquire the mutex.
 		if atomic.LoadInt32(&a.resolved) == 0 {
 			// If not, it's our turn to try selection.
-			d, err := selectDriver(ctx, a.db, a.candidates)
+			d, err := SelectDriver(ctx, a.db, a.candidates)
 			if err != nil {
 				return nil, err
 			}

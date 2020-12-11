@@ -15,9 +15,9 @@ import (
 )
 
 var _ = Describe("type Driver (implementations)", func() {
-	Describe("func NewDriver()", func() {
+	Describe("func SelectDriver()", func() {
 		It("returns an error if the driver is unrecognized", func() {
-			_, err := NewDriver(context.Background(), unrecognizedDB)
+			_, err := SelectDriver(context.Background(), unrecognizedDB, BuiltInDrivers())
 
 			expect := "none of the candidate drivers are compatible with sqlprojection_test.fakeDriver"
 			for _, e := range multierr.Errors(err) {
@@ -58,7 +58,7 @@ var _ = Describe("type Driver (implementations)", func() {
 					db, err = database.Open()
 					Expect(err).ShouldNot(HaveOccurred())
 
-					driver, err = NewDriver(ctx, db)
+					driver, err = SelectDriver(ctx, db, BuiltInDrivers())
 					Expect(err).ShouldNot(HaveOccurred())
 
 					err = driver.CreateSchema(ctx, db)

@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog], and this project adheres to
 - **[BC]** Add `CreateSchema()` and `DropSchema()` methods to `sqlprojection.Driver`
 - **[BC]** Add `IsCompatibleWith()` method to `sqlprojection.Driver`
 - Add `sqlprojection.Option`
+- Add `sqlprojection.SelectDriver()`
 
 ### Changed
 
@@ -23,7 +24,6 @@ The format is based on [Keep a Changelog], and this project adheres to
 - **[BC]** Rename `sql` package to `sqlprojection`
 - **[BC]** `sqlprojection.New()` no longer returns an error
 - **[BC]** `sqlprojection.New()` now accepts functional options instead of a single driver
-- **[BC]** `sqlprojection.NewDriver()` now requires a context
 - `boltprojection.New()` and `sqlprojection.New()` now explicitly accept a `nil` database
 
 ### Removed
@@ -32,6 +32,7 @@ The format is based on [Keep a Changelog], and this project adheres to
 - **[BC]** Remove the `sql/postgres` package
 - **[BC]** Remove the `sql/sqlite` package
 - **[BC]** Removed `sqlprojection.MustNew()`
+- **[BC]** Removed `sqlprojection.NewDriver()`
 
 ## [0.5.1] - 2020-11-14
 

@@ -52,7 +52,7 @@ var _ = Describe("type adaptor", func() {
 					db, err = database.Open()
 					Expect(err).ShouldNot(HaveOccurred())
 
-					driver, err = NewDriver(ctx, db)
+					driver, err = SelectDriver(ctx, db, BuiltInDrivers())
 					Expect(err).ShouldNot(HaveOccurred())
 
 					err = driver.CreateSchema(ctx, db)
