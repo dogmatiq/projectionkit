@@ -3,9 +3,7 @@ package sqlprojection
 import (
 	"context"
 	"database/sql"
-	"sync/atomic"
 
-	"github.com/dogmatiq/cosyne"
 	"github.com/dogmatiq/dogma"
 	"github.com/dogmatiq/projectionkit/internal/identity"
 	"github.com/dogmatiq/projectionkit/internal/unboundhandler"
@@ -18,11 +16,7 @@ type adaptor struct {
 
 	db  *sql.DB
 	key string
-
-	m          cosyne.Mutex
-	resolved   int32 // atomic bool, fast path
-	candidates []Driver
-	selected   Driver
+	cs  candidateSet
 }
 
 // New returns a new Dogma projection message handler by binding an SQL-specific
@@ -48,15 +42,7 @@ func New(
 		key:            identity.Key(h),
 	}
 
-	if len(options) == 0 {
-		options = []Option{
-			WithCandidateDrivers(BuiltInDrivers()...),
-		}
-	}
-
-	for _, opt := range options {
-		opt.applyAdaptorOption(a)
-	}
+	a.cs.init(db, options)
 
 	return a
 }
@@ -139,7 +125,7 @@ func (a *adaptor) withDriver(
 	ctx context.Context,
 	fn func(Driver) error,
 ) error {
-	d, err := a.driver(ctx)
+	d, err := a.cs.resolve(ctx)
 	if err != nil {
 		return err
 	}
@@ -177,33 +163,4 @@ func (a *adaptor) withTx(
 	)
 
 	return ok && err == nil, err
-}
-
-// driver returns the driver that should be used by the adaptor.
-func (a *adaptor) driver(ctx context.Context) (Driver, error) {
-	if atomic.LoadInt32(&a.resolved) == 0 {
-		// If the resolved flag is 0 then a.selected has not been populated yet.
-		// We acquire the mutex to ensure we're the only goroutine attempting
-		// selection.
-		if err := a.m.Lock(ctx); err != nil {
-			return nil, err
-		}
-		defer a.m.Unlock()
-
-		// Ensure that no another goroutine selected the driver while we were
-		// waiting to acquire the mutex.
-		if atomic.LoadInt32(&a.resolved) == 0 {
-			// If not, it's our turn to try selection.
-			d, err := SelectDriver(ctx, a.db, a.candidates)
-			if err != nil {
-				return nil, err
-			}
-
-			a.candidates = nil
-			a.selected = d
-			atomic.StoreInt32(&a.resolved, 1)
-		}
-	}
-
-	return a.selected, nil
 }

@@ -38,7 +38,6 @@ var _ = Describe("type adaptor", func() {
 					ctx      context.Context
 					cancel   context.CancelFunc
 					database *sqltest.Database
-					driver   Driver
 					db       *sql.DB
 					adaptor  dogma.ProjectionMessageHandler
 				)
@@ -53,17 +52,14 @@ var _ = Describe("type adaptor", func() {
 					db, err = database.Open()
 					Expect(err).ShouldNot(HaveOccurred())
 
-					driver, err = SelectDriver(ctx, db, BuiltInDrivers())
-					Expect(err).ShouldNot(HaveOccurred())
-
-					err = driver.CreateSchema(ctx, db)
+					err = CreateSchema(ctx, db)
 					Expect(err).ShouldNot(HaveOccurred())
 
 					adaptor = New(db, handler)
 				})
 
 				AfterEach(func() {
-					err := driver.DropSchema(ctx, db)
+					err := DropSchema(ctx, db)
 					Expect(err).ShouldNot(HaveOccurred())
 
 					err = database.Close()
