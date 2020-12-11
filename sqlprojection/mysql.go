@@ -3,12 +3,12 @@ package sqlprojection
 import (
 	"context"
 	"database/sql"
-	"errors"
-
-	"github.com/go-sql-driver/mysql"
 )
 
-// MySQLDriver is a Driver for MySQL and compatible databases such as MariaDB.
+// MySQLDriver is a Driver for MySQL.
+//
+// This driver should work with any underlying Go SQL driver that supports MySQL
+// compatible databases and ?-style placeholders.
 var MySQLDriver Driver = mysqlDriver{}
 
 type mysqlDriver struct{}
@@ -87,7 +87,7 @@ func (d mysqlDriver) UpdateVersion(
 	// If the "current" version is empty, we assumed it's correct and that there
 	// is no existing entry for this resource.
 	if len(c) == 0 {
-		_, err := tx.ExecContext(
+		res, err := tx.ExecContext(
 			ctx,
 			`INSERT INTO projection_occ (
 				handler,
@@ -97,19 +97,19 @@ func (d mysqlDriver) UpdateVersion(
 				?,
 				?,
 				?
-			)`,
+			) ON DUPLICATE KEY UPDATE
+				handler = handler`, // do nothing
 			h,
 			r,
 			n,
 		)
-
-		// If this results in a duplicate key error, that means the current
-		// version was not correct.
-		if d.isDup(err) {
-			return false, nil
+		if err != nil {
+			return false, err
 		}
 
-		return true, err
+		// The affected rows will be exactly 1 if the row was inserted.
+		n, err := res.RowsAffected()
+		return n == 1, err
 	}
 
 	var (
@@ -198,14 +198,4 @@ func (mysqlDriver) DeleteResource(
 	)
 
 	return err
-}
-
-func (mysqlDriver) isDup(err error) bool {
-	var e *mysql.MySQLError
-	if errors.As(err, &e) {
-		// https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
-		return e.Number == 1062
-	}
-
-	return false
 }
