@@ -3,14 +3,12 @@ package sqlprojection
 import (
 	"context"
 	"database/sql"
-	"errors"
-
-	"github.com/jackc/pgconn"
-	"github.com/jackc/pgerrcode"
-	"github.com/lib/pq"
 )
 
 // PostgresDriver is a Driver for PostgreSQL.
+//
+// This driver should work with any underlying Go SQL driver that supports
+// PostgreSQL compatible databases and $1-style placeholders.
 var PostgresDriver Driver = postgresDriver{}
 
 type postgresDriver struct{}
@@ -92,7 +90,7 @@ func (d postgresDriver) UpdateVersion(
 	// If the "current" version is empty, we assumed it's correct and that there
 	// is no existing entry for this resource.
 	if len(c) == 0 {
-		_, err := tx.ExecContext(
+		res, err := tx.ExecContext(
 			ctx,
 			`INSERT INTO projection.occ (
 				handler,
@@ -102,19 +100,18 @@ func (d postgresDriver) UpdateVersion(
 				$1,
 				$2,
 				$3
-			)`,
+			) ON CONFLICT DO NOTHING`,
 			h,
 			r,
 			n,
 		)
-
-		// If this results in a duplicate key error, that means the current
-		// version was not correct.
-		if d.isDup(err) {
-			return false, nil
+		if err != nil {
+			return false, err
 		}
 
-		return true, err
+		// The affected rows will be exactly 1 if the row was inserted.
+		n, err := res.RowsAffected()
+		return n == 1, err
 	}
 
 	var (
@@ -203,22 +200,4 @@ func (postgresDriver) DeleteResource(
 	)
 
 	return err
-}
-
-func (postgresDriver) isDup(err error) bool {
-	{
-		var e *pq.Error
-		if errors.As(err, &e) {
-			return e.Code == pgerrcode.UniqueViolation
-		}
-	}
-
-	{
-		var e *pgconn.PgError
-		if errors.As(err, &e) {
-			return e.Code == pgerrcode.UniqueViolation
-		}
-	}
-
-	return false
 }
