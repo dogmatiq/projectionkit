@@ -8,7 +8,6 @@ import (
 	. "github.com/dogmatiq/dogma/fixtures"
 	"github.com/dogmatiq/projectionkit/internal/identity"
 	. "github.com/dogmatiq/projectionkit/internal/unboundhandler"
-	_ "github.com/mattn/go-sqlite3"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )

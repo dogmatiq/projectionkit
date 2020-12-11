@@ -6,12 +6,15 @@ import (
 )
 
 // SQLiteDriver is Driver for SQLite.
+//
+// This driver should work with any underlying Go SQL driver that supports
+// SQLite v3 compatible databases and $1-style placeholders.
 var SQLiteDriver Driver = sqliteDriver{}
 
 type sqliteDriver struct{}
 
 func (sqliteDriver) IsCompatibleWith(ctx context.Context, db *sql.DB) error {
-	// Verify that we're using PostgreSQL and that $1-style placeholders are
+	// Verify that we're using SQLite and that $1-style placeholders are
 	// supported.
 	return db.QueryRowContext(
 		ctx,
@@ -74,7 +77,7 @@ func (d sqliteDriver) UpdateVersion(
 	// If the "current" version is empty, we assumed it's correct and that there
 	// is no existing entry for this resource.
 	if len(c) == 0 {
-		_, err := tx.ExecContext(
+		res, err := tx.ExecContext(
 			ctx,
 			`INSERT INTO projection_occ (
 				handler,
@@ -84,19 +87,18 @@ func (d sqliteDriver) UpdateVersion(
 				?,
 				?,
 				?
-			)`,
+			) ON CONFLICT DO NOTHING`,
 			h,
 			r,
 			n,
 		)
-
-		// If this results in a duplicate key error, that means the current
-		// version was not correct.
-		if d.isDup(err) {
-			return false, nil
+		if err != nil {
+			return false, err
 		}
 
-		return true, err
+		// The affected rows will be exactly 1 if the row was inserted.
+		n, err := res.RowsAffected()
+		return n == 1, err
 	}
 
 	var (

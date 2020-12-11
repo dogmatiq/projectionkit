@@ -7,7 +7,6 @@ require (
 	github.com/dogmatiq/dogma v0.10.0
 	github.com/dogmatiq/sqltest v0.0.0-20201211020229-72df1564f865
 	github.com/gofrs/uuid v3.3.0+incompatible // indirect
-	github.com/mattn/go-sqlite3 v1.14.5
 	github.com/onsi/ginkgo v1.14.2
 	github.com/onsi/gomega v1.10.4
 	github.com/pkg/errors v0.9.1 // indirect
