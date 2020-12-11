@@ -18,6 +18,7 @@ import (
 
 var _ = Describe("type adaptor", func() {
 	var (
+		ctx     context.Context
 		handler *fixtures.MessageHandler
 		db      *bbolt.DB
 		tmpfile string
@@ -25,6 +26,8 @@ var _ = Describe("type adaptor", func() {
 	)
 
 	BeforeEach(func() {
+		ctx = context.Background()
+
 		f, err := ioutil.TempFile("", "*.boltdb")
 		Expect(err).ShouldNot(HaveOccurred())
 		f.Close()
@@ -52,11 +55,7 @@ var _ = Describe("type adaptor", func() {
 		}
 	})
 
-	adaptortest.Declare(
-		func(ctx context.Context) dogma.ProjectionMessageHandler {
-			return adaptor
-		},
-	)
+	adaptortest.DescribeAdaptor(&ctx, &adaptor)
 
 	Describe("func New()", func() {
 		It("returns an unbound handler if the database is nil", func() {

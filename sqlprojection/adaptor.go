@@ -46,7 +46,12 @@ func New(
 		MessageHandler: h,
 		db:             db,
 		key:            identity.Key(h),
-		candidates:     BuiltInDrivers(),
+	}
+
+	if len(options) == 0 {
+		options = []Option{
+			WithCandidateDrivers(BuiltInDrivers()...),
+		}
 	}
 
 	for _, opt := range options {

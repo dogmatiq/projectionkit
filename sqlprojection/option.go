@@ -22,12 +22,12 @@ func WithDriver(d Driver) Option {
 	})
 }
 
-// WithCandidateDriver returns an Option that adds d as a candidate for
+// WithCandidateDrivers returns an Option that adds candidate drivers for
 // selection as the driver to use.
-func WithCandidateDriver(d Driver) Option {
+func WithCandidateDrivers(drivers ...Driver) Option {
 	return adaptorOptionFunc(func(a *adaptor) {
 		if a.resolved == 0 {
-			a.candidates = append(a.candidates, d)
+			a.candidates = append(a.candidates, drivers...)
 		}
 	})
 }

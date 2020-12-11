@@ -71,14 +71,12 @@ var _ = Describe("type adaptor", func() {
 					cancel()
 				})
 
-				adaptortest.Declare(
-					func(ctx context.Context) dogma.ProjectionMessageHandler {
-						return adaptor
-					},
-				)
+				adaptortest.DescribeAdaptor(&ctx, &adaptor)
 
 				Describe("func Compact()", func() {
 					It("forwards to the handler", func() {
+						adaptor := New(db, handler)
+
 						handler.CompactFunc = func(
 							_ context.Context,
 							d *sql.DB,
