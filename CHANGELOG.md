@@ -9,7 +9,7 @@ The format is based on [Keep a Changelog], and this project adheres to
 [Keep a Changelog]: https://keepachangelog.com/en/1.0.0/
 [Semantic Versioning]: https://semver.org/spec/v2.0.0.html
 
-## [Unreleased]
+## [0.6.0] - 2020-12-11
 
 ### Added
 
@@ -19,6 +19,11 @@ The format is based on [Keep a Changelog], and this project adheres to
 - Add `sqlprojection.SelectDriver()`
 
 ### Changed
+
+As of this release the various `sqlprojection.Driver` implementations no longer
+depend on specific Go `database/sql` driver implementations. They should each
+work with any underlying driver that supports the database's native query
+placeholder format (`?` for MySQL, `$1` for everything else).
 
 - **[BC]** Rename `boltdb` package to `boltprojection`
 - **[BC]** Rename `sql` package to `sqlprojection`
@@ -112,6 +117,7 @@ The format is based on [Keep a Changelog], and this project adheres to
 [0.4.0]: https://github.com/dogmatiq/projectionkit/releases/tag/v0.4.0
 [0.5.0]: https://github.com/dogmatiq/projectionkit/releases/tag/v0.5.0
 [0.5.1]: https://github.com/dogmatiq/projectionkit/releases/tag/v0.5.1
+[0.6.0]: https://github.com/dogmatiq/projectionkit/releases/tag/v0.6.0
 
 <!-- version template
 ## [0.0.1] - YYYY-MM-DD
