@@ -15,14 +15,14 @@ var PostgresDriver Driver = postgresDriver{}
 
 type postgresDriver struct{}
 
-func (postgresDriver) IsCompatibleWith(ctx context.Context, db *sql.DB) (bool, error) {
-	// Verify that we're connect to PostgreSQL and that $1-style placeholders
-	// are supported.
-	row := db.QueryRowContext(ctx, `SELECT pg_backend_pid() != $1`, 0)
-
-	var ok bool
-	err := row.Scan(&ok)
-	return ok, err
+func (postgresDriver) IsCompatibleWith(ctx context.Context, db *sql.DB) error {
+	// Verify that we're using PostgreSQL and that $1-style placeholders are
+	// supported.
+	return db.QueryRowContext(
+		ctx,
+		`SELECT pg_backend_pid() WHERE 1 = $1`,
+		1,
+	).Err()
 }
 
 func (postgresDriver) CreateSchema(ctx context.Context, db *sql.DB) error {

@@ -10,9 +10,9 @@ import (
 
 // Driver is an interface for database-specific projection drivers.
 type Driver interface {
-	// IsCompatibleWith returns true if this driver can be used to store
+	// IsCompatibleWith returns nil if this driver can be used to store
 	// projections on db.
-	IsCompatibleWith(ctx context.Context, db *sql.DB) (bool, error)
+	IsCompatibleWith(ctx context.Context, db *sql.DB) error
 
 	// CreateSchema creates the schema elements required by the driver.
 	CreateSchema(ctx context.Context, db *sql.DB) error
@@ -82,17 +82,17 @@ func selectDriver(ctx context.Context, db *sql.DB, candidates []Driver) (Driver,
 	var err error
 
 	for _, d := range candidates {
-		ok, e := d.IsCompatibleWith(ctx, db)
-		if e != nil {
-			err = multierr.Append(err, fmt.Errorf(
-				"%T is not compatible with %T: %w",
-				d,
-				db.Driver(),
-				e,
-			))
-		} else if ok {
+		e := d.IsCompatibleWith(ctx, db)
+		if e == nil {
 			return d, nil
 		}
+
+		err = multierr.Append(err, fmt.Errorf(
+			"%T is not compatible with %T: %w",
+			d,
+			db.Driver(),
+			e,
+		))
 	}
 
 	return nil, multierr.Append(err, fmt.Errorf(
