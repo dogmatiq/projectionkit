@@ -20,6 +20,11 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 ### Changed
 
+As of this release the various `sqlprojection.Driver` implementations no longer
+depend on specific Go `database/sql` driver implementations. They should each
+work with any underlying driver that supports the database's native query
+placeholder format (`?` for MySQL, `$1` for everything else).
+
 - **[BC]** Rename `boltdb` package to `boltprojection`
 - **[BC]** Rename `sql` package to `sqlprojection`
 - **[BC]** `sqlprojection.New()` no longer returns an error
