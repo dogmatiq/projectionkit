@@ -7,7 +7,6 @@ import (
 
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgerrcode"
-	"github.com/jackc/pgx/v4/stdlib"
 	"github.com/lib/pq"
 )
 
@@ -17,14 +16,13 @@ var PostgresDriver Driver = postgresDriver{}
 type postgresDriver struct{}
 
 func (postgresDriver) IsCompatibleWith(ctx context.Context, db *sql.DB) (bool, error) {
-	switch db.Driver().(type) {
-	case *pq.Driver:
-		return true, nil
-	case *stdlib.Driver:
-		return true, nil
-	default:
-		return false, nil
-	}
+	// Verify that we're connect to PostgreSQL and that $1-style placeholders
+	// are supported.
+	row := db.QueryRowContext(ctx, `SELECT pg_backend_pid() != $1`, 0)
+
+	var ok bool
+	err := row.Scan(&ok)
+	return ok, err
 }
 
 func (postgresDriver) CreateSchema(ctx context.Context, db *sql.DB) error {
