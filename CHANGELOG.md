@@ -11,6 +11,11 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 ## [0.6.0] - 2020-12-11
 
+As of this release the various SQL projection drivers no longer depend on
+specific Go `database/sql` driver implementations. They should each work with
+any underlying `database/sql` driver that supports the database's native query
+placeholder format (`?` for MySQL, `$1` for everything else).
+
 ### Added
 
 - **[BC]** Add `CreateSchema()` and `DropSchema()` methods to `sqlprojection.Driver`
@@ -19,11 +24,6 @@ The format is based on [Keep a Changelog], and this project adheres to
 - Add `sqlprojection.SelectDriver()`
 
 ### Changed
-
-As of this release the various `sqlprojection.Driver` implementations no longer
-depend on specific Go `database/sql` driver implementations. They should each
-work with any underlying driver that supports the database's native query
-placeholder format (`?` for MySQL, `$1` for everything else).
 
 - **[BC]** Rename `boltdb` package to `boltprojection`
 - **[BC]** Rename `sql` package to `sqlprojection`
