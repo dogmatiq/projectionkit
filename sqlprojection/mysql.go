@@ -13,9 +13,9 @@ var MySQLDriver Driver = mysqlDriver{}
 
 type mysqlDriver struct{}
 
-func (mysqlDriver) IsCompatibleWith(db *sql.DB) bool {
+func (mysqlDriver) IsCompatibleWith(ctx context.Context, db *sql.DB) (bool, error) {
 	_, ok := db.Driver().(*mysql.MySQLDriver)
-	return ok
+	return ok, nil
 }
 
 func (mysqlDriver) CreateSchema(ctx context.Context, db *sql.DB) error {

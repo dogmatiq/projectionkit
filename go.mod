@@ -18,4 +18,5 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
 	go.etcd.io/bbolt v1.3.5
+	go.uber.org/multierr v1.6.0
 )

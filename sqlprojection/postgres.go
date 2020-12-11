@@ -16,14 +16,14 @@ var PostgresDriver Driver = postgresDriver{}
 
 type postgresDriver struct{}
 
-func (postgresDriver) IsCompatibleWith(db *sql.DB) bool {
+func (postgresDriver) IsCompatibleWith(ctx context.Context, db *sql.DB) (bool, error) {
 	switch db.Driver().(type) {
 	case *pq.Driver:
-		return true
+		return true, nil
 	case *stdlib.Driver:
-		return true
+		return true, nil
 	default:
-		return false
+		return false, nil
 	}
 }
 

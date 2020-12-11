@@ -4,13 +4,15 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+
+	"go.uber.org/multierr"
 )
 
 // Driver is an interface for database-specific projection drivers.
 type Driver interface {
 	// IsCompatibleWith returns true if this driver can be used to store
 	// projections on db.
-	IsCompatibleWith(db *sql.DB) bool
+	IsCompatibleWith(ctx context.Context, db *sql.DB) (bool, error)
 
 	// CreateSchema creates the schema elements required by the driver.
 	CreateSchema(ctx context.Context, db *sql.DB) error
@@ -77,14 +79,19 @@ func NewDriver(ctx context.Context, db *sql.DB) (Driver, error) {
 }
 
 func selectDriver(ctx context.Context, db *sql.DB, candidates []Driver) (Driver, error) {
+	var err error
+
 	for _, d := range candidates {
-		if d.IsCompatibleWith(db) {
+		ok, e := d.IsCompatibleWith(ctx, db)
+		if err != nil {
+			err = multierr.Append(err, e)
+		} else if ok {
 			return d, nil
 		}
 	}
 
-	return nil, fmt.Errorf(
+	return nil, multierr.Append(err, fmt.Errorf(
 		"can not deduce the appropriate SQL projection driver for %T",
 		db.Driver(),
-	)
+	))
 }

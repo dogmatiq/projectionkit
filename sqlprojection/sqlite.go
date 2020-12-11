@@ -12,9 +12,9 @@ var SQLiteDriver Driver = sqliteDriver{}
 
 type sqliteDriver struct{}
 
-func (sqliteDriver) IsCompatibleWith(db *sql.DB) bool {
+func (sqliteDriver) IsCompatibleWith(ctx context.Context, db *sql.DB) (bool, error) {
 	_, ok := db.Driver().(*sqlite3.SQLiteDriver)
-	return ok
+	return ok, nil
 }
 
 func (sqliteDriver) CreateSchema(ctx context.Context, db *sql.DB) error {
