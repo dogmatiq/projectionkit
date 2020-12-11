@@ -154,7 +154,7 @@ func (a *adaptor) withTx(
 ) (bool, error) {
 	var ok bool
 
-	return ok, a.withDriver(
+	err := a.withDriver(
 		ctx,
 		func(d Driver) error {
 			tx, err := a.db.BeginTx(ctx, nil)
@@ -175,6 +175,8 @@ func (a *adaptor) withTx(
 			return tx.Rollback()
 		},
 	)
+
+	return ok && err == nil, err
 }
 
 // driver returns the driver that should be used by the adaptor.
