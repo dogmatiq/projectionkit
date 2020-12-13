@@ -30,7 +30,7 @@ func SelectDriver(ctx context.Context, db *sql.DB, candidates []Driver) (Driver,
 	}
 
 	return nil, multierr.Append(err, fmt.Errorf(
-		"none of the candidate drivers are compatible with %T",
+		"could not find a driver that is compatible with %T",
 		db.Driver(),
 	))
 }

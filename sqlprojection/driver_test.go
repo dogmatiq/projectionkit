@@ -11,25 +11,9 @@ import (
 	. "github.com/onsi/ginkgo"
 	"github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
-	"go.uber.org/multierr"
 )
 
 var _ = Describe("type Driver (implementations)", func() {
-	Describe("func SelectDriver()", func() {
-		It("returns an error if the driver is unrecognized", func() {
-			_, err := SelectDriver(context.Background(), unrecognizedDB, BuiltInDrivers())
-
-			expect := "none of the candidate drivers are compatible with sqlprojection_test.fakeDriver"
-			for _, e := range multierr.Errors(err) {
-				if e.Error() == expect {
-					return
-				}
-			}
-
-			Expect(err).To(MatchError(expect))
-		})
-	})
-
 	for _, pair := range sqltest.CompatiblePairs {
 		pair := pair // capture loop variable
 
