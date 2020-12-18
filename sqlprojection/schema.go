@@ -8,6 +8,8 @@ import (
 // CreateSchema creates the schema elements necessary to store projections on
 // the given database.
 //
+// It does not return an error if the schema already exists.
+//
 // If no candidate drivers are provided all built-in drivers are considered as
 // candidates.
 func CreateSchema(ctx context.Context, db *sql.DB, options ...Option) error {
@@ -24,6 +26,8 @@ func CreateSchema(ctx context.Context, db *sql.DB, options ...Option) error {
 
 // DropSchema drops the schema elements necessary to store projections on the
 // given database.
+//
+// It does not return an error if the schema does not exist.
 //
 // If no candidate drivers are provided all built-in drivers are considered as
 // candidates.

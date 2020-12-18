@@ -30,12 +30,12 @@ func (postgresDriver) CreateSchema(ctx context.Context, db *sql.DB) error {
 	}
 	defer tx.Rollback()
 
-	_, err = tx.ExecContext(ctx, `CREATE SCHEMA projection`)
+	_, err = tx.ExecContext(ctx, `CREATE SCHEMA IF NOT EXISTS projection`)
 	if err != nil {
 		return err
 	}
 
-	_, err = tx.ExecContext(ctx, `CREATE TABLE projection.occ (
+	_, err = tx.ExecContext(ctx, `CREATE TABLE IF NOT EXISTS projection.occ (
 			handler  BYTEA NOT NULL,
 			resource BYTEA NOT NULL,
 			version  BYTEA NOT NULL,

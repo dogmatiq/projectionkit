@@ -36,7 +36,7 @@ func (mysqlDriver) IsCompatibleWith(ctx context.Context, db *sql.DB) error {
 func (mysqlDriver) CreateSchema(ctx context.Context, db *sql.DB) error {
 	_, err := db.ExecContext(
 		ctx,
-		`CREATE TABLE projection_occ (
+		`CREATE TABLE IF NOT EXISTS projection_occ (
 			handler  VARBINARY(255) NOT NULL,
 			resource VARBINARY(255) NOT NULL,
 			version  VARBINARY(255) NOT NULL,

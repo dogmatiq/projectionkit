@@ -26,7 +26,7 @@ func (sqliteDriver) IsCompatibleWith(ctx context.Context, db *sql.DB) error {
 func (sqliteDriver) CreateSchema(ctx context.Context, db *sql.DB) error {
 	_, err := db.ExecContext(
 		ctx,
-		`CREATE TABLE projection_occ (
+		`CREATE TABLE IF NOT EXISTS projection_occ (
 			handler  BINARY NOT NULL,
 			resource BINARY NOT NULL,
 			version  BINARY NOT NULL,

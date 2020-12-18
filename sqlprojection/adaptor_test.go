@@ -24,7 +24,7 @@ var _ = Describe("type adaptor", func() {
 		handler = &fixtures.MessageHandler{}
 	})
 
-	for _, pair := range sqltest.CompatiblePairs {
+	for _, pair := range sqltest.CompatiblePairs() {
 		pair := pair // capture loop variable
 
 		When(
