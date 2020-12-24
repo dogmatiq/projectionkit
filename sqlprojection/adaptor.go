@@ -9,7 +9,7 @@ import (
 	"github.com/dogmatiq/projectionkit/internal/unboundhandler"
 )
 
-// adaptor adapts an sql.ProjectionMessageHandler to the
+// adaptor adapts an sqlprojection.ProjectionMessageHandler to the
 // dogma.ProjectionMessageHandler interface.
 type adaptor struct {
 	MessageHandler
