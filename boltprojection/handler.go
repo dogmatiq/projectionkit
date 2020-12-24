@@ -79,11 +79,11 @@ type MessageHandler interface {
 	Compact(ctx context.Context, db *bbolt.DB, s dogma.ProjectionCompactScope) error
 }
 
-// NoCompactBehavior can be embedded in MessageHandler implementations
-// to indicate that the projection does not require its data to be compacted.
+// NoCompactBehavior can be embedded in MessageHandler implementations to
+// indicate that the projection does not require its data to be compacted.
 //
-// It provides an implementation of MessageHandler.Compact() that
-// always returns a nil error.
+// It provides an implementation of MessageHandler.Compact() that always returns
+// a nil error.
 type NoCompactBehavior struct{}
 
 // Compact returns nil.
