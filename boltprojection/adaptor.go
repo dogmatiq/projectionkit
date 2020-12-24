@@ -9,7 +9,7 @@ import (
 	"go.etcd.io/bbolt"
 )
 
-// adaptor adapts a boltdb.ProjectionMessageHandler to the
+// adaptor adapts a boltprojection.ProjectionMessageHandler to the
 // dogma.ProjectionMessageHandler interface.
 type adaptor struct {
 	MessageHandler
