@@ -2,7 +2,6 @@ package unboundhandler_test
 
 import (
 	"context"
-	"time"
 
 	"github.com/dogmatiq/dogma"
 	. "github.com/dogmatiq/dogma/fixtures"
@@ -56,16 +55,9 @@ var _ = Describe("type Handler", func() {
 	})
 
 	Describe("func TimeoutHint()", func() {
-		It("forwards to the upstream handler", func() {
-			upstream.TimeoutHintFunc = func(
-				m dogma.Message,
-			) time.Duration {
-				Expect(m).To(Equal(MessageA1))
-				return 10 * time.Second
-			}
-
+		It("returns 0", func() {
 			d := handler.TimeoutHint(MessageA1)
-			Expect(d).To(Equal(10 * time.Second))
+			Expect(d).To(BeZero())
 		})
 	})
 

@@ -12,7 +12,6 @@ import (
 // interfaces within projectionkit.
 type UpstreamHandler interface {
 	Configure(dogma.ProjectionConfigurer)
-	TimeoutHint(dogma.Message) time.Duration
 }
 
 // errUnbound is returned by any projection operation that requires a database.
@@ -48,6 +47,10 @@ func (h handler) ResourceVersion(context.Context, []byte) ([]byte, error) {
 
 func (h handler) CloseResource(context.Context, []byte) error {
 	return errUnbound
+}
+
+func (h handler) TimeoutHint(dogma.Message) time.Duration {
+	return 0
 }
 
 func (h handler) Compact(context.Context, dogma.ProjectionCompactScope) error {
