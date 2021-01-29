@@ -17,7 +17,7 @@ func (mysqlDriver) IsCompatibleWith(ctx context.Context, db *sql.DB) error {
 	// Verify that ?-style placeholders are supported.
 	err := db.QueryRowContext(
 		ctx,
-		`SELECT 1 WHERE 1 = ?`,
+		`SELECT ?`,
 		1,
 	).Err()
 

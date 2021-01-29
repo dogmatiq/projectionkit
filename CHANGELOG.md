@@ -9,6 +9,12 @@ The format is based on [Keep a Changelog], and this project adheres to
 [Keep a Changelog]: https://keepachangelog.com/en/1.0.0/
 [Semantic Versioning]: https://semver.org/spec/v2.0.0.html
 
+## [0.6.3] - 2021-01-29
+
+### Fixed
+
+- Fix MySQL driver detection on old versions of MariaDB
+
 ## [0.6.2] - 2020-12-18
 
 ### Changed
@@ -132,6 +138,7 @@ placeholder format (`?` for MySQL, `$1` for everything else).
 [0.6.0]: https://github.com/dogmatiq/projectionkit/releases/tag/v0.6.0
 [0.6.1]: https://github.com/dogmatiq/projectionkit/releases/tag/v0.6.1
 [0.6.2]: https://github.com/dogmatiq/projectionkit/releases/tag/v0.6.2
+[0.6.3]: https://github.com/dogmatiq/projectionkit/releases/tag/v0.6.3
 
 <!-- version template
 ## [0.0.1] - YYYY-MM-DD
