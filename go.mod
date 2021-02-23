@@ -4,7 +4,7 @@ go 1.15
 
 require (
 	github.com/dogmatiq/cosyne v0.2.0
-	github.com/dogmatiq/dogma v0.10.0
+	github.com/dogmatiq/dogma v0.11.0
 	github.com/dogmatiq/sqltest v0.3.0
 	github.com/onsi/ginkgo v1.15.0
 	github.com/onsi/gomega v1.10.5
