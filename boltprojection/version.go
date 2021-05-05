@@ -82,7 +82,7 @@ func queryVersion(
 		// breaking the BoltDB connection or the database file in some way.
 		return nil, err
 	}
-	defer tx.Rollback()
+	defer tx.Rollback() // nolint:errcheck
 
 	if b := handlerBucket(tx, hk); b != nil {
 		return b.Get(r), nil
@@ -104,7 +104,7 @@ func deleteResource(
 		// breaking the BoltDB connection or the database file in some way.
 		return err
 	}
-	defer tx.Rollback()
+	defer tx.Rollback() // nolint:errcheck
 
 	if b := handlerBucket(tx, hk); b != nil {
 		if err := b.Delete(r); err != nil {

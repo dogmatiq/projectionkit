@@ -28,7 +28,7 @@ func (postgresDriver) CreateSchema(ctx context.Context, db *sql.DB) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer tx.Rollback() // nolint:errcheck
 
 	_, err = tx.ExecContext(ctx, `CREATE SCHEMA IF NOT EXISTS projection`)
 	if err != nil {

@@ -147,7 +147,7 @@ func (a *adaptor) withTx(
 			if err != nil {
 				return err
 			}
-			defer tx.Rollback()
+			defer tx.Rollback() // nolint:errcheck
 
 			ok, err = fn(d, tx)
 			if err != nil {

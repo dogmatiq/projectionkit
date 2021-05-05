@@ -51,7 +51,7 @@ func (a *adaptor) HandleEvent(
 		// breaking the BoltDB connection or the database file in some way.
 		return false, err
 	}
-	defer tx.Rollback()
+	defer tx.Rollback() // nolint:errcheck
 
 	ok, err := updateVersion(ctx, tx, a.key, r, c, n)
 	if !ok || err != nil {
@@ -82,7 +82,7 @@ func (a *adaptor) StoreResourceVersion(ctx context.Context, r, v []byte) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer tx.Rollback() // nolint:errcheck
 
 	if err := storeVersion(ctx, tx, a.key, r, v); err != nil {
 		return err
@@ -103,7 +103,7 @@ func (a *adaptor) UpdateResourceVersion(
 	if err != nil {
 		return false, err
 	}
-	defer tx.Rollback()
+	defer tx.Rollback() // nolint:errcheck
 
 	ok, err = updateVersion(ctx, tx, a.key, r, c, n)
 	if !ok || err != nil {

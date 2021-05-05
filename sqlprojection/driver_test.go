@@ -99,7 +99,7 @@ var _ = Describe("type Driver (implementations)", func() {
 						func(current []byte) {
 							tx, err := db.BeginTx(ctx, nil)
 							Expect(err).ShouldNot(HaveOccurred())
-							defer tx.Rollback()
+							defer tx.Rollback() // nolint:errcheck
 
 							ok, err := driver.UpdateVersion(
 								ctx,
