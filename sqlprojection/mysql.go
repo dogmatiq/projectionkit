@@ -42,7 +42,7 @@ func (mysqlDriver) CreateSchema(ctx context.Context, db *sql.DB) error {
 			version  VARBINARY(255) NOT NULL,
 
 			PRIMARY KEY (handler, resource)
-		) ENGINE=InnoDB ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=4;`,
+		) ENGINE=InnoDB;`,
 	)
 	return err
 }
