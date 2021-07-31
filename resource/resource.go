@@ -26,7 +26,9 @@ func StoreVersion(
 ) error {
 	// If the handler directly supports storing versions, use that.
 	if s, ok := h.(storer); ok {
-		return s.StoreResourceVersion(ctx, r, v)
+		if err := s.StoreResourceVersion(ctx, r, v); err != ErrNotSupported {
+			return err
+		}
 	}
 
 	// If doesn't support the updater interface there's nothing more we can do.
