@@ -12,7 +12,7 @@ import (
 )
 
 var _ = Describe("func StoreVersion()", func() {
-	Context("when the handler implements the storer interface", func() {
+	When("the handler implements the storer interface", func() {
 		It("uses the storer interface", func() {
 			d := &mockStorer{
 				StoreResourceVersionFunc: func(
@@ -20,8 +20,8 @@ var _ = Describe("func StoreVersion()", func() {
 					r, v []byte,
 				) error {
 					Expect(r).To(Equal([]byte("<resource>")))
-					Expect(v).To(Equal([]byte("<version>")))
-					return errors.New("<error>")
+					Expect(v).To(Equal([]byte("<next>")))
+					return nil
 				},
 			}
 
@@ -29,14 +29,83 @@ var _ = Describe("func StoreVersion()", func() {
 				context.Background(),
 				d,
 				[]byte("<resource>"),
-				[]byte("<version>"),
+				[]byte("<next>"),
 			)
 
-			Expect(err).To(MatchError("<error>"))
+			Expect(err).ShouldNot(HaveOccurred())
+		})
+
+		When("StoreResourceVersion() returns ErrNotSupported", func() {
+			It("uses the updater interface", func() {
+				type mockStorerAndUpdater struct {
+					dogma.ProjectionMessageHandler
+
+					mockStorer
+					mockUpdater
+				}
+
+				d := &mockStorerAndUpdater{
+					ProjectionMessageHandler: &ProjectionMessageHandler{
+						ResourceVersionFunc: func(ctx context.Context, r []byte) ([]byte, error) {
+							return []byte("<current>"), nil
+						},
+					},
+					mockStorer: mockStorer{
+						StoreResourceVersionFunc: func(
+							_ context.Context,
+							r, v []byte,
+						) error {
+							return ErrNotSupported
+						},
+					},
+					mockUpdater: mockUpdater{
+						UpdateResourceVersionFunc: func(
+							_ context.Context,
+							r, c, n []byte,
+						) (bool, error) {
+							Expect(r).To(Equal([]byte("<resource>")))
+							Expect(c).To(Equal([]byte("<current>")))
+							Expect(n).To(Equal([]byte("<next>")))
+							return true, nil
+						},
+					},
+				}
+
+				err := StoreVersion(
+					context.Background(),
+					d,
+					[]byte("<resource>"),
+					[]byte("<next>"),
+				)
+
+				Expect(err).ShouldNot(HaveOccurred())
+			})
+		})
+
+		When("storing the resource returns any other error", func() {
+			It("returns the causal error", func() {
+				d := &mockStorer{
+					StoreResourceVersionFunc: func(
+						_ context.Context,
+						r, v []byte,
+					) error {
+						return errors.New("<error>")
+					},
+				}
+
+				err := StoreVersion(
+					context.Background(),
+					d,
+					[]byte("<resource>"),
+					[]byte("<next>"),
+				)
+
+				Expect(err).To(MatchError("<error>"))
+			})
 		})
 	})
 
-	Context("when the handler implements the updater interface", func() {
+	When("the handler implements the updater interface", func() {
 		It("propagates errors when reading the current version", func() {
 			d := &mockUpdater{
 				ProjectionMessageHandler: &ProjectionMessageHandler{
@@ -139,7 +208,7 @@ var _ = Describe("func StoreVersion()", func() {
 })
 
 var _ = Describe("func UpdateVersion()", func() {
-	Context("when the handler implements the updater interface", func() {
+	When("the handler implements the updater interface", func() {
 		It("uses the updater interface", func() {
 			d := &mockUpdater{
 				UpdateResourceVersionFunc: func(
@@ -180,7 +249,7 @@ var _ = Describe("func UpdateVersion()", func() {
 })
 
 var _ = Describe("func DeleteResource()", func() {
-	Context("when the handler implements the deleter interface", func() {
+	When("the handler implements the deleter interface", func() {
 		It("uses the deleter interface", func() {
 			d := &mockDeleter{
 				DeleteResourceFunc: func(
