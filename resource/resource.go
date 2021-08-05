@@ -24,32 +24,13 @@ func StoreVersion(
 	h dogma.ProjectionMessageHandler,
 	r, v []byte,
 ) error {
-	// If the handler directly supports storing versions, use that.
-	if s, ok := h.(storer); ok {
-		if err := s.StoreResourceVersion(ctx, r, v); err != ErrNotSupported {
-			return err
-		}
+	if h, ok := h.(RepositoryAware); ok {
+		return h.
+			ResourceRepository().
+			StoreResourceVersion(ctx, r, v)
 	}
 
-	// If doesn't support the updater interface there's nothing more we can do.
-	u, ok := h.(updater)
-	if !ok {
-		return ErrNotSupported
-	}
-
-	// Otherwise, load the resource version and perform a regular update,
-	// retrying until we "win" (i.e, there is no OCC failure).
-	for {
-		c, err := h.ResourceVersion(ctx, r)
-		if err != nil {
-			return err
-		}
-
-		ok, err := u.UpdateResourceVersion(ctx, r, c, v)
-		if ok || err != nil {
-			return err
-		}
-	}
+	return ErrNotSupported
 }
 
 // UpdateVersion updates the version of the resource r to n if the current
@@ -64,12 +45,13 @@ func UpdateVersion(
 	h dogma.ProjectionMessageHandler,
 	r, c, n []byte,
 ) (ok bool, err error) {
-	u, ok := h.(updater)
-	if !ok {
-		return false, ErrNotSupported
+	if h, ok := h.(RepositoryAware); ok {
+		return h.
+			ResourceRepository().
+			UpdateResourceVersion(ctx, r, c, n)
 	}
 
-	return u.UpdateResourceVersion(ctx, r, c, n)
+	return false, ErrNotSupported
 }
 
 // DeleteResource removes all information about the resource r from the
@@ -90,10 +72,11 @@ func DeleteResource(
 	h dogma.ProjectionMessageHandler,
 	r []byte,
 ) (bool error) {
-	d, ok := h.(deleter)
-	if !ok {
-		return ErrNotSupported
+	if h, ok := h.(RepositoryAware); ok {
+		return h.
+			ResourceRepository().
+			DeleteResource(ctx, r)
 	}
 
-	return d.DeleteResource(ctx, r)
+	return ErrNotSupported
 }

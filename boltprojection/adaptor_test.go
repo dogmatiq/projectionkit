@@ -5,12 +5,14 @@ import (
 	"errors"
 	"io/ioutil"
 	"os"
+	"time"
 
 	"github.com/dogmatiq/dogma"
 	. "github.com/dogmatiq/dogma/fixtures"
 	. "github.com/dogmatiq/projectionkit/boltprojection"
 	"github.com/dogmatiq/projectionkit/boltprojection/fixtures" // can't dot-import due to conflict
 	"github.com/dogmatiq/projectionkit/internal/adaptortest"
+	"github.com/dogmatiq/projectionkit/internal/identity"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"go.etcd.io/bbolt"
@@ -57,6 +59,24 @@ var _ = Describe("type adaptor", func() {
 
 	adaptortest.DescribeAdaptor(&ctx, &adaptor)
 
+	Describe("func New()", func() {
+		It("returns an unbound handler if the database is nil", func() {
+			adaptor = New(nil, handler)
+
+			err := adaptor.Compact(
+				context.Background(),
+				nil, // scope
+			)
+			Expect(err).To(MatchError("projection handler has not been bound to a database"))
+		})
+	})
+
+	Describe("func Configure()", func() {
+		It("forwards to the handler", func() {
+			Expect(identity.Key(adaptor)).To(Equal("<key>"))
+		})
+	})
+
 	Describe("func HandleEvent()", func() {
 		It("returns an error if the application's message handler fails", func() {
 			terr := errors.New("handle event test error")
@@ -70,7 +90,7 @@ var _ = Describe("type adaptor", func() {
 				return terr
 			}
 
-			ok, err := adaptor.HandleEvent(
+			_, err := adaptor.HandleEvent(
 				context.Background(),
 				[]byte("<resource>"),
 				nil,
@@ -78,20 +98,23 @@ var _ = Describe("type adaptor", func() {
 				nil,
 				MessageA1,
 			)
-			Expect(ok).Should(BeFalse())
 			Expect(err).Should(HaveOccurred())
 		})
 	})
 
-	Describe("func New()", func() {
-		It("returns an unbound handler if the database is nil", func() {
-			adaptor = New(nil, handler)
+	Describe("func TimeoutHint()", func() {
+		It("forwards to the handler", func() {
+			handler.TimeoutHintFunc = func(
+				m dogma.Message,
+			) time.Duration {
+				Expect(m).To(BeIdenticalTo(MessageA1))
+				return 100 * time.Millisecond
+			}
 
-			err := adaptor.Compact(
-				context.Background(),
-				nil, // scope
+			d := adaptor.TimeoutHint(
+				MessageA1,
 			)
-			Expect(err).To(MatchError("projection handler has not been bound to a database"))
+			Expect(d).To(Equal(100 * time.Millisecond))
 		})
 	})
 
