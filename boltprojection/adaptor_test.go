@@ -12,6 +12,7 @@ import (
 	. "github.com/dogmatiq/projectionkit/boltprojection"
 	"github.com/dogmatiq/projectionkit/boltprojection/fixtures" // can't dot-import due to conflict
 	"github.com/dogmatiq/projectionkit/internal/adaptortest"
+	"github.com/dogmatiq/projectionkit/internal/identity"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"go.etcd.io/bbolt"
@@ -67,6 +68,12 @@ var _ = Describe("type adaptor", func() {
 				nil, // scope
 			)
 			Expect(err).To(MatchError("projection handler has not been bound to a database"))
+		})
+	})
+
+	Describe("func Configure()", func() {
+		It("forwards to the handler", func() {
+			Expect(identity.Key(adaptor)).To(Equal("<key>"))
 		})
 	})
 

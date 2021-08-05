@@ -10,6 +10,7 @@ import (
 	"github.com/dogmatiq/dogma"
 	. "github.com/dogmatiq/dogma/fixtures"
 	"github.com/dogmatiq/projectionkit/internal/adaptortest"
+	"github.com/dogmatiq/projectionkit/internal/identity"
 	. "github.com/dogmatiq/projectionkit/sqlprojection"
 	"github.com/dogmatiq/projectionkit/sqlprojection/fixtures" // can't dot-import due to conflict
 	"github.com/dogmatiq/sqltest"
@@ -22,6 +23,9 @@ var _ = Describe("type adaptor", func() {
 
 	BeforeEach(func() {
 		handler = &fixtures.MessageHandler{}
+		handler.ConfigureFunc = func(c dogma.ProjectionConfigurer) {
+			c.Identity("<projection>", "<key>")
+		}
 	})
 
 	for _, pair := range sqltest.CompatiblePairs() {
@@ -70,6 +74,12 @@ var _ = Describe("type adaptor", func() {
 
 				adaptortest.DescribeAdaptor(&ctx, &adaptor)
 
+				Describe("func Configure()", func() {
+					It("forwards to the handler", func() {
+						Expect(identity.Key(adaptor)).To(Equal("<key>"))
+					})
+				})
+
 				Describe("func HandleEvent()", func() {
 					It("returns an error if the application's message handler fails", func() {
 						terr := errors.New("handle event test error")
@@ -97,8 +107,6 @@ var _ = Describe("type adaptor", func() {
 
 				Describe("func Compact()", func() {
 					It("forwards to the handler", func() {
-						adaptor := New(db, handler)
-
 						handler.CompactFunc = func(
 							_ context.Context,
 							d *sql.DB,
