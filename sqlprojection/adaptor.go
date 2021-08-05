@@ -3,20 +3,20 @@ package sqlprojection
 import (
 	"context"
 	"database/sql"
+	"time"
 
 	"github.com/dogmatiq/dogma"
 	"github.com/dogmatiq/projectionkit/internal/identity"
 	"github.com/dogmatiq/projectionkit/internal/unboundhandler"
+	"github.com/dogmatiq/projectionkit/resource"
 )
 
 // adaptor adapts an sqlprojection.ProjectionMessageHandler to the
 // dogma.ProjectionMessageHandler interface.
 type adaptor struct {
-	MessageHandler
-
-	db  *sql.DB
-	key string
-	cs  candidateSet
+	db      *sql.DB
+	handler MessageHandler
+	repo    *ResourceRepository
 }
 
 // New returns a new Dogma projection message handler by binding an SQL-specific
@@ -36,15 +36,20 @@ func New(
 		return unboundhandler.New(h)
 	}
 
-	a := &adaptor{
-		MessageHandler: h,
-		db:             db,
-		key:            identity.Key(h),
+	return &adaptor{
+		db:      db,
+		handler: h,
+		repo: NewResourceRepository(
+			db,
+			identity.Key(h),
+		),
 	}
+}
 
-	a.cs.init(db, options)
-
-	return a
+// Configure produces a configuration for this handler by calling methods on
+// the configurer c.
+func (a *adaptor) Configure(c dogma.ProjectionConfigurer) {
+	a.handler.Configure(c)
 }
 
 // HandleEvent updates the projection to reflect the occurrence of an event.
@@ -54,113 +59,39 @@ func (a *adaptor) HandleEvent(
 	s dogma.ProjectionEventScope,
 	m dogma.Message,
 ) (bool, error) {
-	return a.withTx(ctx, func(d Driver, tx *sql.Tx) (bool, error) {
-		ok, err := d.UpdateVersion(ctx, tx, a.key, r, c, n)
-		if !ok || err != nil {
-			return ok, err
-		}
-
-		return true, a.MessageHandler.HandleEvent(ctx, tx, s, m)
-	})
+	return a.repo.UpdateResourceVersionFn(
+		ctx,
+		r, c, n,
+		func(ctx context.Context, tx *sql.Tx) error {
+			return a.handler.HandleEvent(ctx, tx, s, m)
+		},
+	)
 }
 
 // ResourceVersion returns the version of the resource r.
 func (a *adaptor) ResourceVersion(ctx context.Context, r []byte) ([]byte, error) {
-	var v []byte
-
-	return v, a.withDriver(ctx, func(d Driver) error {
-		var err error
-		v, err = d.QueryVersion(ctx, a.db, a.key, r)
-		return err
-	})
+	return a.repo.ResourceVersion(ctx, r)
 }
 
 // CloseResource informs the projection that the resource r will not be
 // used in any future calls to HandleEvent().
 func (a *adaptor) CloseResource(ctx context.Context, r []byte) error {
-	return a.withDriver(ctx, func(d Driver) error {
-		return d.DeleteResource(ctx, a.db, a.key, r)
-	})
+	return a.repo.DeleteResource(ctx, r)
 }
 
-// StoreResourceVersion sets the version of the resource r to v
-func (a *adaptor) StoreResourceVersion(ctx context.Context, r, v []byte) error {
-	return a.withDriver(ctx, func(d Driver) error {
-		if len(v) == 0 {
-			return d.DeleteResource(ctx, a.db, a.key, r)
-		}
-
-		return d.StoreVersion(ctx, a.db, a.key, r, v)
-	})
-}
-
-// UpdateResourceVersion updates the version of the resource r to n without
-// handling any event.
-//
-// If c is not the current version of r, it returns false and no update occurs.
-func (a *adaptor) UpdateResourceVersion(
-	ctx context.Context,
-	r, c, n []byte,
-) (bool, error) {
-	return a.withTx(ctx, func(d Driver, tx *sql.Tx) (bool, error) {
-		return d.UpdateVersion(ctx, tx, a.key, r, c, n)
-	})
-}
-
-// DeleteResource removes all information about the resource r from the
-// handler's data store.
-func (a *adaptor) DeleteResource(ctx context.Context, r []byte) error {
-	return a.withDriver(ctx, func(d Driver) error {
-		return d.DeleteResource(ctx, a.db, a.key, r)
-	})
+// TimeoutHint returns a duration that is suitable for computing a deadline
+// for the handling of the given message by this handler.
+func (a *adaptor) TimeoutHint(m dogma.Message) time.Duration {
+	return a.handler.TimeoutHint(m)
 }
 
 // Compact reduces the size of the projection's data.
 func (a *adaptor) Compact(ctx context.Context, s dogma.ProjectionCompactScope) error {
-	return a.MessageHandler.Compact(ctx, a.db, s)
+	return a.handler.Compact(ctx, a.db, s)
 }
 
-// withDriver calls fn with the driver that the adaptor should use.
-func (a *adaptor) withDriver(
-	ctx context.Context,
-	fn func(Driver) error,
-) error {
-	d, err := a.cs.resolve(ctx)
-	if err != nil {
-		return err
-	}
-
-	return fn(d)
-}
-
-// withTx calls fn with the driver that the adaptor should use.
-func (a *adaptor) withTx(
-	ctx context.Context,
-	fn func(Driver, *sql.Tx) (bool, error),
-) (bool, error) {
-	var ok bool
-
-	err := a.withDriver(
-		ctx,
-		func(d Driver) error {
-			tx, err := a.db.BeginTx(ctx, nil)
-			if err != nil {
-				return err
-			}
-			defer tx.Rollback() // nolint:errcheck
-
-			ok, err = fn(d, tx)
-			if err != nil {
-				return err
-			}
-
-			if ok {
-				return tx.Commit()
-			}
-
-			return tx.Rollback()
-		},
-	)
-
-	return ok && err == nil, err
+// ResourceRepository returns a repository that can be used to manipulate the
+// handler's resource versions.
+func (a *adaptor) ResourceRepository() resource.Repository {
+	return a.repo
 }

@@ -83,7 +83,7 @@ var _ = Describe("type adaptor", func() {
 							return terr
 						}
 
-						ok, err := adaptor.HandleEvent(
+						_, err := adaptor.HandleEvent(
 							context.Background(),
 							[]byte("<resource>"),
 							nil,
@@ -91,7 +91,6 @@ var _ = Describe("type adaptor", func() {
 							nil,
 							MessageA1,
 						)
-						Expect(ok).Should(BeFalse())
 						Expect(err).Should(HaveOccurred())
 					})
 				})
