@@ -39,8 +39,8 @@ func DescribeAdaptor(
 				nil,
 				fixtures.MessageA1,
 			)
-			gomega.Expect(ok).Should(gomega.BeTrue())
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+			gomega.Expect(ok).Should(gomega.BeTrue())
 
 			v, err := adaptor.ResourceVersion(
 				context.Background(),
@@ -59,8 +59,8 @@ func DescribeAdaptor(
 				nil,
 				fixtures.MessageA2,
 			)
-			gomega.Expect(ok).Should(gomega.BeTrue())
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+			gomega.Expect(ok).Should(gomega.BeTrue())
 
 			v, err = adaptor.ResourceVersion(
 				context.Background(),
@@ -99,8 +99,8 @@ func DescribeAdaptor(
 				nil,
 				fixtures.MessageA1,
 			)
-			gomega.Expect(ok).Should(gomega.BeTrue())
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+			gomega.Expect(ok).Should(gomega.BeTrue())
 
 			ok, err = adaptor.HandleEvent(
 				context.Background(),
@@ -110,8 +110,8 @@ func DescribeAdaptor(
 				nil,
 				fixtures.MessageA2,
 			)
-			gomega.Expect(ok).Should(gomega.BeFalse())
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+			gomega.Expect(ok).Should(gomega.BeFalse())
 		})
 	})
 
@@ -156,8 +156,8 @@ func DescribeAdaptor(
 				nil,
 				fixtures.MessageA2,
 			)
-			gomega.Expect(ok).Should(gomega.BeTrue())
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+			gomega.Expect(ok).Should(gomega.BeTrue())
 
 			err = adaptor.CloseResource(
 				context.Background(),
