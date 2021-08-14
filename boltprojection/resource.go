@@ -134,9 +134,9 @@ func (rr *ResourceRepository) DeleteResource(ctx context.Context, r []byte) erro
 }
 
 var (
-	// topBucket is the bucket at the root level that contains all data related
+	// rootBucket is the bucket at the root level that contains all data related
 	// to projection OCC.
-	topBucket = []byte("projection_occ")
+	rootBucket = []byte("projection_occ")
 )
 
 // makeHandlerBucket creates a bucket for the given handler key if it has not
@@ -144,7 +144,7 @@ var (
 //
 // This function returns an error it tx is not writable.
 func makeHandlerBucket(tx *bbolt.Tx, hk string) (*bbolt.Bucket, error) {
-	tb, err := tx.CreateBucketIfNotExists(topBucket)
+	tb, err := tx.CreateBucketIfNotExists(rootBucket)
 	if err != nil {
 		// CODE COVERAGE: This branch can not be easily covered without somehow
 		// breaking the BoltDB connection or the database file in some way.
@@ -157,7 +157,7 @@ func makeHandlerBucket(tx *bbolt.Tx, hk string) (*bbolt.Bucket, error) {
 // handlerBucket retrieves a bucket for the given handler key. If a bucket with
 // the given handler key does not exist, this function returns nil.
 func handlerBucket(tx *bbolt.Tx, hk string) *bbolt.Bucket {
-	tb := tx.Bucket(topBucket)
+	tb := tx.Bucket(rootBucket)
 	if tb == nil {
 		return nil
 	}
