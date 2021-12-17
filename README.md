@@ -7,3 +7,6 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/dogmatiq/projectionkit)](https://goreportcard.com/report/github.com/dogmatiq/projectionkit)
 
 Utilities for building [Dogma](https://github.com/dogmatiq/dogma) projections.
+
+This project's tests depend on the Docker stack provided by
+[`dogmatiq/sqltest`](https://github.com/dogmatiq/sqltest#readme).
