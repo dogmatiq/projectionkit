@@ -3,6 +3,7 @@ module github.com/dogmatiq/projectionkit
 go 1.17
 
 require (
+	github.com/aws/aws-sdk-go v1.44.182
 	github.com/dogmatiq/cosyne v0.2.0
 	github.com/dogmatiq/dogma v0.11.1
 	github.com/dogmatiq/sqltest v0.3.0
@@ -24,6 +25,7 @@ require (
 	github.com/jackc/pgservicefile v0.0.0-20200714003250-2b9c44734f2b // indirect
 	github.com/jackc/pgtype v1.6.2 // indirect
 	github.com/jackc/pgx/v4 v4.10.0 // indirect
+	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/lib/pq v1.9.0 // indirect
 	github.com/mattn/go-sqlite3 v1.14.5 // indirect
 	github.com/nxadm/tail v1.4.8 // indirect
@@ -33,5 +35,6 @@ require (
 	golang.org/x/text v0.8.0 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
