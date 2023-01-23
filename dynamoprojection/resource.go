@@ -162,15 +162,22 @@ func (rr *ResourceRepository) deleteResourceWithinTx(
 	r, c, n []byte,
 	items ...*dynamodb.TransactWriteItem,
 ) (bool, error) {
-	// TO-DO: add a version check prior to deletion.
-	// Also add a test for that.
 	_, err := rr.db.TransactWriteItems(
 		&dynamodb.TransactWriteItemsInput{
 			TransactItems: append(
 				items,
 				&dynamodb.TransactWriteItem{
 					Delete: &dynamodb.Delete{
-						TableName: aws.String(rr.occTable),
+						TableName:           aws.String(rr.occTable),
+						ConditionExpression: aws.String(`#C = :C`),
+						ExpressionAttributeNames: map[string]*string{
+							"#C": aws.String(resourceVersionAttr),
+						},
+						ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+							":C": {
+								B: c,
+							},
+						},
 						Key: map[string]*dynamodb.AttributeValue{
 							handlerAndResourceAttr: {
 								B: handlerAndResource(rr.key, r),
@@ -181,6 +188,10 @@ func (rr *ResourceRepository) deleteResourceWithinTx(
 			),
 		},
 	)
+
+	if isErrorCode(err, dynamodb.ErrCodeTransactionCanceledException) {
+		return false, nil
+	}
 
 	return err == nil, err
 }
