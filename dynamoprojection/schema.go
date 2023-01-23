@@ -21,6 +21,13 @@ const (
 // CreateSchema creates an AWS DynamoDB table to store projections on the given
 // database.
 //
+// occTable is the name of the table that stores the data related to the
+// projection OCC. For AWS DynamoDB naming rules, see [this link](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/HowItWorks.NamingRulesDataTypes.html)
+// for reference.
+//
+// Use decorators to modify the input of a CreateTable operation and provide
+// request.Option to alter request behavior.
+//
 // It does not return an error if the table already exists.
 func CreateSchema(
 	ctx context.Context,
@@ -62,6 +69,12 @@ func CreateSchema(
 
 // DropSchema deletes an AWS DynamoDB table that stores data related to
 // projection OCC in the given database.
+//
+// occTable is the name of the table that stores the data related to the
+// projection OCC.
+//
+// Use decorators to modify the input of a DeleteTable operation and provide
+// request.Option to alter request behavior.
 //
 // It does not return an error if the table does not exist.
 func DropSchema(

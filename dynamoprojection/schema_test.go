@@ -48,28 +48,28 @@ var _ = Context("creating and dropping schema", func() {
 
 	Describe("func CreateSchema()", func() {
 		It("can be called when the schema already exists", func() {
-			err := CreateSchema(ctx, db, "Table")
+			err := CreateSchema(ctx, db, "ProjectionOCCTable")
 			Expect(err).ShouldNot(HaveOccurred())
 
-			err = CreateSchema(ctx, db, "Table")
+			err = CreateSchema(ctx, db, "ProjectionOCCTable")
 			Expect(err).ShouldNot(HaveOccurred())
 		})
 	})
 
 	Describe("func DropSchema()", func() {
 		It("can be called when the schema does not exist", func() {
-			err := DropSchema(ctx, db, "Table")
+			err := DropSchema(ctx, db, "ProjectionOCCTable")
 			Expect(err).ShouldNot(HaveOccurred())
 		})
 
 		It("can be called when the schema has already been dropped", func() {
-			err := CreateSchema(ctx, db, "Table")
+			err := CreateSchema(ctx, db, "ProjectionOCCTable")
 			Expect(err).ShouldNot(HaveOccurred())
 
-			err = DropSchema(ctx, db, "Table")
+			err = DropSchema(ctx, db, "ProjectionOCCTable")
 			Expect(err).ShouldNot(HaveOccurred())
 
-			err = DropSchema(ctx, db, "Table")
+			err = DropSchema(ctx, db, "ProjectionOCCTable")
 			Expect(err).ShouldNot(HaveOccurred())
 		})
 	})
