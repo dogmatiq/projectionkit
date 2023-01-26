@@ -23,8 +23,9 @@ type MessageHandler interface {
 
 	// HandleEvent updates the projection to reflect the occurrence of an event.
 	//
-	// It SHOULD return all database changes that MUST be applied within a
-	// single transaction.
+	// It SHOULD return all database changes in the form of the slice to
+	// *dynamodb.TransactWriteItem that MUST be applied within a single
+	// transaction.
 	//
 	// If an error is returned, the projection SHOULD be left in the state it
 	// was before HandleEvent() was called.

@@ -1,4 +1,4 @@
-package dynamoprojection
+package awsx
 
 import (
 	"errors"
@@ -6,8 +6,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 )
 
-// isErrorCode returns true if err is an AWS error with the given code.
-func isErrorCode(err error, code string) bool {
+// IsErrorCode returns true if err is an AWS error with the given code.
+func IsErrorCode(err error, code string) bool {
 	var awsErr awserr.Error
 	return errors.As(err, &awsErr) && awsErr.Code() == code
 }

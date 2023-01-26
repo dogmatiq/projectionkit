@@ -53,14 +53,14 @@ var _ = Describe("type adaptor", func() {
 			c.Identity("<projection>", "<key>")
 		}
 
-		err = CreateSchema(ctx, db, "ProjectionOCCTable")
+		err = CreateTable(ctx, db, "ProjectionOCCTable")
 		Expect(err).ShouldNot(HaveOccurred())
 
 		adaptor = New(db, "ProjectionOCCTable", handler)
 	})
 
 	AfterEach(func() {
-		err := DropSchema(ctx, db, "ProjectionOCCTable")
+		err := DeleteTable(ctx, db, "ProjectionOCCTable")
 		Expect(err).ShouldNot(HaveOccurred())
 	})
 

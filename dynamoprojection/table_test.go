@@ -14,7 +14,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Context("creating and dropping schema", func() {
+var _ = Context("creating and deleting a table", func() {
 	var (
 		ctx    context.Context
 		cancel context.CancelFunc
@@ -46,30 +46,30 @@ var _ = Context("creating and dropping schema", func() {
 		cancel()
 	})
 
-	Describe("func CreateSchema()", func() {
-		It("can be called when the schema already exists", func() {
-			err := CreateSchema(ctx, db, "ProjectionOCCTable")
+	Describe("func CreateTable()", func() {
+		It("can be called when the table already exists", func() {
+			err := CreateTable(ctx, db, "ProjectionOCCTable")
 			Expect(err).ShouldNot(HaveOccurred())
 
-			err = CreateSchema(ctx, db, "ProjectionOCCTable")
+			err = CreateTable(ctx, db, "ProjectionOCCTable")
 			Expect(err).ShouldNot(HaveOccurred())
 		})
 	})
 
-	Describe("func DropSchema()", func() {
-		It("can be called when the schema does not exist", func() {
-			err := DropSchema(ctx, db, "ProjectionOCCTable")
+	Describe("func DeleteTable()", func() {
+		It("can be called when the table does not exist", func() {
+			err := DeleteTable(ctx, db, "ProjectionOCCTable")
 			Expect(err).ShouldNot(HaveOccurred())
 		})
 
-		It("can be called when the schema has already been dropped", func() {
-			err := CreateSchema(ctx, db, "ProjectionOCCTable")
+		It("can be called when the table has already been deleted", func() {
+			err := CreateTable(ctx, db, "ProjectionOCCTable")
 			Expect(err).ShouldNot(HaveOccurred())
 
-			err = DropSchema(ctx, db, "ProjectionOCCTable")
+			err = DeleteTable(ctx, db, "ProjectionOCCTable")
 			Expect(err).ShouldNot(HaveOccurred())
 
-			err = DropSchema(ctx, db, "ProjectionOCCTable")
+			err = DeleteTable(ctx, db, "ProjectionOCCTable")
 			Expect(err).ShouldNot(HaveOccurred())
 		})
 	})

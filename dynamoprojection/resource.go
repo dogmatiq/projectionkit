@@ -5,15 +5,17 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/dogmatiq/projectionkit/dynamoprojection/internal/awsx"
 	"github.com/dogmatiq/projectionkit/resource"
 )
 
 // ResourceRepository is an implementation of resource.Repository that stores
 // resources versions in an AWS DynamoDB database.
 type ResourceRepository struct {
-	db       *dynamodb.DynamoDB
-	key      string
-	occTable string
+	db         *dynamodb.DynamoDB
+	key        string
+	occTable   string
+	decorators *decorators
 }
 
 var _ resource.Repository = (*ResourceRepository)(nil)
@@ -22,14 +24,28 @@ var _ resource.Repository = (*ResourceRepository)(nil)
 func NewResourceRepository(
 	db *dynamodb.DynamoDB,
 	key, occTable string,
+	options ...ResourceRepositoryOption,
 ) *ResourceRepository {
-	return &ResourceRepository{db, key, occTable}
+	r := &ResourceRepository{
+		db:         db,
+		key:        key,
+		occTable:   occTable,
+		decorators: &decorators{},
+	}
+
+	for _, opt := range options {
+		opt.applyResourceRepositoryOption(r.decorators)
+	}
+
+	return r
 }
 
 // ResourceVersion returns the version of the resource r.
 func (rr *ResourceRepository) ResourceVersion(ctx context.Context, r []byte) ([]byte, error) {
-	out, err := rr.db.GetItemWithContext(
+	out, err := awsx.Do(
 		ctx,
+		rr.db.GetItemWithContext,
+		rr.decorators.decorateGetItem,
 		&dynamodb.GetItemInput{
 			TableName: aws.String(rr.occTable),
 			Key: map[string]*dynamodb.AttributeValue{
@@ -55,8 +71,10 @@ func (rr *ResourceRepository) StoreResourceVersion(ctx context.Context, r, v []b
 		v = []byte{}
 	}
 
-	_, err := rr.db.PutItemWithContext(
+	_, err := awsx.Do(
 		ctx,
+		rr.db.PutItemWithContext,
+		rr.decorators.decoratePutItem,
 		&dynamodb.PutItemInput{
 			TableName: aws.String(rr.occTable),
 			Item: map[string]*dynamodb.AttributeValue{
@@ -105,8 +123,10 @@ func (rr *ResourceRepository) UpdateResourceVersionAndTransactionItems(
 
 // DeleteResource removes all information about the resource r.
 func (rr *ResourceRepository) DeleteResource(ctx context.Context, r []byte) error {
-	_, err := rr.db.DeleteItemWithContext(
+	_, err := awsx.Do(
 		ctx,
+		rr.db.DeleteItemWithContext,
+		rr.decorators.decorateDeleteItem,
 		&dynamodb.DeleteItemInput{
 			TableName: aws.String(rr.occTable),
 			Key: map[string]*dynamodb.AttributeValue{
@@ -120,12 +140,17 @@ func (rr *ResourceRepository) DeleteResource(ctx context.Context, r []byte) erro
 	return err
 }
 
+// createResourceWithinTx creates a resource record in the projection OCC table
+// and applies the supplied items within a single transaction.
 func (rr *ResourceRepository) createResourceWithinTx(
 	ctx context.Context,
 	r, c, n []byte,
 	items ...*dynamodb.TransactWriteItem,
 ) (bool, error) {
-	_, err := rr.db.TransactWriteItems(
+	_, err := awsx.Do(
+		ctx,
+		rr.db.TransactWriteItemsWithContext,
+		rr.decorators.decorateTransactWriteItems,
 		&dynamodb.TransactWriteItemsInput{
 			TransactItems: append(
 				items,
@@ -150,19 +175,24 @@ func (rr *ResourceRepository) createResourceWithinTx(
 		},
 	)
 
-	if isErrorCode(err, dynamodb.ErrCodeTransactionCanceledException) {
+	if awsx.IsErrorCode(err, dynamodb.ErrCodeTransactionCanceledException) {
 		return false, nil
 	}
 
 	return err == nil, err
 }
 
+// deleteResourceWithinTx deletes a resource record in the projection OCC table
+// and applies the supplied items within a single transaction.
 func (rr *ResourceRepository) deleteResourceWithinTx(
 	ctx context.Context,
 	r, c, n []byte,
 	items ...*dynamodb.TransactWriteItem,
 ) (bool, error) {
-	_, err := rr.db.TransactWriteItems(
+	_, err := awsx.Do(
+		ctx,
+		rr.db.TransactWriteItemsWithContext,
+		rr.decorators.decorateTransactWriteItems,
 		&dynamodb.TransactWriteItemsInput{
 			TransactItems: append(
 				items,
@@ -189,19 +219,24 @@ func (rr *ResourceRepository) deleteResourceWithinTx(
 		},
 	)
 
-	if isErrorCode(err, dynamodb.ErrCodeTransactionCanceledException) {
+	if awsx.IsErrorCode(err, dynamodb.ErrCodeTransactionCanceledException) {
 		return false, nil
 	}
 
 	return err == nil, err
 }
 
+// updateResourceWithinTx updates a resource record in the projection OCC table
+// and applies the supplied items within a single transaction.
 func (rr *ResourceRepository) updateResourceWithinTx(
 	ctx context.Context,
 	r, c, n []byte,
 	items ...*dynamodb.TransactWriteItem,
 ) (bool, error) {
-	_, err := rr.db.TransactWriteItems(
+	_, err := awsx.Do(
+		ctx,
+		rr.db.TransactWriteItemsWithContext,
+		rr.decorators.decorateTransactWriteItems,
 		&dynamodb.TransactWriteItemsInput{
 			TransactItems: append(
 				items,
@@ -231,7 +266,7 @@ func (rr *ResourceRepository) updateResourceWithinTx(
 		},
 	)
 
-	if isErrorCode(err, dynamodb.ErrCodeTransactionCanceledException) {
+	if awsx.IsErrorCode(err, dynamodb.ErrCodeTransactionCanceledException) {
 		return false, nil
 	}
 
