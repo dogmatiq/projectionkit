@@ -8,9 +8,7 @@ services:
   neo4j:
     image: neo4j:latest
     environment:
-      POSTGRES_DBNAME: nomad
-      POSTGRES_USER: nomad
-      POSTGRES_PASS: nomad
+      - NEO4J_AUTH=neo4j/nomadamon
     ports:
       - "7474:7474"
       - "7687:7687"

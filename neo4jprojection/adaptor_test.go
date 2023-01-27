@@ -3,8 +3,6 @@ package neo4jprojection_test
 import (
 	"context"
 	"errors"
-	"io/ioutil"
-	"os"
 	"time"
 
 	"github.com/dogmatiq/dogma"
@@ -19,25 +17,20 @@ import (
 )
 
 var _ = Describe("type adaptor", func() {
+
 	var (
 		ctx     context.Context
+		cancel  context.CancelFunc
 		handler *fixtures.MessageHandler
 		db      neo4j.DriverWithContext
-		tmpfile string
 		adaptor dogma.ProjectionMessageHandler
 	)
 
 	BeforeEach(func() {
-		ctx = context.Background()
+		ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
 
-		f, err := ioutil.TempFile("", "*.boltdb")
-		Expect(err).ShouldNot(HaveOccurred())
-		f.Close()
-
-		tmpfile = f.Name()
-
-		db, err = neo4j.NewDriverWithContext("target string", neo4j.BasicAuth("username", "password", ""))
-		//db, err = bbolt.Open(tmpfile, 0600, bbolt.DefaultOptions)
+		var err error
+		db, err = neo4j.NewDriverWithContext("bolt://localhost:7687", neo4j.BasicAuth("neo4j", "nomadamon", ""))
 		Expect(err).ShouldNot(HaveOccurred())
 
 		handler = &fixtures.MessageHandler{}
@@ -49,28 +42,21 @@ var _ = Describe("type adaptor", func() {
 	})
 
 	AfterEach(func() {
-		if db != nil {
-			db.Close(ctx)
-		}
 
-		if tmpfile != "" {
-			os.Remove(tmpfile)
-		}
+		session := db.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+
+		_, err := session.Run(ctx,
+			`MATCH (n) DETACH DELETE n`,
+			map[string]any{},
+		)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		session.Close(ctx)
+		db.Close(ctx)
+		cancel()
 	})
 
 	adaptortest.DescribeAdaptor(&ctx, &adaptor)
-
-	Describe("func New()", func() {
-		It("returns an unbound handler if the database is nil", func() {
-			adaptor = New(nil, handler)
-
-			err := adaptor.Compact(
-				context.Background(),
-				nil, // scope
-			)
-			Expect(err).To(MatchError("projection handler has not been bound to a database"))
-		})
-	})
 
 	Describe("func Configure()", func() {
 		It("forwards to the handler", func() {
@@ -100,22 +86,6 @@ var _ = Describe("type adaptor", func() {
 				MessageA1,
 			)
 			Expect(err).Should(HaveOccurred())
-		})
-	})
-
-	Describe("func TimeoutHint()", func() {
-		It("forwards to the handler", func() {
-			handler.TimeoutHintFunc = func(
-				m dogma.Message,
-			) time.Duration {
-				Expect(m).To(BeIdenticalTo(MessageA1))
-				return 100 * time.Millisecond
-			}
-
-			d := adaptor.TimeoutHint(
-				MessageA1,
-			)
-			Expect(d).To(Equal(100 * time.Millisecond))
 		})
 	})
 

@@ -27,36 +27,27 @@ func NewResourceRepository(
 // ResourceVersion returns the version of the resource r.
 func (rr *ResourceRepository) ResourceVersion(ctx context.Context, r []byte) ([]byte, error) {
 
-	session := rr.db.NewSession(ctx, neo4j.SessionConfig{})
+	session := rr.db.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
 	defer session.Close(ctx)
 
-	_, err := session.ExecuteRead(ctx, func(mtx neo4j.ManagedTransaction) (any, error) {
-
-		result, err := mtx.Run(ctx,
-			`MATCH (o:OCC{handler: $handler, resource: $resource}
-			RETURN o.version`,
-			map[string]any{
-				"handler":  rr.key,
-				"resource": r,
-			},
-		)
-
-		if err != nil {
-			return nil, err
-		}
-
-		if result.Next(ctx) {
-			return result.Record().Values[0], nil
-		}
-
-		return nil, nil
-	})
+	result, err := session.Run(ctx,
+		`MATCH (p:projection_occ{handler: $handler, resource: $resource} )
+			RETURN p.version`,
+		map[string]any{
+			"handler":  rr.key,
+			"resource": r,
+		},
+	)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return nil, err
+	if result.Next(ctx) {
+		return result.Record().Values[0].([]byte), nil
+	}
+
+	return nil, nil
 
 }
 
@@ -67,22 +58,15 @@ func (rr *ResourceRepository) StoreResourceVersion(ctx context.Context, r, v []b
 	session := rr.db.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close(ctx)
 
-	_, err := session.ExecuteWrite(ctx, func(mtx neo4j.ManagedTransaction) (any, error) {
-		result, err := mtx.Run(ctx,
-			`CREATE (o:OCC {handler: $handler, resource: $resource})
-			SET o.version = $version
-			RETURN o`,
-			map[string]any{
-				"version":  v,
-				"handler":  rr.key,
-				"resource": r,
-			})
-		if err != nil {
-			return nil, err
-		}
-
-		return nil, result.Err()
-	})
+	_, err := session.Run(ctx,
+		`MERGE (p:projection_occ {handler: $handler, resource: $resource})
+		SET p.version = $version
+		RETURN p`,
+		map[string]any{
+			"version":  v,
+			"handler":  rr.key,
+			"resource": r,
+		})
 	if err != nil {
 		return err
 	}
@@ -98,36 +82,10 @@ func (rr *ResourceRepository) UpdateResourceVersion(
 	r, c, n []byte,
 ) (ok bool, err error) {
 
-	session := rr.db.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
-	defer session.Close(ctx)
-
-	res, err := session.ExecuteWrite(ctx, func(mtx neo4j.ManagedTransaction) (any, error) {
-		result, err := mtx.Run(ctx,
-			`MATCH (o:OCC {handler: $handler, resource: $resource, version: $version})
-			SET o.resource = $resource
-			RETURN o`,
-			map[string]any{
-				"version":  n,
-				"handler":  rr.key,
-				"resource": r,
-			})
-		if err != nil {
-			return nil, err
-		}
-		if result.Next(ctx) {
-			return result.Record().Values[0], nil
-		}
-		return nil, nil
+	return rr.withTx(ctx, func(tx neo4j.ExplicitTransaction) (bool, error) {
+		return rr.updateResourceVersion(ctx, tx, r, c, n)
 	})
-	if err != nil {
-		return false, err
-	}
 
-	if res == nil {
-		return false, nil
-	}
-
-	return true, nil
 }
 
 // UpdateResourceVersion updates the version of the resource r to n and performs
@@ -139,29 +97,72 @@ func (rr *ResourceRepository) UpdateResourceVersionFn(
 	r, c, n []byte,
 	fn func(context.Context, neo4j.ExplicitTransaction) (bool, error),
 ) (ok bool, err error) {
-
 	return rr.withTx(ctx, func(tx neo4j.ExplicitTransaction) (bool, error) {
-		var err error
-		result, err := tx.Run(ctx,
-			`MATCH (o:OCC {handler: $handler, resource: $resource, version: $current_version})
-			SET o.version = $new_version
-			RETURN o`,
+		ok, err = rr.updateResourceVersion(ctx, tx, r, c, n)
+		if !ok || err != nil {
+			return false, err
+		}
+
+		return fn(ctx, tx)
+	})
+}
+
+// UpdateResourceVersion updates the version of the resource r to n.
+//
+// If c is not the current version of r, it returns false and no update occurs.
+func (rr *ResourceRepository) updateResourceVersion(ctx context.Context,
+	tx neo4j.ExplicitTransaction,
+	r, c, n []byte,
+) (ok bool, err error) {
+
+	var result neo4j.ResultWithContext
+	// If resource does not exist, create it with the new version.
+	result, err = tx.Run(ctx,
+		`MATCH (p:projection_occ {handler: $handler, resource: $resource})
+		RETURN p`,
+		map[string]any{
+			"handler":  rr.key,
+			"resource": r,
+		},
+	)
+	if err != nil {
+		return false, err
+	}
+
+	// If resource does not exist, create it unconditionally
+	exists := result.Next(ctx)
+	if !exists && len(c) == 0 {
+		_, err = tx.Run(ctx,
+			`CREATE (p:projection_occ {handler: $handler, resource: $resource, version: $version})`,
 			map[string]any{
-				"current_version": c,
-				"new_version":     n,
-				"handler":         rr.key,
-				"resource":        r,
+				"handler":  rr.key,
+				"resource": r,
+				"version":  n,
 			},
 		)
 		if err != nil {
 			return false, err
 		}
-		if result.Next(ctx) {
-			return fn(ctx, tx)
-		}
+		return true, nil
+	}
 
-		return false, nil
-	})
+	// If the resource does exist, update it only if the current version matches.
+	result, err = tx.Run(ctx,
+		`MATCH (p:projection_occ {handler: $handler, resource: $resource, version: $current_version})
+		SET p.version = $new_version
+		RETURN p`,
+		map[string]any{
+			"current_version": c,
+			"new_version":     n,
+			"handler":         rr.key,
+			"resource":        r,
+		},
+	)
+	if err != nil {
+		return false, err
+	}
+
+	return result.Next(ctx), nil
 }
 
 // DeleteResource removes all information about the resource r.
@@ -170,20 +171,13 @@ func (rr *ResourceRepository) DeleteResource(ctx context.Context, r []byte) erro
 	session := rr.db.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close(ctx)
 
-	_, err := session.ExecuteWrite(ctx, func(transaction neo4j.ManagedTransaction) (any, error) {
-		result, err := transaction.Run(ctx,
-			`MATCH (o:OCC {handler: $handler, resource: $resource})
-			DELETE o`,
-			map[string]interface{}{
-				"handler":  rr.key,
-				"resource": r,
-			})
-		if err != nil {
-			return nil, err
-		}
-
-		return result.Consume(ctx)
-	})
+	_, err := session.Run(ctx,
+		`MATCH (p:projection_occ {handler: $handler, resource: $resource})
+		DELETE p`,
+		map[string]interface{}{
+			"handler":  rr.key,
+			"resource": r,
+		})
 	if err != nil {
 		return err
 	}
@@ -222,8 +216,3 @@ func (rr *ResourceRepository) withTx(
 
 	return false, tx.Rollback(ctx)
 }
-
-var (
-	// node is the node that contains all data related to projection OCC.
-	node = []byte("projection_occ")
-)
