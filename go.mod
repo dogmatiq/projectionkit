@@ -10,6 +10,7 @@ require (
 	github.com/dogmatiq/cosyne v0.2.0
 	github.com/dogmatiq/dogma v0.12.1
 	github.com/dogmatiq/sqltest v0.3.0
+	github.com/neo4j/neo4j-go-driver/v5 v5.4.0
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.27.8
 	go.etcd.io/bbolt v1.3.7
