@@ -27,6 +27,7 @@ type adaptor struct {
 func New(
 	db neo4j.DriverWithContext,
 	h MessageHandler,
+	occTable string,
 ) dogma.ProjectionMessageHandler {
 	if db == nil {
 		return unboundhandler.New(h)
@@ -38,6 +39,7 @@ func New(
 		repo: NewResourceRepository(
 			db,
 			identity.Key(h),
+			occTable,
 		),
 	}
 }

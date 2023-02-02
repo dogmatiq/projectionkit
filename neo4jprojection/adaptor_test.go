@@ -38,7 +38,7 @@ var _ = Describe("type adaptor", func() {
 			c.Identity("<projection>", "<key>")
 		}
 
-		adaptor = New(db, handler)
+		adaptor = New(db, handler, "projection_occ")
 	})
 
 	AfterEach(func() {
