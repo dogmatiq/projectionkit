@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	. "github.com/dogmatiq/projectionkit/neo4jprojection"
+	. "github.com/deslittle/projectionkit/neo4jprojection"
 )
 
 func TestNoCompactBehavior_Compact_ReturnsNil(t *testing.T) {

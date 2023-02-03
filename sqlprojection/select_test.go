@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 
-	. "github.com/dogmatiq/projectionkit/sqlprojection"
+	. "github.com/deslittle/projectionkit/sqlprojection"
 	"github.com/dogmatiq/sqltest/sqlstub"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

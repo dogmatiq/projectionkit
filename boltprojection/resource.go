@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 
-	"github.com/dogmatiq/projectionkit/resource"
+	"github.com/deslittle/projectionkit/resource"
 	"go.etcd.io/bbolt"
 )
 

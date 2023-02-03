@@ -7,12 +7,12 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/deslittle/projectionkit/internal/adaptortest"
+	"github.com/deslittle/projectionkit/internal/identity"
+	. "github.com/deslittle/projectionkit/sqlprojection"
+	"github.com/deslittle/projectionkit/sqlprojection/fixtures" // can't dot-import due to conflict
 	"github.com/dogmatiq/dogma"
 	. "github.com/dogmatiq/dogma/fixtures"
-	"github.com/dogmatiq/projectionkit/internal/adaptortest"
-	"github.com/dogmatiq/projectionkit/internal/identity"
-	. "github.com/dogmatiq/projectionkit/sqlprojection"
-	"github.com/dogmatiq/projectionkit/sqlprojection/fixtures" // can't dot-import due to conflict
 	"github.com/dogmatiq/sqltest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

@@ -1,9 +1,9 @@
 package identity_test
 
 import (
+	. "github.com/deslittle/projectionkit/internal/identity"
 	"github.com/dogmatiq/dogma"
 	. "github.com/dogmatiq/dogma/fixtures"
-	. "github.com/dogmatiq/projectionkit/internal/identity"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
