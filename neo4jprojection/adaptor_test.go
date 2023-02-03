@@ -38,7 +38,7 @@ var _ = Describe("type adaptor", func() {
 			c.Identity("<projection>", "<key>")
 		}
 
-		adaptor = New(db, handler, "projection_occ")
+		adaptor = New(db, handler, "test:projection_occ")
 	})
 
 	AfterEach(func() {
@@ -46,7 +46,7 @@ var _ = Describe("type adaptor", func() {
 		session := db.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 
 		_, err := session.Run(ctx,
-			`MATCH (n) DETACH DELETE n`,
+			`MATCH (n:test:projection_occ) DETACH DELETE n`,
 			map[string]any{},
 		)
 		Expect(err).ShouldNot(HaveOccurred())

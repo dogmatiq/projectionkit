@@ -33,7 +33,7 @@ func (rr *ResourceRepository) ResourceVersion(ctx context.Context, r []byte) ([]
 	defer session.Close(ctx)
 
 	result, err := session.Run(ctx,
-		fmt.Sprintf(`MATCH (p: %s {handler: $handler, resource: $resource} )
+		fmt.Sprintf(`MATCH (p:%s{handler: $handler, resource: $resource} )
 		RETURN p.version`, rr.occTable),
 		map[string]any{
 			"handler":  rr.key,
@@ -61,7 +61,7 @@ func (rr *ResourceRepository) StoreResourceVersion(ctx context.Context, r, v []b
 	defer session.Close(ctx)
 
 	_, err := session.Run(ctx,
-		fmt.Sprintf(`MERGE (p: %s{handler: $handler, resource: $resource} )
+		fmt.Sprintf(`MERGE (p:%s{handler: $handler, resource: $resource} )
 			SET p.version = $version
 			RETURN p.version`, rr.occTable,
 		),
@@ -121,7 +121,7 @@ func (rr *ResourceRepository) updateResourceVersion(ctx context.Context,
 	var result neo4j.ResultWithContext
 	// If resource does not exist, create it with the new version.
 	result, err = tx.Run(ctx,
-		fmt.Sprintf(`MATCH (p: %s{handler: $handler, resource: $resource} )
+		fmt.Sprintf(`MATCH (p:%s{handler: $handler, resource: $resource} )
 		RETURN p`, rr.occTable),
 		map[string]any{
 			"handler":  rr.key,
@@ -136,7 +136,7 @@ func (rr *ResourceRepository) updateResourceVersion(ctx context.Context,
 	exists := result.Next(ctx)
 	if !exists && len(c) == 0 {
 		_, err = tx.Run(ctx,
-			fmt.Sprintf(`CREATE (p: %s{handler: $handler, resource: $resource, version: $version})`, rr.occTable),
+			fmt.Sprintf(`CREATE (p:%s{handler: $handler, resource: $resource, version: $version})`, rr.occTable),
 			map[string]any{
 				"handler":  rr.key,
 				"resource": r,
@@ -151,7 +151,7 @@ func (rr *ResourceRepository) updateResourceVersion(ctx context.Context,
 
 	// If the resource does exist, update it only if the current version matches.
 	result, err = tx.Run(ctx,
-		fmt.Sprintf(`MATCH (p: %s{handler: $handler, resource: $resource, version: $current_version})
+		fmt.Sprintf(`MATCH (p:%s{handler: $handler, resource: $resource, version: $current_version})
 			SET p.version = $new_version
 			RETURN p`, rr.occTable,
 		),
@@ -176,7 +176,7 @@ func (rr *ResourceRepository) DeleteResource(ctx context.Context, r []byte) erro
 	defer session.Close(ctx)
 
 	_, err := session.Run(ctx,
-		fmt.Sprintf(`MATCH (p: %s{handler: $handler, resource: $resource})
+		fmt.Sprintf(`MATCH (p:%s{handler: $handler, resource: $resource})
 		DELETE p`, rr.occTable),
 		map[string]interface{}{
 			"handler":  rr.key,
