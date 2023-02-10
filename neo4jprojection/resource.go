@@ -119,6 +119,23 @@ func (rr *ResourceRepository) updateResourceVersion(ctx context.Context,
 ) (ok bool, err error) {
 
 	var result neo4j.ResultWithContext
+
+	// If the new version is empty, delete the resource.
+	if len(n) == 0 {
+		_, err = tx.Run(ctx,
+			fmt.Sprintf(`MATCH (p:%s{handler: $handler, resource: $resource} )
+			DETACH DELETE p`, rr.occTable),
+			map[string]any{
+				"handler":  rr.key,
+				"resource": r,
+			},
+		)
+		if err != nil {
+			return false, err
+		}
+		return true, nil
+	}
+
 	// If resource does not exist, create it with the new version.
 	result, err = tx.Run(ctx,
 		fmt.Sprintf(`MATCH (p:%s{handler: $handler, resource: $resource} )
