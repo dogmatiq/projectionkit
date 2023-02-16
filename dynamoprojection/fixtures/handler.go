@@ -11,7 +11,7 @@ import (
 // MessageHandler is a test implementation of dynamoprojection.MessageHandler.
 type MessageHandler struct {
 	ConfigureFunc   func(c dogma.ProjectionConfigurer)
-	HandleEventFunc func(ctx context.Context, s dogma.ProjectionEventScope, m dogma.Message) ([]*dynamodb.TransactWriteItem, error)
+	HandleEventFunc func(ctx context.Context, s dogma.ProjectionEventScope, m dogma.Message) ([][]*dynamodb.TransactWriteItem, error)
 	TimeoutHintFunc func(m dogma.Message) time.Duration
 	CompactFunc     func(context.Context, *dynamodb.DynamoDB, dogma.ProjectionCompactScope) error
 }
@@ -37,7 +37,7 @@ func (h *MessageHandler) HandleEvent(
 	ctx context.Context,
 	s dogma.ProjectionEventScope,
 	m dogma.Message,
-) ([]*dynamodb.TransactWriteItem, error) {
+) ([][]*dynamodb.TransactWriteItem, error) {
 	if h.HandleEventFunc != nil {
 		return h.HandleEventFunc(ctx, s, m)
 	}

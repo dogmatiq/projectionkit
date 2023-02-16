@@ -72,12 +72,30 @@ func (a *adaptor) HandleEvent(
 	s dogma.ProjectionEventScope,
 	m dogma.Message,
 ) (bool, error) {
-	items, err := a.handler.HandleEvent(ctx, s, m)
+	ii, err := a.handler.HandleEvent(ctx, s, m)
 	if err != nil {
 		return false, err
 	}
 
-	return a.repo.UpdateResourceVersionAndTransactionItems(ctx, r, c, n, items...)
+	var errLast error
+	for _, items := range ii {
+		ok, err := a.repo.UpdateResourceVersionAndTransactionItems(
+			ctx,
+			r, c, n,
+			items...,
+		)
+		if err == nil {
+			return ok, nil
+		}
+
+		errLast = err
+	}
+
+	if errLast != nil {
+		return false, errLast
+	}
+
+	return a.repo.UpdateResourceVersionAndTransactionItems(ctx, r, c, n)
 }
 
 // ResourceVersion returns the version of the resource r.
