@@ -23,11 +23,9 @@ type MessageHandler interface {
 
 	// HandleEvent updates the projection to reflect the occurrence of an event.
 	//
-	// It SHOULD return all database changes in the form of the slice of slices
-	// of *dynamodb.TransactWriteItem. Each slice of transaction items  MUST be
-	// applied within a single transaction. The first slice of transaction item
-	// to return no error is applied. The implementation MUST return an error if
-	// all slices of transaction items failed to apply.
+	// It SHOULD return all database changes in the form of the slice to
+	// *dynamodb.TransactWriteItem that MUST be applied within a single
+	// transaction.
 	//
 	// If an error is returned, the projection SHOULD be left in the state it
 	// was before HandleEvent() was called.
@@ -51,14 +49,7 @@ type MessageHandler interface {
 	// UnexpectedMessage value.
 	//
 	// The engine MAY call HandleEvent() from multiple goroutines concurrently.
-	HandleEvent(
-		ctx context.Context,
-		s dogma.ProjectionEventScope,
-		m dogma.Message,
-	) (
-		[][]*dynamodb.TransactWriteItem,
-		error,
-	)
+	HandleEvent(ctx context.Context, s dogma.ProjectionEventScope, m dogma.Message) ([]*dynamodb.TransactWriteItem, error)
 
 	// TimeoutHint returns a duration that is suitable for computing a deadline
 	// for the handling of the given message by this handler.

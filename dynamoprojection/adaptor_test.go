@@ -85,39 +85,6 @@ var _ = Describe("type adaptor", func() {
 	})
 
 	Describe("func HandleEvent()", func() {
-		BeforeEach(func() {
-			_, err := db.CreateTableWithContext(
-				ctx,
-				&dynamodb.CreateTableInput{
-					TableName: aws.String("TestTable"),
-					AttributeDefinitions: []*dynamodb.AttributeDefinition{
-						{
-							AttributeName: aws.String("ID"),
-							AttributeType: aws.String("S"),
-						},
-					},
-					KeySchema: []*dynamodb.KeySchemaElement{
-						{
-							AttributeName: aws.String("ID"),
-							KeyType:       aws.String("HASH"),
-						},
-					},
-					BillingMode: aws.String("PAY_PER_REQUEST"),
-				},
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-		})
-
-		AfterEach(func() {
-			_, err := db.DeleteTableWithContext(
-				ctx,
-				&dynamodb.DeleteTableInput{
-					TableName: aws.String("TestTable"),
-				},
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-		})
-
 		It("returns an error if the application's message handler fails", func() {
 			terr := errors.New("handle event test error")
 
@@ -125,118 +92,8 @@ var _ = Describe("type adaptor", func() {
 				context.Context,
 				dogma.ProjectionEventScope,
 				dogma.Message,
-			) ([][]*dynamodb.TransactWriteItem, error) {
+			) ([]*dynamodb.TransactWriteItem, error) {
 				return nil, terr
-			}
-
-			_, err := adaptor.HandleEvent(
-				context.Background(),
-				[]byte("<resource>"),
-				nil,
-				[]byte("<version 01>"),
-				nil,
-				MessageA1,
-			)
-			Expect(err).Should(HaveOccurred())
-		})
-
-		It("applies the first slice of transaction items that returns no error", func() {
-			handler.HandleEventFunc = func(
-				context.Context,
-				dogma.ProjectionEventScope,
-				dogma.Message,
-			) ([][]*dynamodb.TransactWriteItem, error) {
-				return [][]*dynamodb.TransactWriteItem{
-					{
-						&dynamodb.TransactWriteItem{
-							Put: &dynamodb.Put{
-								TableName: aws.String("NonExistingTable"),
-								Item: map[string]*dynamodb.AttributeValue{
-									"ID": {
-										S: aws.String("ID1"),
-									},
-								},
-							},
-						},
-						&dynamodb.TransactWriteItem{
-							Put: &dynamodb.Put{
-								TableName: aws.String("NonExistingTable"),
-								Item: map[string]*dynamodb.AttributeValue{
-									"ID": {
-										S: aws.String("ID2"),
-									},
-								},
-							},
-						},
-					},
-					{
-						&dynamodb.TransactWriteItem{
-							Put: &dynamodb.Put{
-								TableName: aws.String("TestTable"),
-								Item: map[string]*dynamodb.AttributeValue{
-									"ID": {
-										S: aws.String("ID1"),
-									},
-								},
-							},
-						},
-						&dynamodb.TransactWriteItem{
-							Put: &dynamodb.Put{
-								TableName: aws.String("TestTable"),
-								Item: map[string]*dynamodb.AttributeValue{
-									"ID": {
-										S: aws.String("ID2"),
-									},
-								},
-							},
-						},
-					},
-				}, nil
-			}
-
-			_, err := adaptor.HandleEvent(
-				context.Background(),
-				[]byte("<resource>"),
-				nil,
-				[]byte("<version 01>"),
-				nil,
-				MessageA1,
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-		})
-
-		It("returns an error if all slices of transaction items are failed to apply", func() {
-			handler.HandleEventFunc = func(
-				context.Context,
-				dogma.ProjectionEventScope,
-				dogma.Message,
-			) ([][]*dynamodb.TransactWriteItem, error) {
-				return [][]*dynamodb.TransactWriteItem{
-					{
-						&dynamodb.TransactWriteItem{
-							Put: &dynamodb.Put{
-								TableName: aws.String("NonExistingTable"),
-								Item: map[string]*dynamodb.AttributeValue{
-									"ID": {
-										S: aws.String("ID1"),
-									},
-								},
-							},
-						},
-					},
-					{
-						&dynamodb.TransactWriteItem{
-							Put: &dynamodb.Put{
-								TableName: aws.String("AnotherNonExistingTable"),
-								Item: map[string]*dynamodb.AttributeValue{
-									"ID": {
-										S: aws.String("ID1"),
-									},
-								},
-							},
-						},
-					},
-				}, nil
 			}
 
 			_, err := adaptor.HandleEvent(
