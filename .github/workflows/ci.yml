@@ -14,4 +14,4 @@ on:
 jobs:
   ci:
     name: Shared
-    uses: dogmatiq/repos/.github/workflows/shared-go+sql.yml@main
+    uses: dogmatiq/repos/.github/workflows/shared-go+persistence.yml@main
