@@ -37,7 +37,7 @@ func (rr *ResourceRepository) ResourceVersion(ctx context.Context, r []byte) ([]
 		RETURN p.version`, rr.occTable),
 		map[string]any{
 			"handler":  rr.key,
-			"resource": r,
+			"resource": string(r),
 		},
 	)
 
@@ -46,7 +46,7 @@ func (rr *ResourceRepository) ResourceVersion(ctx context.Context, r []byte) ([]
 	}
 
 	if result.Next(ctx) {
-		return result.Record().Values[0].([]byte), nil
+		return []byte(result.Record().Values[0].(string)), nil
 	}
 
 	return nil, nil
@@ -66,9 +66,9 @@ func (rr *ResourceRepository) StoreResourceVersion(ctx context.Context, r, v []b
 			RETURN p.version`, rr.occTable,
 		),
 		map[string]any{
-			"version":  v,
+			"version":  string(v),
 			"handler":  rr.key,
-			"resource": r,
+			"resource": string(r),
 		})
 	if err != nil {
 		return err
@@ -127,7 +127,7 @@ func (rr *ResourceRepository) updateResourceVersion(ctx context.Context,
 			DETACH DELETE p`, rr.occTable),
 			map[string]any{
 				"handler":  rr.key,
-				"resource": r,
+				"resource": string(r),
 			},
 		)
 		if err != nil {
@@ -142,7 +142,7 @@ func (rr *ResourceRepository) updateResourceVersion(ctx context.Context,
 		RETURN p`, rr.occTable),
 		map[string]any{
 			"handler":  rr.key,
-			"resource": r,
+			"resource": string(r),
 		},
 	)
 	if err != nil {
@@ -156,8 +156,8 @@ func (rr *ResourceRepository) updateResourceVersion(ctx context.Context,
 			fmt.Sprintf(`CREATE (p:%s{handler: $handler, resource: $resource, version: $version})`, rr.occTable),
 			map[string]any{
 				"handler":  rr.key,
-				"resource": r,
-				"version":  n,
+				"resource": string(r),
+				"version":  string(n),
 			},
 		)
 		if err != nil {
@@ -173,10 +173,10 @@ func (rr *ResourceRepository) updateResourceVersion(ctx context.Context,
 			RETURN p`, rr.occTable,
 		),
 		map[string]any{
-			"current_version": c,
-			"new_version":     n,
+			"current_version": string(c),
+			"new_version":     string(n),
 			"handler":         rr.key,
-			"resource":        r,
+			"resource":        string(r),
 		},
 	)
 	if err != nil {
@@ -197,7 +197,7 @@ func (rr *ResourceRepository) DeleteResource(ctx context.Context, r []byte) erro
 		DELETE p`, rr.occTable),
 		map[string]interface{}{
 			"handler":  rr.key,
-			"resource": r,
+			"resource": string(r),
 		})
 	if err != nil {
 		return err
