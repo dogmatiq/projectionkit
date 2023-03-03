@@ -2,6 +2,7 @@ package neo4jprojection
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/deslittle/projectionkit/internal/identity"
@@ -57,7 +58,8 @@ func (a *adaptor) HandleEvent(
 	s dogma.ProjectionEventScope,
 	m dogma.Message,
 ) (bool, error) {
-	return a.repo.UpdateResourceVersionFn(
+
+	ok, err := a.repo.UpdateResourceVersionFn(
 		ctx,
 		r, c, n,
 		func(ctx context.Context, tx neo4j.ExplicitTransaction) (bool, error) {
@@ -68,6 +70,13 @@ func (a *adaptor) HandleEvent(
 			return true, nil
 		},
 	)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return ok, err
+
 }
 
 // ResourceVersion returns the version of the resource r.

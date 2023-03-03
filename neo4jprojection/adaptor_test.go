@@ -30,7 +30,9 @@ var _ = Describe("type adaptor", func() {
 		ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
 
 		var err error
-		db, err = neo4j.NewDriverWithContext("bolt://localhost:7687", neo4j.BasicAuth("neo4j", "nomadamon", ""))
+		db, err = neo4j.NewDriverWithContext("bolt://localhost:7687", neo4j.BasicAuth("neo4j", "dogmamgod", ""))
+		// hostAndPort := "nomad-cluster-neptune.cluster-cojplssy37iq.ap-southeast-2.neptune.amazonaws.com:8182"
+		// db, err = neo4j.NewDriverWithContext("bolt+ssc://"+hostAndPort+"/opencypher", neo4j.NoAuth())
 		Expect(err).ShouldNot(HaveOccurred())
 
 		handler = &fixtures.MessageHandler{}
