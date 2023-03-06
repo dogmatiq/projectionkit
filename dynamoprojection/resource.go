@@ -3,6 +3,7 @@ package dynamoprojection
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
@@ -62,7 +63,17 @@ func (rr *ResourceRepository) ResourceVersion(ctx context.Context, r []byte) ([]
 		return nil, err
 	}
 
-	return out.Item[resourceVersionAttr].(*types.AttributeValueMemberB).Value, nil
+	b, ok := out.Item[resourceVersionAttr].(*types.AttributeValueMemberB)
+	if !ok {
+		panic(
+			fmt.Sprintf(
+				"invalid structure in projection OCC table %s",
+				rr.occTable,
+			),
+		)
+	}
+
+	return b.Value, nil
 }
 
 // StoreResourceVersion sets the version of the resource r to v without checking
