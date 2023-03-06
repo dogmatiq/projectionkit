@@ -4,16 +4,17 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/dogmatiq/dogma"
 )
 
 // MessageHandler is a test implementation of dynamoprojection.MessageHandler.
 type MessageHandler struct {
 	ConfigureFunc   func(c dogma.ProjectionConfigurer)
-	HandleEventFunc func(ctx context.Context, s dogma.ProjectionEventScope, m dogma.Message) ([]*dynamodb.TransactWriteItem, error)
+	HandleEventFunc func(ctx context.Context, s dogma.ProjectionEventScope, m dogma.Message) ([]types.TransactWriteItem, error)
 	TimeoutHintFunc func(m dogma.Message) time.Duration
-	CompactFunc     func(context.Context, *dynamodb.DynamoDB, dogma.ProjectionCompactScope) error
+	CompactFunc     func(context.Context, *dynamodb.Client, dogma.ProjectionCompactScope) error
 }
 
 // Configure configures the behavior of the engine as it relates to this
@@ -37,7 +38,7 @@ func (h *MessageHandler) HandleEvent(
 	ctx context.Context,
 	s dogma.ProjectionEventScope,
 	m dogma.Message,
-) ([]*dynamodb.TransactWriteItem, error) {
+) ([]types.TransactWriteItem, error) {
 	if h.HandleEventFunc != nil {
 		return h.HandleEventFunc(ctx, s, m)
 	}
@@ -62,9 +63,9 @@ func (h *MessageHandler) TimeoutHint(m dogma.Message) time.Duration {
 //
 // If h.CompactFunc is non-nil it returns h.CompactFunc(ctx,db,s), otherwise it
 // returns nil.
-func (h *MessageHandler) Compact(ctx context.Context, db *dynamodb.DynamoDB, s dogma.ProjectionCompactScope) error {
+func (h *MessageHandler) Compact(ctx context.Context, client *dynamodb.Client, s dogma.ProjectionCompactScope) error {
 	if h.CompactFunc != nil {
-		return h.CompactFunc(ctx, db, s)
+		return h.CompactFunc(ctx, client, s)
 	}
 
 	return nil

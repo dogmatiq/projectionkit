@@ -1,8 +1,7 @@
 package dynamoprojection
 
 import (
-	"github.com/aws/aws-sdk-go/aws/request"
-	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 )
 
 // HandlerOption is used to alter the behavior of AWS DynamoDB projection
@@ -23,12 +22,12 @@ type TableOption interface {
 }
 
 type decorators struct {
-	decorateGetItem            func(*dynamodb.GetItemInput) []request.Option
-	decoratePutItem            func(*dynamodb.PutItemInput) []request.Option
-	decorateDeleteItem         func(*dynamodb.DeleteItemInput) []request.Option
-	decorateTransactWriteItems func(*dynamodb.TransactWriteItemsInput) []request.Option
-	decorateCreateTableItem    func(*dynamodb.CreateTableInput) []request.Option
-	decorateDeleteTableItem    func(*dynamodb.DeleteTableInput) []request.Option
+	decorateGetItem            func(*dynamodb.GetItemInput) []func(*dynamodb.Options)
+	decoratePutItem            func(*dynamodb.PutItemInput) []func(*dynamodb.Options)
+	decorateDeleteItem         func(*dynamodb.DeleteItemInput) []func(*dynamodb.Options)
+	decorateTransactWriteItems func(*dynamodb.TransactWriteItemsInput) []func(*dynamodb.Options)
+	decorateCreateTableItem    func(*dynamodb.CreateTableInput) []func(*dynamodb.Options)
+	decorateDeleteTableItem    func(*dynamodb.DeleteTableInput) []func(*dynamodb.Options)
 }
 
 type options struct {
@@ -59,7 +58,7 @@ func (o *options) applyTableOption(decorators *decorators) {
 // modify the passed GetItemInput structure and return a slice of request.Option
 // to alter the request prior to its execution.
 func WithDecorateGetItem(
-	dec func(*dynamodb.GetItemInput) []request.Option,
+	dec func(*dynamodb.GetItemInput) []func(*dynamodb.Options),
 ) interface {
 	HandlerOption
 	ResourceRepositoryOption
@@ -78,7 +77,7 @@ func WithDecorateGetItem(
 // modify the passed PutItemInput structure and return a slice of request.Option
 // to alter the request prior to its execution.
 func WithDecoratePutItem(
-	dec func(*dynamodb.PutItemInput) []request.Option,
+	dec func(*dynamodb.PutItemInput) []func(*dynamodb.Options),
 ) interface {
 	HandlerOption
 	ResourceRepositoryOption
@@ -97,7 +96,7 @@ func WithDecoratePutItem(
 // decorator can modify the passed DeleteItemInput structure and return a slice
 // of request.Option to alter the request prior to its execution.
 func WithDecorateDeleteItem(
-	dec func(*dynamodb.DeleteItemInput) []request.Option,
+	dec func(*dynamodb.DeleteItemInput) []func(*dynamodb.Options),
 ) interface {
 	HandlerOption
 	ResourceRepositoryOption
@@ -117,7 +116,7 @@ func WithDecorateDeleteItem(
 // structure and return a slice of request.Option to alter the request prior to
 // its execution.
 func WithDecorateTransactWriteItems(
-	dec func(*dynamodb.TransactWriteItemsInput) []request.Option,
+	dec func(*dynamodb.TransactWriteItemsInput) []func(*dynamodb.Options),
 ) interface {
 	HandlerOption
 	ResourceRepositoryOption
@@ -136,7 +135,7 @@ func WithDecorateTransactWriteItems(
 // decorator can modify the passed CreateTableInput structure and return
 // a slice of request.Option to alter the request prior to its execution.
 func WithDecorateCreateTable(
-	dec func(*dynamodb.CreateTableInput) []request.Option,
+	dec func(*dynamodb.CreateTableInput) []func(*dynamodb.Options),
 ) TableOption {
 	return &options{
 		applyTableOptionFunc: func(d *decorators) {
@@ -149,7 +148,7 @@ func WithDecorateCreateTable(
 // decorator can modify the passed DeleteTableInput structure and return a slice
 // of request.Option to alter the request prior to its execution.
 func WithDecorateDeleteTable(
-	dec func(*dynamodb.DeleteTableInput) []request.Option,
+	dec func(*dynamodb.DeleteTableInput) []func(*dynamodb.Options),
 ) TableOption {
 	return &options{
 		applyTableOptionFunc: func(d *decorators) {

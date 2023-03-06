@@ -6,10 +6,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/dogmatiq/dogma"
 	. "github.com/dogmatiq/dogma/fixtures"
 	. "github.com/dogmatiq/projectionkit/dynamoprojection"
@@ -24,7 +25,7 @@ var _ = Describe("type adaptor", func() {
 	var (
 		ctx     context.Context
 		handler *fixtures.MessageHandler
-		db      *dynamodb.DynamoDB
+		client  *dynamodb.Client
 		adaptor dogma.ProjectionMessageHandler
 	)
 
@@ -36,31 +37,49 @@ var _ = Describe("type adaptor", func() {
 			endpoint = "http://localhost:28000"
 		}
 
-		config := &aws.Config{
-			Credentials: credentials.NewStaticCredentials("<id>", "<secret>", ""),
-			Endpoint:    aws.String(endpoint),
-			Region:      aws.String("us-east-1"),
-			DisableSSL:  aws.Bool(true),
-		}
-
-		sess, err := session.NewSession(config)
+		cfg, err := config.LoadDefaultConfig(
+			ctx,
+			config.WithRegion("us-east-1"),
+			config.WithEndpointResolverWithOptions(
+				aws.EndpointResolverWithOptionsFunc(
+					func(
+						service, region string,
+						options ...interface{},
+					) (aws.Endpoint, error) {
+						return aws.Endpoint{
+							PartitionID: "aws",
+							URL:         endpoint,
+						}, nil
+					},
+				),
+			),
+			config.WithCredentialsProvider(
+				credentials.StaticCredentialsProvider{
+					Value: aws.Credentials{
+						AccessKeyID:     "<id>",
+						SecretAccessKey: "<secret>",
+						SessionToken:    "",
+					},
+				},
+			),
+		)
 		Expect(err).ShouldNot(HaveOccurred())
 
-		db = dynamodb.New(sess)
+		client = dynamodb.NewFromConfig(cfg)
 
 		handler = &fixtures.MessageHandler{}
 		handler.ConfigureFunc = func(c dogma.ProjectionConfigurer) {
 			c.Identity("<projection>", "<key>")
 		}
 
-		err = CreateTable(ctx, db, "ProjectionOCCTable")
+		err = CreateTable(ctx, client, "ProjectionOCCTable")
 		Expect(err).ShouldNot(HaveOccurred())
 
-		adaptor = New(db, "ProjectionOCCTable", handler)
+		adaptor = New(client, "ProjectionOCCTable", handler)
 	})
 
 	AfterEach(func() {
-		err := DeleteTable(ctx, db, "ProjectionOCCTable")
+		err := DeleteTable(ctx, client, "ProjectionOCCTable")
 		Expect(err).ShouldNot(HaveOccurred())
 	})
 
@@ -92,7 +111,7 @@ var _ = Describe("type adaptor", func() {
 				context.Context,
 				dogma.ProjectionEventScope,
 				dogma.Message,
-			) ([]*dynamodb.TransactWriteItem, error) {
+			) ([]types.TransactWriteItem, error) {
 				return nil, terr
 			}
 
@@ -128,10 +147,10 @@ var _ = Describe("type adaptor", func() {
 		It("forwards to the handler", func() {
 			handler.CompactFunc = func(
 				_ context.Context,
-				d *dynamodb.DynamoDB,
+				c *dynamodb.Client,
 				_ dogma.ProjectionCompactScope,
 			) error {
-				Expect(d).To(BeIdenticalTo(db))
+				Expect(c).To(BeIdenticalTo(client))
 				return errors.New("<error>")
 			}
 

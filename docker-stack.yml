@@ -4,4 +4,4 @@ services:
   dynamodb:
     image: amazon/dynamodb-local
     ports:
-      - "29000:8000/tcp"
+      - "28000:8000/tcp"

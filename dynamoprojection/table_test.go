@@ -5,10 +5,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	. "github.com/dogmatiq/projectionkit/dynamoprojection"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -18,7 +18,7 @@ var _ = Context("creating and deleting a table", func() {
 	var (
 		ctx    context.Context
 		cancel context.CancelFunc
-		db     *dynamodb.DynamoDB
+		client *dynamodb.Client
 	)
 
 	BeforeEach(func() {
@@ -29,17 +29,29 @@ var _ = Context("creating and deleting a table", func() {
 			endpoint = "http://localhost:28000"
 		}
 
-		config := &aws.Config{
-			Credentials: credentials.NewStaticCredentials("<id>", "<secret>", ""),
-			Endpoint:    aws.String(endpoint),
-			Region:      aws.String("us-east-1"),
-			DisableSSL:  aws.Bool(true),
-		}
-
-		sess, err := session.NewSession(config)
+		cfg, err := config.LoadDefaultConfig(
+			ctx,
+			config.WithRegion("us-east-1"),
+			config.WithEndpointResolverWithOptions(
+				aws.EndpointResolverWithOptionsFunc(
+					func(service, region string, options ...interface{}) (aws.Endpoint, error) {
+						return aws.Endpoint{URL: endpoint}, nil
+					},
+				),
+			),
+			config.WithCredentialsProvider(
+				credentials.StaticCredentialsProvider{
+					Value: aws.Credentials{
+						AccessKeyID:     "<id>",
+						SecretAccessKey: "<secret>",
+						SessionToken:    "",
+					},
+				},
+			),
+		)
 		Expect(err).ShouldNot(HaveOccurred())
 
-		db = dynamodb.New(sess)
+		client = dynamodb.NewFromConfig(cfg)
 	})
 
 	AfterEach(func() {
@@ -48,28 +60,28 @@ var _ = Context("creating and deleting a table", func() {
 
 	Describe("func CreateTable()", func() {
 		It("can be called when the table already exists", func() {
-			err := CreateTable(ctx, db, "ProjectionOCCTable")
+			err := CreateTable(ctx, client, "ProjectionOCCTable")
 			Expect(err).ShouldNot(HaveOccurred())
 
-			err = CreateTable(ctx, db, "ProjectionOCCTable")
+			err = CreateTable(ctx, client, "ProjectionOCCTable")
 			Expect(err).ShouldNot(HaveOccurred())
 		})
 	})
 
 	Describe("func DeleteTable()", func() {
 		It("can be called when the table does not exist", func() {
-			err := DeleteTable(ctx, db, "ProjectionOCCTable")
+			err := DeleteTable(ctx, client, "ProjectionOCCTable")
 			Expect(err).ShouldNot(HaveOccurred())
 		})
 
 		It("can be called when the table has already been deleted", func() {
-			err := CreateTable(ctx, db, "ProjectionOCCTable")
+			err := CreateTable(ctx, client, "ProjectionOCCTable")
 			Expect(err).ShouldNot(HaveOccurred())
 
-			err = DeleteTable(ctx, db, "ProjectionOCCTable")
+			err = DeleteTable(ctx, client, "ProjectionOCCTable")
 			Expect(err).ShouldNot(HaveOccurred())
 
-			err = DeleteTable(ctx, db, "ProjectionOCCTable")
+			err = DeleteTable(ctx, client, "ProjectionOCCTable")
 			Expect(err).ShouldNot(HaveOccurred())
 		})
 	})

@@ -2,9 +2,11 @@ package dynamoprojection
 
 import (
 	"context"
+	"errors"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/dogmatiq/projectionkit/dynamoprojection/internal/awsx"
 	"github.com/dogmatiq/projectionkit/resource"
 )
@@ -12,7 +14,7 @@ import (
 // ResourceRepository is an implementation of resource.Repository that stores
 // resources versions in an AWS DynamoDB database.
 type ResourceRepository struct {
-	db         *dynamodb.DynamoDB
+	client     *dynamodb.Client
 	key        string
 	occTable   string
 	decorators *decorators
@@ -22,12 +24,12 @@ var _ resource.Repository = (*ResourceRepository)(nil)
 
 // NewResourceRepository returns a new DynamoDB resource repository.
 func NewResourceRepository(
-	db *dynamodb.DynamoDB,
+	client *dynamodb.Client,
 	key, occTable string,
 	options ...ResourceRepositoryOption,
 ) *ResourceRepository {
 	r := &ResourceRepository{
-		db:         db,
+		client:     client,
 		key:        key,
 		occTable:   occTable,
 		decorators: &decorators{},
@@ -44,13 +46,13 @@ func NewResourceRepository(
 func (rr *ResourceRepository) ResourceVersion(ctx context.Context, r []byte) ([]byte, error) {
 	out, err := awsx.Do(
 		ctx,
-		rr.db.GetItemWithContext,
+		rr.client.GetItem,
 		rr.decorators.decorateGetItem,
 		&dynamodb.GetItemInput{
 			TableName: aws.String(rr.occTable),
-			Key: map[string]*dynamodb.AttributeValue{
-				handlerAndResourceAttr: {
-					B: handlerAndResource(rr.key, r),
+			Key: map[string]types.AttributeValue{
+				handlerAndResourceAttr: &types.AttributeValueMemberB{
+					Value: handlerAndResource(rr.key, r),
 				},
 			},
 		},
@@ -60,7 +62,7 @@ func (rr *ResourceRepository) ResourceVersion(ctx context.Context, r []byte) ([]
 		return nil, err
 	}
 
-	return out.Item[resourceVersionAttr].B, nil
+	return out.Item[resourceVersionAttr].(*types.AttributeValueMemberB).Value, nil
 }
 
 // StoreResourceVersion sets the version of the resource r to v without checking
@@ -73,16 +75,16 @@ func (rr *ResourceRepository) StoreResourceVersion(ctx context.Context, r, v []b
 
 	_, err := awsx.Do(
 		ctx,
-		rr.db.PutItemWithContext,
+		rr.client.PutItem,
 		rr.decorators.decoratePutItem,
 		&dynamodb.PutItemInput{
 			TableName: aws.String(rr.occTable),
-			Item: map[string]*dynamodb.AttributeValue{
-				handlerAndResourceAttr: {
-					B: handlerAndResource(rr.key, r),
+			Item: map[string]types.AttributeValue{
+				handlerAndResourceAttr: &types.AttributeValueMemberB{
+					Value: handlerAndResource(rr.key, r),
 				},
-				resourceVersionAttr: {
-					B: v,
+				resourceVersionAttr: &types.AttributeValueMemberB{
+					Value: v,
 				},
 			},
 		},
@@ -108,7 +110,7 @@ func (rr *ResourceRepository) UpdateResourceVersion(
 func (rr *ResourceRepository) UpdateResourceVersionAndTransactionItems(
 	ctx context.Context,
 	r, c, n []byte,
-	items ...*dynamodb.TransactWriteItem,
+	items ...types.TransactWriteItem,
 ) (ok bool, err error) {
 	if len(c) == 0 {
 		return rr.createResourceWithinTx(ctx, r, c, n, items...)
@@ -125,13 +127,13 @@ func (rr *ResourceRepository) UpdateResourceVersionAndTransactionItems(
 func (rr *ResourceRepository) DeleteResource(ctx context.Context, r []byte) error {
 	_, err := awsx.Do(
 		ctx,
-		rr.db.DeleteItemWithContext,
+		rr.client.DeleteItem,
 		rr.decorators.decorateDeleteItem,
 		&dynamodb.DeleteItemInput{
 			TableName: aws.String(rr.occTable),
-			Key: map[string]*dynamodb.AttributeValue{
-				handlerAndResourceAttr: {
-					B: handlerAndResource(rr.key, r),
+			Key: map[string]types.AttributeValue{
+				handlerAndResourceAttr: &types.AttributeValueMemberB{
+					Value: handlerAndResource(rr.key, r),
 				},
 			},
 		},
@@ -145,28 +147,28 @@ func (rr *ResourceRepository) DeleteResource(ctx context.Context, r []byte) erro
 func (rr *ResourceRepository) createResourceWithinTx(
 	ctx context.Context,
 	r, c, n []byte,
-	items ...*dynamodb.TransactWriteItem,
+	items ...types.TransactWriteItem,
 ) (bool, error) {
 	_, err := awsx.Do(
 		ctx,
-		rr.db.TransactWriteItemsWithContext,
+		rr.client.TransactWriteItems,
 		rr.decorators.decorateTransactWriteItems,
 		&dynamodb.TransactWriteItemsInput{
 			TransactItems: append(
 				items,
-				&dynamodb.TransactWriteItem{
-					Put: &dynamodb.Put{
+				types.TransactWriteItem{
+					Put: &types.Put{
 						TableName:           aws.String(rr.occTable),
 						ConditionExpression: aws.String(`attribute_not_exists(#HR)`),
-						ExpressionAttributeNames: map[string]*string{
-							"#HR": aws.String(handlerAndResourceAttr),
+						ExpressionAttributeNames: map[string]string{
+							"#HR": handlerAndResourceAttr,
 						},
-						Item: map[string]*dynamodb.AttributeValue{
-							handlerAndResourceAttr: {
-								B: handlerAndResource(rr.key, r),
+						Item: map[string]types.AttributeValue{
+							handlerAndResourceAttr: &types.AttributeValueMemberB{
+								Value: handlerAndResource(rr.key, r),
 							},
-							resourceVersionAttr: {
-								B: n,
+							resourceVersionAttr: &types.AttributeValueMemberB{
+								Value: n,
 							},
 						},
 					},
@@ -175,7 +177,7 @@ func (rr *ResourceRepository) createResourceWithinTx(
 		},
 	)
 
-	if awsx.IsErrorCode(err, dynamodb.ErrCodeTransactionCanceledException) {
+	if errors.As(err, new(*types.TransactionCanceledException)) {
 		return false, nil
 	}
 
@@ -187,30 +189,30 @@ func (rr *ResourceRepository) createResourceWithinTx(
 func (rr *ResourceRepository) deleteResourceWithinTx(
 	ctx context.Context,
 	r, c, n []byte,
-	items ...*dynamodb.TransactWriteItem,
+	items ...types.TransactWriteItem,
 ) (bool, error) {
 	_, err := awsx.Do(
 		ctx,
-		rr.db.TransactWriteItemsWithContext,
+		rr.client.TransactWriteItems,
 		rr.decorators.decorateTransactWriteItems,
 		&dynamodb.TransactWriteItemsInput{
 			TransactItems: append(
 				items,
-				&dynamodb.TransactWriteItem{
-					Delete: &dynamodb.Delete{
+				types.TransactWriteItem{
+					Delete: &types.Delete{
 						TableName:           aws.String(rr.occTable),
 						ConditionExpression: aws.String(`#C = :C`),
-						ExpressionAttributeNames: map[string]*string{
-							"#C": aws.String(resourceVersionAttr),
+						ExpressionAttributeNames: map[string]string{
+							"#C": resourceVersionAttr,
 						},
-						ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
-							":C": {
-								B: c,
+						ExpressionAttributeValues: map[string]types.AttributeValue{
+							":C": &types.AttributeValueMemberB{
+								Value: c,
 							},
 						},
-						Key: map[string]*dynamodb.AttributeValue{
-							handlerAndResourceAttr: {
-								B: handlerAndResource(rr.key, r),
+						Key: map[string]types.AttributeValue{
+							handlerAndResourceAttr: &types.AttributeValueMemberB{
+								Value: handlerAndResource(rr.key, r),
 							},
 						},
 					},
@@ -219,7 +221,7 @@ func (rr *ResourceRepository) deleteResourceWithinTx(
 		},
 	)
 
-	if awsx.IsErrorCode(err, dynamodb.ErrCodeTransactionCanceledException) {
+	if errors.As(err, new(*types.TransactionCanceledException)) {
 		return false, nil
 	}
 
@@ -231,33 +233,33 @@ func (rr *ResourceRepository) deleteResourceWithinTx(
 func (rr *ResourceRepository) updateResourceWithinTx(
 	ctx context.Context,
 	r, c, n []byte,
-	items ...*dynamodb.TransactWriteItem,
+	items ...types.TransactWriteItem,
 ) (bool, error) {
 	_, err := awsx.Do(
 		ctx,
-		rr.db.TransactWriteItemsWithContext,
+		rr.client.TransactWriteItems,
 		rr.decorators.decorateTransactWriteItems,
 		&dynamodb.TransactWriteItemsInput{
 			TransactItems: append(
 				items,
-				&dynamodb.TransactWriteItem{
-					Put: &dynamodb.Put{
+				types.TransactWriteItem{
+					Put: &types.Put{
 						TableName:           aws.String(rr.occTable),
 						ConditionExpression: aws.String(`#C = :C`),
-						ExpressionAttributeNames: map[string]*string{
-							"#C": aws.String(resourceVersionAttr),
+						ExpressionAttributeNames: map[string]string{
+							"#C": resourceVersionAttr,
 						},
-						ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
-							":C": {
-								B: c,
+						ExpressionAttributeValues: map[string]types.AttributeValue{
+							":C": &types.AttributeValueMemberB{
+								Value: c,
 							},
 						},
-						Item: map[string]*dynamodb.AttributeValue{
-							handlerAndResourceAttr: {
-								B: handlerAndResource(rr.key, r),
+						Item: map[string]types.AttributeValue{
+							handlerAndResourceAttr: &types.AttributeValueMemberB{
+								Value: handlerAndResource(rr.key, r),
 							},
-							resourceVersionAttr: {
-								B: n,
+							resourceVersionAttr: &types.AttributeValueMemberB{
+								Value: n,
 							},
 						},
 					},
@@ -266,7 +268,7 @@ func (rr *ResourceRepository) updateResourceWithinTx(
 		},
 	)
 
-	if awsx.IsErrorCode(err, dynamodb.ErrCodeTransactionCanceledException) {
+	if errors.As(err, new(*types.TransactionCanceledException)) {
 		return false, nil
 	}
 

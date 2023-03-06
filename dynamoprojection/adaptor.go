@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/dogmatiq/dogma"
 	"github.com/dogmatiq/projectionkit/internal/identity"
 	"github.com/dogmatiq/projectionkit/internal/unboundhandler"
@@ -14,7 +14,7 @@ import (
 // adaptor adapts a dynamoprojection.ProjectionMessageHandler to the
 // dogma.ProjectionMessageHandler interface.
 type adaptor struct {
-	db      *dynamodb.DynamoDB
+	client  *dynamodb.Client
 	handler MessageHandler
 	repo    *ResourceRepository
 }
@@ -29,12 +29,12 @@ type adaptor struct {
 // If db is nil the returned handler will return an error whenever an operation
 // that requires the database is performed.
 func New(
-	db *dynamodb.DynamoDB,
+	client *dynamodb.Client,
 	occTable string,
 	h MessageHandler,
 	options ...HandlerOption,
 ) dogma.ProjectionMessageHandler {
-	if db == nil {
+	if client == nil {
 		return unboundhandler.New(h)
 	}
 
@@ -46,10 +46,10 @@ func New(
 	}
 
 	a := &adaptor{
-		db:      db,
+		client:  client,
 		handler: h,
 		repo: NewResourceRepository(
-			db,
+			client,
 			identity.Key(h),
 			occTable,
 			rrOpts...,
@@ -99,7 +99,7 @@ func (a *adaptor) TimeoutHint(m dogma.Message) time.Duration {
 
 // Compact reduces the size of the projection's data.
 func (a *adaptor) Compact(ctx context.Context, s dogma.ProjectionCompactScope) error {
-	return a.handler.Compact(ctx, a.db, s)
+	return a.handler.Compact(ctx, a.client, s)
 }
 
 // ResourceRepository returns a repository that can be used to manipulate the

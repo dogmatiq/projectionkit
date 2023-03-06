@@ -2,9 +2,11 @@ package dynamoprojection
 
 import (
 	"context"
+	"errors"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/dogmatiq/projectionkit/dynamoprojection/internal/awsx"
 )
 
@@ -28,7 +30,7 @@ const (
 // It does not return an error if the table already exists.
 func CreateTable(
 	ctx context.Context,
-	db *dynamodb.DynamoDB,
+	client *dynamodb.Client,
 	occTable string,
 	options ...TableOption,
 ) error {
@@ -39,27 +41,27 @@ func CreateTable(
 
 	_, err := awsx.Do(
 		ctx,
-		db.CreateTableWithContext,
+		client.CreateTable,
 		decorators.decorateCreateTableItem,
 		&dynamodb.CreateTableInput{
 			TableName: aws.String(occTable),
-			AttributeDefinitions: []*dynamodb.AttributeDefinition{
+			AttributeDefinitions: []types.AttributeDefinition{
 				{
 					AttributeName: aws.String(handlerAndResourceAttr),
-					AttributeType: aws.String("B"),
+					AttributeType: types.ScalarAttributeTypeB,
 				},
 			},
-			KeySchema: []*dynamodb.KeySchemaElement{
+			KeySchema: []types.KeySchemaElement{
 				{
 					AttributeName: aws.String(handlerAndResourceAttr),
-					KeyType:       aws.String("HASH"),
+					KeyType:       types.KeyTypeHash,
 				},
 			},
-			BillingMode: aws.String("PAY_PER_REQUEST"),
+			BillingMode: types.BillingModePayPerRequest,
 		},
 	)
 
-	if awsx.IsErrorCode(err, dynamodb.ErrCodeResourceInUseException) {
+	if errors.As(err, new(*types.ResourceInUseException)) {
 		return nil
 	}
 
@@ -75,7 +77,7 @@ func CreateTable(
 // It does not return an error if the table does not exist.
 func DeleteTable(
 	ctx context.Context,
-	db *dynamodb.DynamoDB,
+	client *dynamodb.Client,
 	occTable string,
 	options ...TableOption,
 ) error {
@@ -86,14 +88,14 @@ func DeleteTable(
 
 	_, err := awsx.Do(
 		ctx,
-		db.DeleteTableWithContext,
+		client.DeleteTable,
 		decorators.decorateDeleteTableItem,
 		&dynamodb.DeleteTableInput{
 			TableName: aws.String(occTable),
 		},
 	)
 
-	if awsx.IsErrorCode(err, dynamodb.ErrCodeResourceNotFoundException) {
+	if errors.As(err, new(*types.ResourceNotFoundException)) {
 		return nil
 	}
 

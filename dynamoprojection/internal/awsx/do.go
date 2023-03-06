@@ -3,7 +3,7 @@ package awsx
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 )
 
 // Do executes an AWS API request.
@@ -15,10 +15,10 @@ import (
 // and returns any options that should be used when sending the request.
 func Do[In, Out any](
 	ctx context.Context,
-	fn func(context.Context, *In, ...request.Option) (Out, error),
-	dec func(*In) []request.Option,
+	fn func(context.Context, *In, ...func(*dynamodb.Options)) (Out, error),
+	dec func(*In) []func(*dynamodb.Options),
 	in *In,
-	options ...request.Option,
+	options ...func(*dynamodb.Options),
 ) (out Out, err error) {
 	options = append(options, Decorate(in, dec)...)
 	return fn(ctx, in, options...)
@@ -28,8 +28,8 @@ func Do[In, Out any](
 // be used when sending the request.
 func Decorate[In any](
 	in *In,
-	dec func(*In) []request.Option,
-) []request.Option {
+	dec func(*In) []func(*dynamodb.Options),
+) []func(*dynamodb.Options) {
 	if dec != nil {
 		return dec(in)
 	}

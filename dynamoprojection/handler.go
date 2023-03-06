@@ -4,7 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/dogmatiq/dogma"
 )
 
@@ -24,7 +25,7 @@ type MessageHandler interface {
 	// HandleEvent updates the projection to reflect the occurrence of an event.
 	//
 	// It SHOULD return all database changes in the form of the slice to
-	// *dynamodb.TransactWriteItem that MUST be applied within a single
+	// types.TransactWriteItem that MUST be applied within a single
 	// transaction.
 	//
 	// If an error is returned, the projection SHOULD be left in the state it
@@ -49,7 +50,7 @@ type MessageHandler interface {
 	// UnexpectedMessage value.
 	//
 	// The engine MAY call HandleEvent() from multiple goroutines concurrently.
-	HandleEvent(ctx context.Context, s dogma.ProjectionEventScope, m dogma.Message) ([]*dynamodb.TransactWriteItem, error)
+	HandleEvent(ctx context.Context, s dogma.ProjectionEventScope, m dogma.Message) ([]types.TransactWriteItem, error)
 
 	// TimeoutHint returns a duration that is suitable for computing a deadline
 	// for the handling of the given message by this handler.
@@ -75,7 +76,7 @@ type MessageHandler interface {
 	// The engine SHOULD call Compact() repeatedly throughout the lifetime of
 	// the projection. The precise scheduling of calls to Compact() are
 	// engine-defined. It MAY be called concurrently with any other method.
-	Compact(ctx context.Context, db *dynamodb.DynamoDB, s dogma.ProjectionCompactScope) error
+	Compact(ctx context.Context, client *dynamodb.Client, s dogma.ProjectionCompactScope) error
 }
 
 // NoCompactBehavior can be embedded in MessageHandler implementations to
@@ -88,7 +89,7 @@ type NoCompactBehavior struct{}
 // Compact returns nil.
 func (NoCompactBehavior) Compact(
 	ctx context.Context,
-	db *dynamodb.DynamoDB,
+	client *dynamodb.Client,
 	s dogma.ProjectionCompactScope,
 ) error {
 	return nil
