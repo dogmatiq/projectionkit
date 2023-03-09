@@ -59,7 +59,7 @@ func (rr *ResourceRepository) ResourceVersion(ctx context.Context, r []byte) ([]
 		},
 	)
 
-	if out.Item == nil || err != nil {
+	if err != nil || out.Item == nil {
 		return nil, err
 	}
 
