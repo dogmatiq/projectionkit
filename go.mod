@@ -9,7 +9,7 @@ require (
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.27.2
 	go.etcd.io/bbolt v1.3.7
-	go.uber.org/multierr v1.9.0
+	go.uber.org/multierr v1.10.0
 )
 
 require (
@@ -27,7 +27,6 @@ require (
 	github.com/lib/pq v1.9.0 // indirect
 	github.com/mattn/go-sqlite3 v1.14.5 // indirect
 	github.com/nxadm/tail v1.4.8 // indirect
-	go.uber.org/atomic v1.7.0 // indirect
 	golang.org/x/crypto v0.1.0 // indirect
 	golang.org/x/net v0.7.0 // indirect
 	golang.org/x/sys v0.5.0 // indirect
