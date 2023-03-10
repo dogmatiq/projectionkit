@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/dogmatiq/dogma"
+	. "github.com/dogmatiq/dogma/fixtures"
 	. "github.com/dogmatiq/projectionkit/dynamoprojection"
 	"github.com/dogmatiq/projectionkit/dynamoprojection/fixtures"
 	"github.com/dogmatiq/projectionkit/internal/identity"
@@ -193,12 +194,48 @@ var _ = Context("adding options", func() {
 		})
 	})
 
-	Describe("resource repository options", func() {
+	Describe("NewResourceRepository() options", func() {
 		handler := &fixtures.MessageHandler{
 			ConfigureFunc: func(c dogma.ProjectionConfigurer) {
 				c.Identity("<projection>", "<key>")
 			},
 		}
+
+		BeforeEach(func() {
+			err := CreateTable(
+				ctx,
+				client,
+				"ProjectionOCCTable",
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			err = dynamodb.NewTableExistsWaiter(client).Wait(
+				ctx,
+				&dynamodb.DescribeTableInput{
+					TableName: aws.String("ProjectionOCCTable"),
+				},
+				5*time.Second,
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+		})
+
+		AfterEach(func() {
+			err := DeleteTable(
+				ctx,
+				client,
+				"ProjectionOCCTable",
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			err = dynamodb.NewTableNotExistsWaiter(client).Wait(
+				ctx,
+				&dynamodb.DescribeTableInput{
+					TableName: aws.String("ProjectionOCCTable"),
+				},
+				5*time.Second,
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+		})
 
 		Describe("WithDecorateGetItem() option", func() {
 			It("can modify the input of the operation", func() {
@@ -348,40 +385,6 @@ var _ = Context("adding options", func() {
 
 		Describe("WithDecorateTransactWriteItems() option", func() {
 			It("can modify the input of the operation", func() {
-				err := CreateTable(
-					ctx,
-					client,
-					"ProjectionOCCTable",
-				)
-				Expect(err).ShouldNot(HaveOccurred())
-
-				err = dynamodb.NewTableExistsWaiter(client).Wait(
-					ctx,
-					&dynamodb.DescribeTableInput{
-						TableName: aws.String("ProjectionOCCTable"),
-					},
-					5*time.Second,
-				)
-				Expect(err).ShouldNot(HaveOccurred())
-
-				defer func() {
-					err := DeleteTable(
-						ctx,
-						client,
-						"ProjectionOCCTable",
-					)
-					Expect(err).ShouldNot(HaveOccurred())
-
-					err = dynamodb.NewTableNotExistsWaiter(client).Wait(
-						ctx,
-						&dynamodb.DescribeTableInput{
-							TableName: aws.String("ProjectionOCCTable"),
-						},
-						5*time.Second,
-					)
-					Expect(err).ShouldNot(HaveOccurred())
-				}()
-
 				repository := NewResourceRepository(
 					client,
 					identity.Key(handler),
@@ -409,7 +412,7 @@ var _ = Context("adding options", func() {
 					),
 				)
 
-				_, err = repository.UpdateResourceVersion(
+				_, err := repository.UpdateResourceVersion(
 					ctx,
 					[]byte("<resource>"),
 					nil,
@@ -443,6 +446,217 @@ var _ = Context("adding options", func() {
 					[]byte("<resource>"),
 					nil,
 					[]byte("<version 01>"),
+				)
+				Expect(err).Should(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring("no such host"))
+			})
+		})
+	})
+
+	Describe("New() options", func() {
+		handler := &fixtures.MessageHandler{
+			ConfigureFunc: func(c dogma.ProjectionConfigurer) {
+				c.Identity("<projection>", "<key>")
+			},
+		}
+
+		BeforeEach(func() {
+			err := CreateTable(
+				ctx,
+				client,
+				"ProjectionOCCTable",
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			err = dynamodb.NewTableExistsWaiter(client).Wait(
+				ctx,
+				&dynamodb.DescribeTableInput{
+					TableName: aws.String("ProjectionOCCTable"),
+				},
+				5*time.Second,
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+		})
+
+		AfterEach(func() {
+			err := DeleteTable(
+				ctx,
+				client,
+				"ProjectionOCCTable",
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			err = dynamodb.NewTableNotExistsWaiter(client).Wait(
+				ctx,
+				&dynamodb.DescribeTableInput{
+					TableName: aws.String("ProjectionOCCTable"),
+				},
+				5*time.Second,
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+		})
+
+		Describe("WithDecorateGetItem() option", func() {
+			It("can modify the input of the operation", func() {
+				adaptor := New(
+					client,
+					"ProjectionOCCTable",
+					handler,
+					WithDecorateGetItem(
+						func(in *dynamodb.GetItemInput) []func(*dynamodb.Options) {
+							in.TableName = aws.String("NonExistingTable")
+							return nil
+						},
+					),
+				)
+
+				_, err := adaptor.ResourceVersion(ctx, []byte("<resource>"))
+				Expect(err).Should(HaveOccurred())
+				Expect(errors.As(err, new(*types.ResourceNotFoundException))).To(BeTrue())
+			})
+
+			It("can modify the operation via returned options", func() {
+				adaptor := New(
+					client,
+					"ProjectionOCCTable",
+					handler,
+					WithDecorateGetItem(
+						func(*dynamodb.GetItemInput) []func(*dynamodb.Options) {
+							return []func(opts *dynamodb.Options){
+								func(opts *dynamodb.Options) {
+									opts.Retryer = aws.NopRetryer{}
+									opts.EndpointResolver = dynamodb.EndpointResolverFromURL(
+										"http://non-existing-host.com:8000",
+									)
+								},
+							}
+						},
+					),
+				)
+
+				_, err := adaptor.ResourceVersion(ctx, []byte("<resource>"))
+				Expect(err).Should(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring("no such host"))
+			})
+		})
+
+		Describe("WithDecorateDeleteItem() option", func() {
+			It("can modify the input of the operation", func() {
+				adaptor := New(
+					client,
+					"ProjectionOCCTable",
+					handler,
+					WithDecorateDeleteItem(
+						func(in *dynamodb.DeleteItemInput) []func(*dynamodb.Options) {
+							in.TableName = aws.String("NonExistingTable")
+							return nil
+						},
+					),
+				)
+
+				err := adaptor.CloseResource(
+					ctx,
+					[]byte("<resource>"),
+				)
+				Expect(err).Should(HaveOccurred())
+				Expect(errors.As(err, new(*types.ResourceNotFoundException))).To(BeTrue())
+			})
+
+			It("can modify the operation via returned options", func() {
+				adaptor := New(
+					client,
+					"ProjectionOCCTable",
+					handler,
+					WithDecorateDeleteItem(
+						func(*dynamodb.DeleteItemInput) []func(*dynamodb.Options) {
+							return []func(opts *dynamodb.Options){
+								func(opts *dynamodb.Options) {
+									opts.Retryer = aws.NopRetryer{}
+									opts.EndpointResolver = dynamodb.EndpointResolverFromURL(
+										"http://non-existing-host.com:8000",
+									)
+								},
+							}
+						},
+					),
+				)
+
+				err := adaptor.CloseResource(
+					ctx,
+					[]byte("<resource>"),
+				)
+				Expect(err).Should(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring("no such host"))
+			})
+		})
+
+		Describe("WithDecorateTransactWriteItems() option", func() {
+			It("can modify the input of the operation", func() {
+				adaptor := New(
+					client,
+					"ProjectionOCCTable",
+					handler,
+					WithDecorateTransactWriteItems(
+						func(in *dynamodb.TransactWriteItemsInput) []func(*dynamodb.Options) {
+							in.TransactItems = append(
+								in.TransactItems,
+								types.TransactWriteItem{
+									ConditionCheck: &types.ConditionCheck{
+										TableName: aws.String("NonExistingTable"),
+										Key: map[string]types.AttributeValue{
+											"PK": &types.AttributeValueMemberS{
+												Value: "<value>",
+											},
+										},
+										ConditionExpression: aws.String(
+											"attribute_exists(PK)",
+										),
+									},
+								},
+							)
+							return nil
+						},
+					),
+				)
+
+				_, err := adaptor.HandleEvent(
+					ctx,
+					[]byte("<resource>"),
+					nil,
+					[]byte("<version 01>"),
+					nil,
+					MessageA1,
+				)
+				Expect(err).Should(HaveOccurred())
+				Expect(errors.As(err, new(*types.ResourceNotFoundException))).To(BeTrue())
+			})
+
+			It("can modify the operation via returned options", func() {
+				adaptor := New(
+					client,
+					"ProjectionOCCTable",
+					handler,
+					WithDecorateTransactWriteItems(
+						func(gii *dynamodb.TransactWriteItemsInput) []func(*dynamodb.Options) {
+							return []func(opts *dynamodb.Options){
+								func(opts *dynamodb.Options) {
+									opts.Retryer = aws.NopRetryer{}
+									opts.EndpointResolver = dynamodb.EndpointResolverFromURL(
+										"http://non-existing-host.com:8000",
+									)
+								},
+							}
+						},
+					),
+				)
+
+				_, err := adaptor.HandleEvent(
+					ctx,
+					[]byte("<resource>"),
+					nil,
+					[]byte("<version 01>"),
+					nil,
+					MessageA1,
 				)
 				Expect(err).Should(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("no such host"))
