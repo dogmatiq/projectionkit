@@ -104,7 +104,7 @@ var _ = Describe("type adaptor", func() {
 	adaptortest.DescribeAdaptor(&ctx, &adaptor)
 
 	Describe("func New()", func() {
-		It("returns an unbound handler if the database is nil", func() {
+		It("returns an unbound handler if the client is nil", func() {
 			adaptor = New(nil, "ProjectionOCCTable", handler)
 
 			err := adaptor.Compact(
