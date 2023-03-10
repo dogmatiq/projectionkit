@@ -75,11 +75,29 @@ var _ = Describe("type adaptor", func() {
 		err = CreateTable(ctx, client, "ProjectionOCCTable")
 		Expect(err).ShouldNot(HaveOccurred())
 
+		err = dynamodb.NewTableExistsWaiter(client).Wait(
+			ctx,
+			&dynamodb.DescribeTableInput{
+				TableName: aws.String("ProjectionOCCTable"),
+			},
+			5*time.Second,
+		)
+		Expect(err).ShouldNot(HaveOccurred())
+
 		adaptor = New(client, "ProjectionOCCTable", handler)
 	})
 
 	AfterEach(func() {
 		err := DeleteTable(ctx, client, "ProjectionOCCTable")
+		Expect(err).ShouldNot(HaveOccurred())
+
+		err = dynamodb.NewTableNotExistsWaiter(client).Wait(
+			ctx,
+			&dynamodb.DescribeTableInput{
+				TableName: aws.String("ProjectionOCCTable"),
+			},
+			5*time.Second,
+		)
 		Expect(err).ShouldNot(HaveOccurred())
 	})
 
