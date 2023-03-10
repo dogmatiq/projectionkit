@@ -85,6 +85,15 @@ var _ = Context("adding options", func() {
 					"ProjectionOCCTableAlternativeName",
 				)
 				Expect(err).ShouldNot(HaveOccurred())
+
+				err = dynamodb.NewTableNotExistsWaiter(client).Wait(
+					ctx,
+					&dynamodb.DescribeTableInput{
+						TableName: aws.String("ProjectionOCCTable"),
+					},
+					5*time.Second,
+				)
+				Expect(err).ShouldNot(HaveOccurred())
 			}()
 
 			err = dynamodb.NewTableExistsWaiter(client).Wait(
@@ -126,6 +135,15 @@ var _ = Context("adding options", func() {
 				ctx,
 				client,
 				"ProjectionOCCTableAlternativeName",
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			err = dynamodb.NewTableExistsWaiter(client).Wait(
+				ctx,
+				&dynamodb.DescribeTableInput{
+					TableName: aws.String("ProjectionOCCTableAlternativeName"),
+				},
+				5*time.Second,
 			)
 			Expect(err).ShouldNot(HaveOccurred())
 
