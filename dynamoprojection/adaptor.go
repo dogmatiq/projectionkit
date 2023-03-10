@@ -26,8 +26,8 @@ type adaptor struct {
 // The caller MUST specify the name of the table used for storing the data
 // related to projection OCC.
 //
-// If db is nil the returned handler will return an error whenever an operation
-// that requires the database is performed.
+// If client is nil the returned handler will return an error whenever an
+// operation that requires the database is performed.
 func New(
 	client *dynamodb.Client,
 	occTable string,

@@ -143,6 +143,96 @@ var _ = Describe("type adaptor", func() {
 			)
 			Expect(err).Should(HaveOccurred())
 		})
+
+		When("transaction items returned by a user cause conflict", func() {
+			BeforeEach(func() {
+				_, err := client.CreateTable(
+					ctx,
+					&dynamodb.CreateTableInput{
+						TableName: aws.String("TestTable"),
+						AttributeDefinitions: []types.AttributeDefinition{
+							{
+								AttributeName: aws.String("PK"),
+								AttributeType: types.ScalarAttributeTypeS,
+							},
+						},
+						KeySchema: []types.KeySchemaElement{
+							{
+								AttributeName: aws.String("PK"),
+								KeyType:       types.KeyTypeHash,
+							},
+						},
+						BillingMode: types.BillingModePayPerRequest,
+					},
+				)
+				if !errors.As(err, new(*types.ResourceInUseException)) {
+					Expect(err).ShouldNot(HaveOccurred())
+				}
+
+				err = dynamodb.NewTableExistsWaiter(client).Wait(
+					ctx,
+					&dynamodb.DescribeTableInput{
+						TableName: aws.String("TestTable"),
+					},
+					5*time.Second,
+				)
+				Expect(err).ShouldNot(HaveOccurred())
+			})
+
+			AfterEach(func() {
+				_, err := client.DeleteTable(
+					ctx,
+					&dynamodb.DeleteTableInput{
+						TableName: aws.String("TestTable"),
+					},
+				)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				err = dynamodb.NewTableNotExistsWaiter(client).Wait(
+					ctx,
+					&dynamodb.DescribeTableInput{
+						TableName: aws.String("TestTable"),
+					},
+					5*time.Second,
+				)
+				Expect(err).ShouldNot(HaveOccurred())
+			})
+
+			It("returns an error", func() {
+				handler.HandleEventFunc = func(
+					context.Context,
+					dogma.ProjectionEventScope,
+					dogma.Message,
+				) ([]types.TransactWriteItem, error) {
+					return []types.TransactWriteItem{
+						{
+							ConditionCheck: &types.ConditionCheck{
+								TableName: aws.String("TestTable"),
+								Key: map[string]types.AttributeValue{
+									"PK": &types.AttributeValueMemberS{
+										Value: "<value>",
+									},
+								},
+								ConditionExpression: aws.String(
+									"attribute_exists(PK)",
+								),
+							},
+						},
+					}, nil
+				}
+
+				_, err := adaptor.HandleEvent(
+					context.Background(),
+					[]byte("<resource>"),
+					nil,
+					[]byte("<version 01>"),
+					nil,
+					MessageA1,
+				)
+				Expect(err).Should(HaveOccurred())
+				Expect(errors.As(err, new(*types.TransactionCanceledException))).To(BeTrue())
+			})
+		})
 	})
 
 	Describe("func TimeoutHint()", func() {

@@ -166,29 +166,31 @@ func (rr *ResourceRepository) createResourceWithinTx(
 		rr.decorators.decorateTransactWriteItems,
 		&dynamodb.TransactWriteItemsInput{
 			TransactItems: append(
-				items,
-				types.TransactWriteItem{
-					Put: &types.Put{
-						TableName:           aws.String(rr.occTable),
-						ConditionExpression: aws.String(`attribute_not_exists(#HR)`),
-						ExpressionAttributeNames: map[string]string{
-							"#HR": handlerAndResourceAttr,
-						},
-						Item: map[string]types.AttributeValue{
-							handlerAndResourceAttr: &types.AttributeValueMemberB{
-								Value: handlerAndResource(rr.key, r),
+				[]types.TransactWriteItem{
+					{
+						Put: &types.Put{
+							TableName:           aws.String(rr.occTable),
+							ConditionExpression: aws.String(`attribute_not_exists(#HR)`),
+							ExpressionAttributeNames: map[string]string{
+								"#HR": handlerAndResourceAttr,
 							},
-							resourceVersionAttr: &types.AttributeValueMemberB{
-								Value: n,
+							Item: map[string]types.AttributeValue{
+								handlerAndResourceAttr: &types.AttributeValueMemberB{
+									Value: handlerAndResource(rr.key, r),
+								},
+								resourceVersionAttr: &types.AttributeValueMemberB{
+									Value: n,
+								},
 							},
 						},
 					},
 				},
+				items...,
 			),
 		},
 	)
 
-	if errors.As(err, new(*types.TransactionCanceledException)) {
+	if isOCCConflict(err) {
 		return false, nil
 	}
 
@@ -208,31 +210,34 @@ func (rr *ResourceRepository) deleteResourceWithinTx(
 		rr.decorators.decorateTransactWriteItems,
 		&dynamodb.TransactWriteItemsInput{
 			TransactItems: append(
-				items,
-				types.TransactWriteItem{
-					Delete: &types.Delete{
-						TableName:           aws.String(rr.occTable),
-						ConditionExpression: aws.String(`#C = :C`),
-						ExpressionAttributeNames: map[string]string{
-							"#C": resourceVersionAttr,
-						},
-						ExpressionAttributeValues: map[string]types.AttributeValue{
-							":C": &types.AttributeValueMemberB{
-								Value: c,
+				[]types.TransactWriteItem{
+					{
+						Delete: &types.Delete{
+							TableName:           aws.String(rr.occTable),
+							ConditionExpression: aws.String(`attribute_exists(#HR) AND #V = :C`),
+							ExpressionAttributeNames: map[string]string{
+								"#HR": handlerAndResourceAttr,
+								"#V":  resourceVersionAttr,
 							},
-						},
-						Key: map[string]types.AttributeValue{
-							handlerAndResourceAttr: &types.AttributeValueMemberB{
-								Value: handlerAndResource(rr.key, r),
+							ExpressionAttributeValues: map[string]types.AttributeValue{
+								":C": &types.AttributeValueMemberB{
+									Value: c,
+								},
+							},
+							Key: map[string]types.AttributeValue{
+								handlerAndResourceAttr: &types.AttributeValueMemberB{
+									Value: handlerAndResource(rr.key, r),
+								},
 							},
 						},
 					},
 				},
+				items...,
 			),
 		},
 	)
 
-	if errors.As(err, new(*types.TransactionCanceledException)) {
+	if isOCCConflict(err) {
 		return false, nil
 	}
 
@@ -252,38 +257,59 @@ func (rr *ResourceRepository) updateResourceWithinTx(
 		rr.decorators.decorateTransactWriteItems,
 		&dynamodb.TransactWriteItemsInput{
 			TransactItems: append(
-				items,
-				types.TransactWriteItem{
-					Put: &types.Put{
-						TableName:           aws.String(rr.occTable),
-						ConditionExpression: aws.String(`#C = :C`),
-						ExpressionAttributeNames: map[string]string{
-							"#C": resourceVersionAttr,
-						},
-						ExpressionAttributeValues: map[string]types.AttributeValue{
-							":C": &types.AttributeValueMemberB{
-								Value: c,
+				[]types.TransactWriteItem{
+					{
+						Update: &types.Update{
+							TableName: aws.String(rr.occTable),
+							Key: map[string]types.AttributeValue{
+								handlerAndResourceAttr: &types.AttributeValueMemberB{
+									Value: handlerAndResource(rr.key, r),
+								},
 							},
-						},
-						Item: map[string]types.AttributeValue{
-							handlerAndResourceAttr: &types.AttributeValueMemberB{
-								Value: handlerAndResource(rr.key, r),
+							ConditionExpression: aws.String(`attribute_exists(#HR) AND #V = :C`),
+							UpdateExpression:    aws.String(`SET #V = :N`),
+							ExpressionAttributeNames: map[string]string{
+								"#HR": handlerAndResourceAttr,
+								"#V":  resourceVersionAttr,
 							},
-							resourceVersionAttr: &types.AttributeValueMemberB{
-								Value: n,
+							ExpressionAttributeValues: map[string]types.AttributeValue{
+								":C": &types.AttributeValueMemberB{
+									Value: c,
+								},
+								":N": &types.AttributeValueMemberB{
+									Value: n,
+								},
 							},
 						},
 					},
 				},
+				items...,
 			),
 		},
 	)
 
-	if errors.As(err, new(*types.TransactionCanceledException)) {
+	if isOCCConflict(err) {
 		return false, nil
 	}
 
 	return err == nil, err
+}
+
+// isOCCConflict determines if the error is caused by the conflict in OCC table
+// in the process of transaction handling.
+//
+// This function heavily relies on the assumption that transaction item to
+// update projection OCC table is the first in the list preceding user-provided
+// transaction items.
+func isOCCConflict(err error) bool {
+	var txCancelErr *types.TransactionCanceledException
+	if errors.As(err, &txCancelErr) {
+		if *txCancelErr.CancellationReasons[0].Code == "ConditionalCheckFailed" {
+			return true
+		}
+	}
+
+	return false
 }
 
 // handlerAndResource returns an identifier based on the handler and resource

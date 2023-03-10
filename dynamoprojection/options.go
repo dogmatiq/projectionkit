@@ -109,6 +109,12 @@ func WithDecorateDeleteItem(
 // operation. The decorator can modify the passed TransactWriteItemsInput
 // structure and return a slice of request.Option to alter the request prior to
 // its execution.
+//
+// Warning! Changing the order of transaction items in the original request may
+// lead to unpredictable results and errors. The logic of the projection handler
+// relies on the order of transaction items to distinguish between projection
+// OCC conflict and conditional failures of the transaction items provided by
+// the user.
 func WithDecorateTransactWriteItems(
 	dec func(*dynamodb.TransactWriteItemsInput) []func(*dynamodb.Options),
 ) interface {
