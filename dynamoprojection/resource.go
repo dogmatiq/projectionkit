@@ -300,7 +300,7 @@ func (rr *ResourceRepository) updateResourceWithinTx(
 // isOCCConflict determines if the error is caused by the conflict in OCC table
 // in the process of transaction handling.
 //
-// This function heavily relies on the assumption that transaction item to
+// This function heavily relies on the assumption that the transaction item to
 // update projection OCC table is the first in the list preceding user-provided
 // transaction items.
 func isOCCConflict(err error) bool {
