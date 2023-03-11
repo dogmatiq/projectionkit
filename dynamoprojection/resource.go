@@ -65,6 +65,8 @@ func (rr *ResourceRepository) ResourceVersion(ctx context.Context, r []byte) ([]
 
 	b, ok := out.Item[resourceVersionAttr].(*types.AttributeValueMemberB)
 	if !ok {
+		// CODE COVERAGE: This branch can not be easily covered without somehow
+		// breaking the integrity of the record in the projection OCC table.
 		panic(
 			fmt.Sprintf(
 				"invalid structure in projection OCC table %s",
