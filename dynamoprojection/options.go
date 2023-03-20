@@ -10,13 +10,13 @@ type HandlerOption interface {
 	applyOptionToAdaptor(*decorators)
 }
 
-// ResourceRepositoryOption is used to alter the behavior ResourceRepository.
+// ResourceRepositoryOption is used to alter the behavior of a ResourceRepository.
 type ResourceRepositoryOption interface {
 	applyResourceRepositoryOption(*decorators)
 }
 
-// TableOption is used to alter the behavior operations related to table
-// manipulations.
+// TableOption is used to alter the behavior of oeprations that manipulate
+// DynamoDB tables.
 type TableOption interface {
 	applyTableOption(*decorators)
 }
@@ -54,9 +54,10 @@ func (o *options) applyTableOption(decorators *decorators) {
 	}
 }
 
-// WithDecorateGetItem adds a decorator for GetItem operation. The decorator can
-// modify the passed GetItemInput structure and return a slice of request.Option
-// to alter the request prior to its execution.
+// WithDecorateGetItem adds a decorator for DynamoDB GetItem operations.
+//
+// The decorator function may modify the input structure in-place. It returns a
+// slice of DynamoDB request.Option values that are applied to the API request.
 func WithDecorateGetItem(
 	dec func(*dynamodb.GetItemInput) []func(*dynamodb.Options),
 ) interface {
@@ -110,11 +111,10 @@ func WithDecorateDeleteItem(
 // structure and return a slice of request.Option to alter the request prior to
 // its execution.
 //
-// Warning! Changing the order of transaction items in the original request may
-// lead to unpredictable results and errors. The logic of the projection handler
-// relies on the order of transaction items to distinguish between projection
-// OCC conflict and conditional failures of the transaction items provided by
-// the user.
+// Warning! The order of the TransactWriteItems in the input structure is
+// meaningful to both DynamoDB and this package. Specifically, the first item is
+// used to update the projection's resource versions; it MUST NOT be modified or
+// reordered.
 func WithDecorateTransactWriteItems(
 	dec func(*dynamodb.TransactWriteItemsInput) []func(*dynamodb.Options),
 ) interface {

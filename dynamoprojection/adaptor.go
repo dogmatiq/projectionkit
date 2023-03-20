@@ -20,17 +20,16 @@ type adaptor struct {
 }
 
 // New returns a new Dogma projection message handler by binding a
-// DynamoDB-specific projection handler to an AWS DynamoDB database.
+// DynamoDB-specific projection handler to an AWS DynamoDB client.
 //
-// occTable is the table that is used for the data related to projection OCC.
-// The caller MUST specify the name of the table used for storing the data
-// related to projection OCC.
+// t is the name of a DynamoDB table that stores information about projection
+// resource versions. Each running Dogma instance SHOULD use a different table.
 //
-// If client is nil the returned handler will return an error whenever an
-// operation that requires the database is performed.
+// If c is nil the returned handler will return an error whenever a
+// DynamoDB API call is made.
 func New(
-	client *dynamodb.Client,
-	occTable string,
+	c *dynamodb.Client,
+	t string,
 	h MessageHandler,
 	options ...HandlerOption,
 ) dogma.ProjectionMessageHandler {

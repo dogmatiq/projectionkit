@@ -20,20 +20,20 @@ const (
 	resourceVersionAttr = "Version"
 )
 
-// CreateTable creates an AWS DynamoDB table to store projections on the given
-// database.
+// CreateTable creates an AWS DynamoDB table that stores information about
+// projection resource versions. 
 //
-// occTable is the name of the table that stores the data related to the
-// projection OCC. For AWS DynamoDB naming rules, see [this link](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/HowItWorks.NamingRulesDataTypes.html)
-// for reference.
-//
+// Each running Dogma instance SHOULD use a different table.
 // It does not return an error if the table already exists.
+//
+// See https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/HowItWorks.NamingRulesDataTypes.html
 func CreateTable(
 	ctx context.Context,
-	client *dynamodb.Client,
-	occTable string,
+	c *dynamodb.Client,
+	name string,
 	options ...TableOption,
 ) error {
+
 	decorators := &decorators{}
 	for _, opt := range options {
 		opt.applyTableOption(decorators)
@@ -68,17 +68,15 @@ func CreateTable(
 	return err
 }
 
-// DeleteTable deletes an AWS DynamoDB table that stores data related to
-// projection OCC in the given database.
+// DeleteTable deletes an AWS DynamoDB table.
 //
-// occTable is the name of the table that stores the data related to the
-// projection OCC.
+// It is used to delete tables created using CreateTable().
 //
 // It does not return an error if the table does not exist.
 func DeleteTable(
 	ctx context.Context,
-	client *dynamodb.Client,
-	occTable string,
+	c *dynamodb.Client,
+	name string,
 	options ...TableOption,
 ) error {
 	decorators := &decorators{}

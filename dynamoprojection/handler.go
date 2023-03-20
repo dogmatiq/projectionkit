@@ -10,7 +10,7 @@ import (
 )
 
 // MessageHandler is a specialization of dogma.ProjectionMessageHandler that
-// persists to an AWS DynamoDB database.
+// persists to AWS DynamoDB.
 type MessageHandler interface {
 	// Configure produces a configuration for this handler by calling methods on
 	// the configurer c.
@@ -24,8 +24,8 @@ type MessageHandler interface {
 
 	// HandleEvent updates the projection to reflect the occurrence of an event.
 	//
-	// It SHOULD return all database changes in the form of the slice to
-	// types.TransactWriteItem that MUST be applied within a single
+	// The changes to be made are returned as a slice of transaction items,
+	// which MAY be empty. The items are applied to DynamoDB in a single
 	// transaction.
 	//
 	// If an error is returned, the projection SHOULD be left in the state it

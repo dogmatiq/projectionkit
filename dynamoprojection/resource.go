@@ -13,7 +13,7 @@ import (
 )
 
 // ResourceRepository is an implementation of resource.Repository that stores
-// resources versions in an AWS DynamoDB database.
+// resources versions in AWS DynamoDB.
 type ResourceRepository struct {
 	client     *dynamodb.Client
 	key        string
