@@ -2,17 +2,19 @@ package dynamoprojection_test
 
 import (
 	"context"
-	"testing"
 
 	. "github.com/dogmatiq/projectionkit/dynamoprojection"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
-func TestNoCompactBehavior_Compact_ReturnsNil(t *testing.T) {
-	var v NoCompactBehavior
+var _ = Describe("NoCompactBehavior", func() {
+	When("Compact() is called", func() {
+		It("returns nil", func() {
+			var v NoCompactBehavior
 
-	err := v.Compact(context.Background(), nil, nil)
-
-	if err != nil {
-		t.Fatal("unexpected error returned")
-	}
-}
+			err := v.Compact(context.Background(), nil, nil)
+			Expect(err).ShouldNot(HaveOccurred())
+		})
+	})
+})
