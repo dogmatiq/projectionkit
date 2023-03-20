@@ -132,9 +132,10 @@ func WithDecorateTransactWriteItems(
 	}
 }
 
-// WithDecorateCreateTable adds a decorator for CreateTable operation. The
-// decorator can modify the passed CreateTableInput structure and return
-// a slice of request.Option to alter the request prior to its execution.
+// WithDecorateCreateTable adds a decorator for DynamoDB CreateTable operations.
+//
+// The decorator function may modify the input structure in-place. It returns a
+// slice of DynamoDB request.Option values that are applied to the API request.
 func WithDecorateCreateTable(
 	dec func(*dynamodb.CreateTableInput) []func(*dynamodb.Options),
 ) TableOption {
