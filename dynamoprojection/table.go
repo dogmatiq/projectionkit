@@ -21,7 +21,7 @@ const (
 )
 
 // CreateTable creates an AWS DynamoDB table that stores information about
-// projection resource versions. 
+// projection resource versions.
 //
 // Each running Dogma instance SHOULD use a different table.
 // It does not return an error if the table already exists.
@@ -41,10 +41,10 @@ func CreateTable(
 
 	_, err := awsx.Do(
 		ctx,
-		client.CreateTable,
+		c.CreateTable,
 		decorators.decorateCreateTableItem,
 		&dynamodb.CreateTableInput{
-			TableName: aws.String(occTable),
+			TableName: aws.String(name),
 			AttributeDefinitions: []types.AttributeDefinition{
 				{
 					AttributeName: aws.String(handlerAndResourceAttr),
@@ -86,10 +86,10 @@ func DeleteTable(
 
 	_, err := awsx.Do(
 		ctx,
-		client.DeleteTable,
+		c.DeleteTable,
 		decorators.decorateDeleteTableItem,
 		&dynamodb.DeleteTableInput{
-			TableName: aws.String(occTable),
+			TableName: aws.String(name),
 		},
 	)
 

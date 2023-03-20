@@ -72,9 +72,10 @@ func WithDecorateGetItem(
 	}
 }
 
-// WithDecoratePutItem adds a decorator for PutItem operation. The decorator can
-// modify the passed PutItemInput structure and return a slice of request.Option
-// to alter the request prior to its execution.
+// WithDecoratePutItem adds a decorator for DynamoDB PutItem operations.
+//
+// The decorator function may modify the input structure in-place. It returns a
+// slice of DynamoDB request.Option values that are applied to the API request.
 func WithDecoratePutItem(
 	dec func(*dynamodb.PutItemInput) []func(*dynamodb.Options),
 ) interface {
@@ -89,9 +90,10 @@ func WithDecoratePutItem(
 	}
 }
 
-// WithDecorateDeleteItem adds a decorator for DeleteItem operation. The
-// decorator can modify the passed DeleteItemInput structure and return a slice
-// of request.Option to alter the request prior to its execution.
+// WithDecorateDeleteItem adds a decorator for DynamoDB DeleteItem operations.
+//
+// The decorator function may modify the input structure in-place. It returns a
+// slice of DynamoDB request.Option values that are applied to the API request.
 func WithDecorateDeleteItem(
 	dec func(*dynamodb.DeleteItemInput) []func(*dynamodb.Options),
 ) interface {
@@ -106,10 +108,11 @@ func WithDecorateDeleteItem(
 	}
 }
 
-// WithDecorateTransactWriteItems adds a decorator for TransactWriteItems
-// operation. The decorator can modify the passed TransactWriteItemsInput
-// structure and return a slice of request.Option to alter the request prior to
-// its execution.
+// WithDecorateTransactWriteItems adds a decorator for DynamoDB
+// TransactWriteItems operations.
+//
+// The decorator function may modify the input structure in-place. It returns a
+// slice of DynamoDB request.Option values that are applied to the API request.
 //
 // Warning! The order of the TransactWriteItems in the input structure is
 // meaningful to both DynamoDB and this package. Specifically, the first item is
@@ -142,9 +145,10 @@ func WithDecorateCreateTable(
 	}
 }
 
-// WithDecorateDeleteTable adds a decorator for DeleteTable operation. The
-// decorator can modify the passed DeleteTableInput structure and return a slice
-// of request.Option to alter the request prior to its execution.
+// WithDecorateDeleteTable adds a decorator for DynamoDB DeleteTable operations.
+//
+// The decorator function may modify the input structure in-place. It returns a
+// slice of DynamoDB request.Option values that are applied to the API request.
 func WithDecorateDeleteTable(
 	dec func(*dynamodb.DeleteTableInput) []func(*dynamodb.Options),
 ) TableOption {

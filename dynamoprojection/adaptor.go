@@ -33,7 +33,7 @@ func New(
 	h MessageHandler,
 	options ...HandlerOption,
 ) dogma.ProjectionMessageHandler {
-	if client == nil {
+	if c == nil {
 		return unboundhandler.New(h)
 	}
 
@@ -45,12 +45,12 @@ func New(
 	}
 
 	a := &adaptor{
-		client:  client,
+		client:  c,
 		handler: h,
 		repo: NewResourceRepository(
-			client,
+			c,
 			identity.Key(h),
-			occTable,
+			t,
 			rrOpts...,
 		),
 	}
