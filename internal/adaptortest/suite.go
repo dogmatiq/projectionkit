@@ -113,6 +113,30 @@ func DescribeAdaptor(
 			gomega.Expect(ok).Should(gomega.BeFalse())
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 		})
+
+		ginkgo.It("returns false if supplied resource version is not the current version when discarding a resource", func() {
+			ok, err := adaptor.HandleEvent(
+				context.Background(),
+				[]byte("<resource>"),
+				nil,
+				[]byte("<version 01>"),
+				nil,
+				fixtures.MessageA1,
+			)
+			gomega.Expect(ok).Should(gomega.BeTrue())
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+
+			ok, err = adaptor.HandleEvent(
+				context.Background(),
+				[]byte("<resource>"),
+				[]byte("<incorrect current version>"),
+				nil,
+				nil,
+				fixtures.MessageA2,
+			)
+			gomega.Expect(ok).Should(gomega.BeFalse())
+			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+		})
 	})
 
 	ginkgo.Describe("func ResourceVersion()", func() {
