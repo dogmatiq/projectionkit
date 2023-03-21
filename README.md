@@ -19,14 +19,14 @@ the lower-level `dogma.ProjectionMessageHandler` interface.
 
 ## Supported targets
 
-- [PostgreSQL](https://www.postgresql.org/) and compatible database
-- [MySQL](https://www.mysql.com/) and compatible databases
-- [SQLite](https://www.sqlite.org/index.html)
+- [Amazon DynamoDB](https://aws.amazon.com/dynamodb/)
 - [BoltDB](https://github.com/etcd-io/bbolt)
+- [MySQL](https://www.mysql.com/) and compatible databases
+- [PostgreSQL](https://www.postgresql.org/) and compatible database
+- [SQLite](https://www.sqlite.org/index.html)
 
 ## Future support
 
-- [Amazon DynamoDB](https://aws.amazon.com/dynamodb/) (in progress)
 - [openCypher](http://opencypher.org), implemented by [Amazon Neptune](https://aws.amazon.com/neptune/), [Neo4j](https://neo4j.com/), etc (in progress)
 - Replicated in-memory projections (planned)
 

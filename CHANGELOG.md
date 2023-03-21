@@ -6,16 +6,22 @@ The format is based on [Keep a Changelog], and this project adheres to
 [Semantic Versioning].
 
 <!-- references -->
-[Keep a Changelog]: https://keepachangelog.com/en/1.0.0/
-[Semantic Versioning]: https://semver.org/spec/v2.0.0.html
 
-## [Unreleased]
+[keep a changelog]: https://keepachangelog.com/en/1.0.0/
+[semantic versioning]: https://semver.org/spec/v2.0.0.html
+
+## [0.6.4] - 2023-03-22
 
 ### Added
 
-- Add `resource.Repository` interface
-- Add `boltprojection.ResourceRepository`
-- Add `sqlprojection.ResourceRepository`
+- Added support for DynamoDB projections in the new `dynamoprojection` package
+- Added `resource.Repository` interface
+- Added `boltprojection.ResourceRepository`
+- Added `sqlprojection.ResourceRepository`
+
+### Changed
+
+- The `sqlprojection` MySQL driver no longer uses compressed table rows for the OCC table
 
 ## [0.6.3] - 2021-01-29
 
@@ -134,7 +140,8 @@ placeholder format (`?` for MySQL, `$1` for everything else).
 - Initial release
 
 <!-- references -->
-[Unreleased]: https://github.com/dogmatiq/projectionkit
+
+[unreleased]: https://github.com/dogmatiq/projectionkit
 [0.1.0]: https://github.com/dogmatiq/projectionkit/releases/tag/v0.1.0
 [0.2.0]: https://github.com/dogmatiq/projectionkit/releases/tag/v0.2.0
 [0.3.0]: https://github.com/dogmatiq/projectionkit/releases/tag/v0.3.0
@@ -147,6 +154,7 @@ placeholder format (`?` for MySQL, `$1` for everything else).
 [0.6.1]: https://github.com/dogmatiq/projectionkit/releases/tag/v0.6.1
 [0.6.2]: https://github.com/dogmatiq/projectionkit/releases/tag/v0.6.2
 [0.6.3]: https://github.com/dogmatiq/projectionkit/releases/tag/v0.6.3
+[0.6.4]: https://github.com/dogmatiq/projectionkit/releases/tag/v0.6.4
 
 <!-- version template
 ## [0.0.1] - YYYY-MM-DD
