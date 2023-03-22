@@ -22,7 +22,7 @@ the lower-level `dogma.ProjectionMessageHandler` interface.
 - [Amazon DynamoDB](https://aws.amazon.com/dynamodb/)
 - [BoltDB](https://github.com/etcd-io/bbolt)
 - [MySQL](https://www.mysql.com/) and compatible databases
-- [PostgreSQL](https://www.postgresql.org/) and compatible database
+- [PostgreSQL](https://www.postgresql.org/) and compatible databases
 - [SQLite](https://www.sqlite.org/index.html)
 
 ## Future support
