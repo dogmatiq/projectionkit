@@ -11,7 +11,7 @@ require (
 	github.com/dogmatiq/dogma v0.11.1
 	github.com/dogmatiq/sqltest v0.3.0
 	github.com/onsi/ginkgo v1.16.5
-	github.com/onsi/gomega v1.27.5
+	github.com/onsi/gomega v1.27.6
 	go.etcd.io/bbolt v1.3.7
 	go.uber.org/multierr v1.10.0
 )
