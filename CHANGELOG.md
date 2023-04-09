@@ -10,6 +10,11 @@ The format is based on [Keep a Changelog], and this project adheres to
 [keep a changelog]: https://keepachangelog.com/en/1.0.0/
 [semantic versioning]: https://semver.org/spec/v2.0.0.html
 
+## [0.6.5] - 2023-04-09
+
+This release updates the `projectionkit` implementation to adhere to Dogma
+v0.12.0 interfaces.
+
 ## [0.6.4] - 2023-03-22
 
 ### Added
@@ -155,6 +160,7 @@ placeholder format (`?` for MySQL, `$1` for everything else).
 [0.6.2]: https://github.com/dogmatiq/projectionkit/releases/tag/v0.6.2
 [0.6.3]: https://github.com/dogmatiq/projectionkit/releases/tag/v0.6.3
 [0.6.4]: https://github.com/dogmatiq/projectionkit/releases/tag/v0.6.4
+[0.6.5]: https://github.com/dogmatiq/projectionkit/releases/tag/v0.6.5
 
 <!-- version template
 ## [0.0.1] - YYYY-MM-DD
