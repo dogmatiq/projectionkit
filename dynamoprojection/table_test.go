@@ -48,6 +48,11 @@ var _ = Context("creating and deleting a table", func() {
 					},
 				},
 			),
+			config.WithRetryer(
+				func() aws.Retryer {
+					return aws.NopRetryer{}
+				},
+			),
 		)
 		Expect(err).ShouldNot(HaveOccurred())
 
