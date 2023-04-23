@@ -54,6 +54,11 @@ var _ = Context("adding options", func() {
 					},
 				},
 			),
+			config.WithRetryer(
+				func() aws.Retryer {
+					return aws.NopRetryer{}
+				},
+			),
 		)
 		Expect(err).ShouldNot(HaveOccurred())
 
@@ -117,7 +122,6 @@ var _ = Context("adding options", func() {
 				) []func(*dynamodb.Options) {
 					return []func(opts *dynamodb.Options){
 						func(opts *dynamodb.Options) {
-							opts.Retryer = aws.NopRetryer{}
 							opts.EndpointResolver = dynamodb.EndpointResolverFromURL(
 								"http://non-existing-host.com:8000",
 							)
@@ -181,7 +185,6 @@ var _ = Context("adding options", func() {
 				) []func(*dynamodb.Options) {
 					return []func(opts *dynamodb.Options){
 						func(opts *dynamodb.Options) {
-							opts.Retryer = aws.NopRetryer{}
 							opts.EndpointResolver = dynamodb.EndpointResolverFromURL(
 								"http://non-existing-host.com:8000",
 							)
@@ -265,7 +268,6 @@ var _ = Context("adding options", func() {
 						func(*dynamodb.GetItemInput) []func(*dynamodb.Options) {
 							return []func(opts *dynamodb.Options){
 								func(opts *dynamodb.Options) {
-									opts.Retryer = aws.NopRetryer{}
 									opts.EndpointResolver = dynamodb.EndpointResolverFromURL(
 										"http://non-existing-host.com:8000",
 									)
@@ -313,7 +315,6 @@ var _ = Context("adding options", func() {
 						func(*dynamodb.PutItemInput) []func(*dynamodb.Options) {
 							return []func(opts *dynamodb.Options){
 								func(opts *dynamodb.Options) {
-									opts.Retryer = aws.NopRetryer{}
 									opts.EndpointResolver = dynamodb.EndpointResolverFromURL(
 										"http://non-existing-host.com:8000",
 									)
@@ -364,7 +365,6 @@ var _ = Context("adding options", func() {
 						func(*dynamodb.DeleteItemInput) []func(*dynamodb.Options) {
 							return []func(opts *dynamodb.Options){
 								func(opts *dynamodb.Options) {
-									opts.Retryer = aws.NopRetryer{}
 									opts.EndpointResolver = dynamodb.EndpointResolverFromURL(
 										"http://non-existing-host.com:8000",
 									)
@@ -431,7 +431,6 @@ var _ = Context("adding options", func() {
 						func(gii *dynamodb.TransactWriteItemsInput) []func(*dynamodb.Options) {
 							return []func(opts *dynamodb.Options){
 								func(opts *dynamodb.Options) {
-									opts.Retryer = aws.NopRetryer{}
 									opts.EndpointResolver = dynamodb.EndpointResolverFromURL(
 										"http://non-existing-host.com:8000",
 									)
@@ -524,7 +523,6 @@ var _ = Context("adding options", func() {
 						func(*dynamodb.GetItemInput) []func(*dynamodb.Options) {
 							return []func(opts *dynamodb.Options){
 								func(opts *dynamodb.Options) {
-									opts.Retryer = aws.NopRetryer{}
 									opts.EndpointResolver = dynamodb.EndpointResolverFromURL(
 										"http://non-existing-host.com:8000",
 									)
@@ -571,7 +569,6 @@ var _ = Context("adding options", func() {
 						func(*dynamodb.DeleteItemInput) []func(*dynamodb.Options) {
 							return []func(opts *dynamodb.Options){
 								func(opts *dynamodb.Options) {
-									opts.Retryer = aws.NopRetryer{}
 									opts.EndpointResolver = dynamodb.EndpointResolverFromURL(
 										"http://non-existing-host.com:8000",
 									)
@@ -640,7 +637,6 @@ var _ = Context("adding options", func() {
 						func(gii *dynamodb.TransactWriteItemsInput) []func(*dynamodb.Options) {
 							return []func(opts *dynamodb.Options){
 								func(opts *dynamodb.Options) {
-									opts.Retryer = aws.NopRetryer{}
 									opts.EndpointResolver = dynamodb.EndpointResolverFromURL(
 										"http://non-existing-host.com:8000",
 									)

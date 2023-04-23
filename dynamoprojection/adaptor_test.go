@@ -62,6 +62,11 @@ var _ = Describe("type adaptor", func() {
 					},
 				},
 			),
+			config.WithRetryer(
+				func() aws.Retryer {
+					return aws.NopRetryer{}
+				},
+			),
 		)
 		Expect(err).ShouldNot(HaveOccurred())
 
