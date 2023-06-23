@@ -7,12 +7,12 @@ import (
 	"os"
 	"time"
 
-	. "github.com/deslittle/projectionkit/boltprojection"
-	"github.com/deslittle/projectionkit/boltprojection/fixtures" // can't dot-import due to conflict
-	"github.com/deslittle/projectionkit/internal/adaptortest"
-	"github.com/deslittle/projectionkit/internal/identity"
 	"github.com/dogmatiq/dogma"
 	. "github.com/dogmatiq/dogma/fixtures"
+	. "github.com/dogmatiq/projectionkit/boltprojection"
+	"github.com/dogmatiq/projectionkit/boltprojection/fixtures" // can't dot-import due to conflict
+	"github.com/dogmatiq/projectionkit/internal/adaptortest"
+	"github.com/dogmatiq/projectionkit/internal/identity"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"go.etcd.io/bbolt"

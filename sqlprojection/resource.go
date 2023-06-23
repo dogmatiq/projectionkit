@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/deslittle/projectionkit/resource"
+	"github.com/dogmatiq/projectionkit/resource"
 )
 
 // ResourceRepository is an implementation of resource.Repository that stores

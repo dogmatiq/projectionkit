@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	. "github.com/deslittle/projectionkit/boltprojection"
+	. "github.com/dogmatiq/projectionkit/boltprojection"
 )
 
 func TestNoCompactBehavior_Compact_ReturnsNil(t *testing.T) {

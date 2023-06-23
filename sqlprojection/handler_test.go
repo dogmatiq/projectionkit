@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	. "github.com/deslittle/projectionkit/sqlprojection"
+	. "github.com/dogmatiq/projectionkit/sqlprojection"
 )
 
 func TestNoCompactBehavior_Compact_ReturnsNil(t *testing.T) {

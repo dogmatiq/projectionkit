@@ -5,12 +5,12 @@ import (
 	"errors"
 	"time"
 
-	"github.com/deslittle/projectionkit/internal/adaptortest"
-	"github.com/deslittle/projectionkit/internal/identity"
-	. "github.com/deslittle/projectionkit/neo4jprojection"
-	"github.com/deslittle/projectionkit/neo4jprojection/fixtures" // can't dot-import due to conflict
 	"github.com/dogmatiq/dogma"
 	. "github.com/dogmatiq/dogma/fixtures"
+	"github.com/dogmatiq/projectionkit/internal/adaptortest"
+	"github.com/dogmatiq/projectionkit/internal/identity"
+	. "github.com/dogmatiq/projectionkit/opencypherprojection"
+	"github.com/dogmatiq/projectionkit/opencypherprojection/fixtures" // can't dot-import due to conflict
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

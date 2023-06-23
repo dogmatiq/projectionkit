@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	. "github.com/deslittle/projectionkit/sqlprojection"
+	. "github.com/dogmatiq/projectionkit/sqlprojection"
 	"github.com/dogmatiq/sqltest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
