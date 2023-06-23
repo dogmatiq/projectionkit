@@ -120,20 +120,39 @@ func (rr *ResourceRepository) updateResourceVersion(ctx context.Context,
 
 	var result neo4j.ResultWithContext
 
-	// If the new version is empty, delete the resource.
+	// If the new version is empty, delete the resource only if the current version matches.
 	if len(n) == 0 {
-		_, err = tx.Run(ctx,
-			fmt.Sprintf(`MATCH (p:%s{handler: $handler, resource: $resource} )
-			DETACH DELETE p`, rr.occTable),
+		// First see if the resource exists with the current version.
+		result, err = tx.Run(ctx,
+			fmt.Sprintf(`MATCH (p:%s{handler: $handler, resource: $resource, version: $current_version} )
+			RETURN p`, rr.occTable),
 			map[string]any{
-				"handler":  rr.key,
-				"resource": string(r),
+				"handler":         rr.key,
+				"resource":        string(r),
+				"current_version": string(c),
 			},
 		)
 		if err != nil {
 			return false, err
 		}
-		return true, nil
+		exists := result.Next(ctx)
+
+		// Now delete the resource if it exists.
+		_, err = tx.Run(ctx,
+			fmt.Sprintf(`MATCH (p:%s{handler: $handler, resource: $resource, version: $current_version} )
+			DETACH DELETE p`, rr.occTable),
+			map[string]any{
+				"handler":         rr.key,
+				"resource":        string(r),
+				"current_version": string(c),
+			},
+		)
+		if err != nil {
+			return false, err
+		}
+
+		fmt.Printf("Deleting resource %v, version %v: %v \n", string(r), string(c), ok)
+		return exists, nil
 	}
 
 	// If resource does not exist, create it with the new version.
