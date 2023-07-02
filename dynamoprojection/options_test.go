@@ -48,8 +48,8 @@ var _ = Context("adding options", func() {
 			config.WithCredentialsProvider(
 				credentials.StaticCredentialsProvider{
 					Value: aws.Credentials{
-						AccessKeyID:     "<id>",
-						SecretAccessKey: "<secret>",
+						AccessKeyID:     "id",
+						SecretAccessKey: "secret",
 						SessionToken:    "",
 					},
 				},
