@@ -5,3 +5,10 @@ services:
     image: amazon/dynamodb-local
     ports:
       - "28000:8000/tcp"
+  neo4j:
+    image: neo4j:latest
+    environment:
+      - NEO4J_AUTH=neo4j/dogmamgod
+    ports:
+      - "7474:7474"
+      - "7687:7687"

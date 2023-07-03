@@ -24,10 +24,10 @@ the lower-level `dogma.ProjectionMessageHandler` interface.
 - [MySQL](https://www.mysql.com/) and compatible databases
 - [PostgreSQL](https://www.postgresql.org/) and compatible databases
 - [SQLite](https://www.sqlite.org/index.html)
+- [openCypher](http://opencypher.org), implemented by [Amazon Neptune](https://aws.amazon.com/neptune/), [Neo4j](https://neo4j.com/), etc.
 
 ## Future support
 
-- [openCypher](http://opencypher.org), implemented by [Amazon Neptune](https://aws.amazon.com/neptune/), [Neo4j](https://neo4j.com/), etc (in progress)
 - Replicated in-memory projections (planned)
 
 ## Testing
