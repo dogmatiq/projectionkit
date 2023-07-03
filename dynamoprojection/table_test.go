@@ -42,8 +42,8 @@ var _ = Context("creating and deleting a table", func() {
 			config.WithCredentialsProvider(
 				credentials.StaticCredentialsProvider{
 					Value: aws.Credentials{
-						AccessKeyID:     "<id>",
-						SecretAccessKey: "<secret>",
+						AccessKeyID:     "id",
+						SecretAccessKey: "secret",
 						SessionToken:    "",
 					},
 				},
