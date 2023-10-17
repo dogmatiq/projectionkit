@@ -10,10 +10,11 @@ import (
 
 // MessageHandler is a test implementation of sql.MessageHandler.
 type MessageHandler struct {
-	ConfigureFunc   func(dogma.ProjectionConfigurer)
-	HandleEventFunc func(context.Context, *sql.Tx, dogma.ProjectionEventScope, dogma.Message) error
-	TimeoutHintFunc func(dogma.Message) time.Duration
-	CompactFunc     func(context.Context, *sql.DB, dogma.ProjectionCompactScope) error
+	ConfigureFunc    func(dogma.ProjectionConfigurer)
+	HandleEventFunc  func(context.Context, *sql.Tx, dogma.ProjectionEventScope, dogma.Message) error
+	TimeoutHintFunc  func(dogma.Message) time.Duration
+	CompactFunc      func(context.Context, *sql.DB, dogma.ProjectionCompactScope) error
+	CreateSchemaFunc func(context.Context, *sql.DB) error
 }
 
 // Configure configures the behavior of the engine as it relates to this
@@ -66,6 +67,18 @@ func (h *MessageHandler) TimeoutHint(m dogma.Message) time.Duration {
 func (h *MessageHandler) Compact(ctx context.Context, db *sql.DB, s dogma.ProjectionCompactScope) error {
 	if h.CompactFunc != nil {
 		return h.CompactFunc(ctx, db, s)
+	}
+
+	return nil
+}
+
+// CreateSchema creates the SQL schema required by the projection.
+//
+// If h.CreateSchemaFunc is non-nil it returns h.CreateSchemaFunc(ctx,db),
+// otherwise it returns nil.
+func (h *MessageHandler) CreateSchema(ctx context.Context, db *sql.DB) error {
+	if h.CreateSchemaFunc != nil {
+		return h.CreateSchemaFunc(ctx, db)
 	}
 
 	return nil

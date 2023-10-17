@@ -77,9 +77,14 @@ type MessageHandler interface {
 	// the projection. The precise scheduling of calls to Compact() are
 	// engine-defined. It MAY be called concurrently with any other method.
 	Compact(ctx context.Context, db *sql.DB, s dogma.ProjectionCompactScope) error
+
+	// CreateSchema creates the SQL schema required by the projection.
+	//
+	// It must be safe to call CreateSchema() multiple times, even concurrently.
+	CreateSchema(ctx context.Context, db *sql.DB) error
 }
 
-// NoCompactBehavior can be embedded in MessageHandler implementations to
+// NoCompactBehavior can be embedded in [MessageHandler] implementations to
 // indicate that the projection does not require its data to be compacted.
 //
 // It provides an implementation of MessageHandler.Compact() that always returns
@@ -87,10 +92,18 @@ type MessageHandler interface {
 type NoCompactBehavior struct{}
 
 // Compact returns nil.
-func (NoCompactBehavior) Compact(
-	context.Context,
-	*sql.DB,
-	dogma.ProjectionCompactScope,
-) error {
+func (NoCompactBehavior) Compact(context.Context, *sql.DB, dogma.ProjectionCompactScope) error {
+	return nil
+}
+
+// NoCreateSchemaBehavior can be embedded in [MessageHandler] implementations to
+// indicate that the projection does not create its own SQL schema.
+//
+// It provides an implementation of MessageHandler.CreateSchema() that always
+// returns a nil error.
+type NoCreateSchemaBehavior struct{}
+
+// CreateSchema returns nil.
+func (NoCreateSchemaBehavior) CreateSchema(context.Context, *sql.DB) error {
 	return nil
 }

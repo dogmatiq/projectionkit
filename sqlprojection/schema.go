@@ -5,6 +5,16 @@ import (
 	"database/sql"
 )
 
+// WithoutSchemaCreation is an [Option] that prevents the projection from
+// creating its own SQL schema.
+func WithoutSchemaCreation() Option {
+	return Option{
+		applyToAdaptor: func(a *adaptor) {
+			a.schemaCreated.Store(true)
+		},
+	}
+}
+
 // CreateSchema creates the schema elements necessary to store projections on
 // the given database.
 //

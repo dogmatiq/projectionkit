@@ -56,9 +56,6 @@ var _ = Describe("type adaptor", func() {
 					db, err = database.Open()
 					Expect(err).ShouldNot(HaveOccurred())
 
-					err = CreateSchema(ctx, db)
-					Expect(err).ShouldNot(HaveOccurred())
-
 					adaptor = New(db, handler)
 				})
 

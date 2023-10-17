@@ -12,9 +12,36 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 ## Unreleased
 
+This release introduces automatic schema creation for SQL projections. This
+includes both the application-defined schema managed by the projection, and
+the supporting schema required by `projectionkit`.
+
+By default, it is no longer necessary to call `sqlprojection.CreateSchema()` in
+your application.
+
+The `sqlprojection.MessageHandler` interface has a new `CreateSchema()` method.
+Implementations of this method should execute the DDL statements required to
+create the schema required by the projection. Alternatively, the
+`NoCreateSchemaBehavior` struct can be embedded into a `MessageHandler`
+implementation to indicate that it does not create its own schema.
+
+To disable _all_ automatic schema creation for a specific handler, pass the
+`WithoutSchemaCreation()` option to `sqlprojection.New()`. This may be necessary
+if the credentials used to connect to the database server do not have permission
+to execute DDL statements. We recommend configuring database RBAC to allow
+execution of DDL statements in a logical schema or database that is only used by
+Dogma projections.
+
+### Added
+
+- **[BC]** Added `CreateSchema()` method to the `sqlprojection.MessageHandler` interface
+- Added `sqlprojection.NoCreateSchemaBehavior` embeddable struct
+- Added `sqlprojection.WithoutSchemaCreation()` option
+
 ### Changed
 
-- **[BC]** Changed `resource.RepositoryAware.ResourceRepository()` to accept a `context.Context`
+- Changed the `sqlprojection` to automatically create the SQL schema it requires
+- **[BC]** Changed the `ResourceRepository()` method of `resource.RepositoryAware` to accept a context and return an error
 
 ### Fixed
 
