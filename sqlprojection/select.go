@@ -35,35 +35,28 @@ func SelectDriver(ctx context.Context, db *sql.DB, candidates []Driver) (Driver,
 	))
 }
 
-// An Option configures the optional behavior of an SQL projection.
-type Option interface {
-	applyCandidateSetOption(*candidateSet)
-}
-
-type adaptorOptionFunc func(*candidateSet)
-
-func (f adaptorOptionFunc) applyCandidateSetOption(s *candidateSet) {
-	f(s)
-}
-
 // WithDriver returns an Option that forces use of a specific Driver.
 //
 // It takes precedence over any WithCandidateDriver() option.
 func WithDriver(d Driver) Option {
-	return adaptorOptionFunc(func(s *candidateSet) {
-		s.resolved = 1
-		s.candidates = []Driver{d}
-	})
+	return Option{
+		applyToCandidateSet: func(s *candidateSet) {
+			s.resolved = 1
+			s.candidates = []Driver{d}
+		},
+	}
 }
 
 // WithCandidateDrivers returns an Option that adds candidate drivers for
 // selection as the driver to use.
 func WithCandidateDrivers(drivers ...Driver) Option {
-	return adaptorOptionFunc(func(s *candidateSet) {
-		if s.resolved == 0 {
-			s.candidates = append(s.candidates, drivers...)
-		}
-	})
+	return Option{
+		applyToCandidateSet: func(s *candidateSet) {
+			if s.resolved == 0 {
+				s.candidates = append(s.candidates, drivers...)
+			}
+		},
+	}
 }
 
 // candidateSet is a set of drivers that are candidates for use with a
@@ -88,7 +81,7 @@ func (s *candidateSet) init(db *sql.DB, options []Option) {
 	}
 
 	for _, opt := range options {
-		opt.applyCandidateSetOption(s)
+		opt.applyToCandidateSet(s)
 	}
 }
 

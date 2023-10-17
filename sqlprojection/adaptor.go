@@ -42,6 +42,7 @@ func New(
 		repo: NewResourceRepository(
 			db,
 			identity.Key(h),
+			options...,
 		),
 	}
 }

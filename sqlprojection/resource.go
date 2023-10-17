@@ -15,6 +15,8 @@ type ResourceRepository struct {
 	cs  candidateSet
 }
 
+// NewResourceRepository returns a new [ResourceRepository] that uses db to
+// store resource versions.
 func NewResourceRepository(
 	db *sql.DB,
 	key string,
@@ -67,8 +69,8 @@ func (rr *ResourceRepository) UpdateResourceVersion(
 	})
 }
 
-// UpdateResourceVersion updates the version of the resource r to n and performs
-// a user-defined operation within the same transaction.
+// UpdateResourceVersionFn updates the version of the resource r to n and
+// performs a user-defined operation within the same transaction.
 //
 // If c is not the current version of r, it returns false and no update occurs.
 func (rr *ResourceRepository) UpdateResourceVersionFn(
