@@ -12,9 +12,13 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 ## Unreleased
 
+### Changed
+
+- **[BC]** Changed `resource.RepositoryAware.ResourceRepository()` to accept a `context.Context`
+
 ### Fixed
 
-- Fixed issue where `sqlprojection.Options` related to driver selection were ignored.
+- Fixed issue where `sqlprojection.Options` related to driver selection were ignored
 
 ## [0.6.5] - 2023-04-09
 

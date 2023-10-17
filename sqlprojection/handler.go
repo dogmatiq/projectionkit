@@ -88,9 +88,9 @@ type NoCompactBehavior struct{}
 
 // Compact returns nil.
 func (NoCompactBehavior) Compact(
-	ctx context.Context,
-	db *sql.DB,
-	s dogma.ProjectionCompactScope,
+	context.Context,
+	*sql.DB,
+	dogma.ProjectionCompactScope,
 ) error {
 	return nil
 }

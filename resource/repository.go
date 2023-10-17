@@ -10,7 +10,7 @@ import (
 type RepositoryAware interface {
 	// ResourceRepository returns a repository that can be used to manipulate
 	// the handler's resource versions.
-	ResourceRepository() Repository
+	ResourceRepository(context.Context) (Repository, error)
 }
 
 // Repository is an interface for low-level management of resource versions.

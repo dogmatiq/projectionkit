@@ -25,9 +25,11 @@ func StoreVersion(
 	r, v []byte,
 ) error {
 	if h, ok := h.(RepositoryAware); ok {
-		return h.
-			ResourceRepository().
-			StoreResourceVersion(ctx, r, v)
+		repo, err := h.ResourceRepository(ctx)
+		if err != nil {
+			return err
+		}
+		return repo.StoreResourceVersion(ctx, r, v)
 	}
 
 	return ErrNotSupported
@@ -46,9 +48,11 @@ func UpdateVersion(
 	r, c, n []byte,
 ) (ok bool, err error) {
 	if h, ok := h.(RepositoryAware); ok {
-		return h.
-			ResourceRepository().
-			UpdateResourceVersion(ctx, r, c, n)
+		repo, err := h.ResourceRepository(ctx)
+		if err != nil {
+			return false, err
+		}
+		return repo.UpdateResourceVersion(ctx, r, c, n)
 	}
 
 	return false, ErrNotSupported
@@ -71,11 +75,13 @@ func DeleteResource(
 	ctx context.Context,
 	h dogma.ProjectionMessageHandler,
 	r []byte,
-) (bool error) {
+) error {
 	if h, ok := h.(RepositoryAware); ok {
-		return h.
-			ResourceRepository().
-			DeleteResource(ctx, r)
+		repo, err := h.ResourceRepository(ctx)
+		if err != nil {
+			return err
+		}
+		return repo.DeleteResource(ctx, r)
 	}
 
 	return ErrNotSupported

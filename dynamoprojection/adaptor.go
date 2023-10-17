@@ -103,6 +103,6 @@ func (a *adaptor) Compact(ctx context.Context, s dogma.ProjectionCompactScope) e
 
 // ResourceRepository returns a repository that can be used to manipulate the
 // handler's resource versions.
-func (a *adaptor) ResourceRepository() resource.Repository {
-	return a.repo
+func (a *adaptor) ResourceRepository(context.Context) (resource.Repository, error) {
+	return a.repo, nil
 }
