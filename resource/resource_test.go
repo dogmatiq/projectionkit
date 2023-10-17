@@ -86,8 +86,8 @@ type repositoryAwareStub struct {
 	ProjectionMessageHandler
 }
 
-func (*repositoryAwareStub) ResourceRepository() Repository {
-	return repositoryStub{}
+func (*repositoryAwareStub) ResourceRepository(context.Context) (Repository, error) {
+	return repositoryStub{}, nil
 }
 
 type repositoryStub struct {
