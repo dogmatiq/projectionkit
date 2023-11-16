@@ -3,7 +3,7 @@ module github.com/dogmatiq/projectionkit
 go 1.19
 
 require (
-	github.com/aws/aws-sdk-go-v2 v1.22.2
+	github.com/aws/aws-sdk-go-v2 v1.23.0
 	github.com/aws/aws-sdk-go-v2/config v1.25.0
 	github.com/aws/aws-sdk-go-v2/credentials v1.16.0
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.25.1
@@ -27,7 +27,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sso v1.17.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.19.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.25.1 // indirect
-	github.com/aws/smithy-go v1.16.0 // indirect
+	github.com/aws/smithy-go v1.17.0 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/go-sql-driver/mysql v1.5.0 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
