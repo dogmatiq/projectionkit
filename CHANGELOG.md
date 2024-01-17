@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog], and this project adheres to
 ### Fixed
 
 - Fixed issue where `sqlprojection.Options` related to driver selection were ignored
+- Fixed issue with SQL driver auto-selection that prevent a database connection from being returned to the pool
 
 ## [0.6.5] - 2023-04-09
 

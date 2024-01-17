@@ -15,22 +15,22 @@ type mysqlDriver struct{}
 
 func (mysqlDriver) IsCompatibleWith(ctx context.Context, db *sql.DB) error {
 	// Verify that ?-style placeholders are supported.
-	err := db.QueryRowContext(
+	_, err := db.ExecContext(
 		ctx,
 		`SELECT ?`,
 		1,
-	).Err()
-
+	)
 	if err != nil {
 		return err
 	}
 
 	// Verify that we're using something compatible with MySQL (because the SHOW
 	// VARIABLES syntax is supported) and that InnoDB is available.
-	return db.QueryRowContext(
+	_, err = db.ExecContext(
 		ctx,
 		`SHOW VARIABLES LIKE "innodb_page_size"`,
-	).Err()
+	)
+	return err
 }
 
 func (mysqlDriver) CreateSchema(ctx context.Context, db *sql.DB) error {
