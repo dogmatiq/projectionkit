@@ -5,7 +5,7 @@ go 1.21
 require (
 	github.com/aws/aws-sdk-go-v2 v1.25.0
 	github.com/aws/aws-sdk-go-v2/config v1.27.0
-	github.com/aws/aws-sdk-go-v2/credentials v1.17.0
+	github.com/aws/aws-sdk-go-v2/credentials v1.17.1
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.29.1
 	github.com/dogmatiq/cosyne v0.2.0
 	github.com/dogmatiq/dogma v0.12.1
@@ -24,9 +24,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.11.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.9.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.19.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.22.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sts v1.27.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.19.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.22.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sts v1.27.1 // indirect
 	github.com/aws/smithy-go v1.20.0 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/go-sql-driver/mysql v1.5.0 // indirect
