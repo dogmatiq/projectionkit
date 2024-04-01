@@ -19,7 +19,6 @@ type configurer struct {
 	key string
 }
 
-func (c *configurer) Identity(name string, key string)              { c.key = key }
+func (c *configurer) Identity(_ string, key string)                 { c.key = key }
 func (c *configurer) Routes(...dogma.ProjectionRoute)               {}
-func (c *configurer) ConsumesEventType(dogma.Message)               {}
 func (c *configurer) DeliveryPolicy(dogma.ProjectionDeliveryPolicy) {}

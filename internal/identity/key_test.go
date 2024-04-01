@@ -13,7 +13,9 @@ var _ = Describe("func Key()", func() {
 		h := &ProjectionMessageHandler{
 			ConfigureFunc: func(c dogma.ProjectionConfigurer) {
 				c.Identity("<name>", "<key>")
-				c.ConsumesEventType(MessageA{})
+				c.Routes(
+					dogma.HandlesEvent[MessageA](),
+				)
 			},
 		}
 
