@@ -10,11 +10,8 @@ import (
 	"github.com/dogmatiq/projectionkit/resource"
 )
 
-// QueryableMessageHandler is a specialization of the
-// [dogma.ProjectionMessageHandler] for in-memory projections that can be
-// queried using [Query].
-type QueryableMessageHandler[T any] interface {
-	dogma.ProjectionMessageHandler
+// Queryable is a container for a value of type T that can be read using [Query].
+type Queryable[T any] interface {
 	query(func(T))
 }
 
@@ -28,19 +25,19 @@ type adaptor[T any] struct {
 	value     *T
 }
 
-// Query accesses the current state of the projection h to produce a result
-// value of type R.
+// Query queries a value of type T to produce a result of type R.
 //
-// fn is called with the current state. The value may be read within the
-// lifetime of the call to fn. fn MUST NOT retain a reference to the value after
-// the call returns. fn MUST NOT modify the projection state.
+// q is called with the current value, which may be read within the lifetime of
+// the call to fn. fn MUST NOT retain a reference to the value after the call
+// returns. fn MUST NOT modify the value.
 func Query[T, R any](
-	h QueryableMessageHandler[T],
-	fn func(T) R,
-) (result R) {
-	h.query(
+	v Queryable[T],
+	q func(T) R,
+) R {
+	var result R
+	v.query(
 		func(v T) {
-			result = fn(v)
+			result = q(v)
 		},
 	)
 	return result
@@ -48,11 +45,12 @@ func Query[T, R any](
 
 // New returns a new Dogma projection message handler that builds an in-memory
 // projection using h.
-func New[T any](h MessageHandler[T]) QueryableMessageHandler[T] {
-	return &adaptor[T]{
+func New[T any](h MessageHandler[T]) (dogma.ProjectionMessageHandler, Queryable[T]) {
+	a := &adaptor[T]{
 		handler:   h,
 		resources: map[string][]byte{},
 	}
+	return a, a
 }
 
 // Configure produces a configuration for this handler by calling methods on

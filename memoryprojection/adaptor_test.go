@@ -7,6 +7,7 @@ import (
 	. "github.com/dogmatiq/dogma/fixtures"
 	"github.com/dogmatiq/projectionkit/internal/adaptortest"
 	"github.com/dogmatiq/projectionkit/internal/identity"
+	"github.com/dogmatiq/projectionkit/memoryprojection"
 	. "github.com/dogmatiq/projectionkit/memoryprojection"
 	"github.com/dogmatiq/projectionkit/memoryprojection/fixtures" // can't dot-import due to conflict
 	. "github.com/onsi/ginkgo"
@@ -15,9 +16,10 @@ import (
 
 var _ = Describe("type adaptor", func() {
 	var (
-		ctx     context.Context
-		handler *fixtures.MessageHandler[*int]
-		adaptor dogma.ProjectionMessageHandler
+		ctx       context.Context
+		handler   *fixtures.MessageHandler[*int]
+		adaptor   dogma.ProjectionMessageHandler
+		queryable Queryable[*int]
 	)
 
 	BeforeEach(func() {
@@ -27,8 +29,12 @@ var _ = Describe("type adaptor", func() {
 		handler.ConfigureFunc = func(c dogma.ProjectionConfigurer) {
 			c.Identity("<projection>", "<key>")
 		}
+		handler.NewFunc = func() *int {
+			v := 123
+			return &v
+		}
 
-		adaptor = New(handler)
+		adaptor, queryable = New(handler)
 	})
 
 	adaptortest.DescribeAdaptor(&ctx, &adaptor)
@@ -36,72 +42,6 @@ var _ = Describe("type adaptor", func() {
 	Describe("func Configure()", func() {
 		It("forwards to the handler", func() {
 			Expect(identity.Key(adaptor)).To(Equal("<key>"))
-		})
-	})
-
-	Describe("func HandleEvent()", func() {
-		It("forwards to the handler", func() {
-			called := false
-			handler.HandleEventFunc = func(
-				_ *int,
-				_ dogma.ProjectionEventScope,
-				m dogma.Message,
-			) {
-				called = true
-				Expect(m).To(Equal(MessageA1))
-			}
-
-			ok, err := adaptor.HandleEvent(
-				ctx,
-				[]byte("<resource>"),
-				nil,
-				[]byte("<version 01>"),
-				nil, // scope
-				MessageA1,
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(ok).To(BeTrue())
-			Expect(called).To(BeTrue())
-		})
-
-		It("maintains state between calls", func() {
-			handler.HandleEventFunc = func(
-				v *int,
-				_ dogma.ProjectionEventScope,
-				m dogma.Message,
-			) {
-				*v = 123
-			}
-
-			ok, err := adaptor.HandleEvent(
-				ctx,
-				[]byte("<resource>"),
-				nil,
-				[]byte("<version 01>"),
-				nil, // scope
-				MessageA1,
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(ok).To(BeTrue())
-
-			handler.HandleEventFunc = func(
-				v *int,
-				_ dogma.ProjectionEventScope,
-				m dogma.Message,
-			) {
-				Expect(*v).To(Equal(123))
-			}
-
-			ok, err = adaptor.HandleEvent(
-				ctx,
-				[]byte("<resource>"),
-				[]byte("<version 01>"),
-				[]byte("<version 02>"),
-				nil, // scope
-				MessageA1,
-			)
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(ok).To(BeTrue())
 		})
 	})
 
@@ -114,8 +54,35 @@ var _ = Describe("type adaptor", func() {
 		})
 	})
 
-	Describe("func Compact()", func() {
-		When("there is no state", func() {
+	When("there is no state", func() {
+		Describe("func HandleEvent()", func() {
+			It("forwards a new value to the handler", func() {
+				called := false
+				handler.HandleEventFunc = func(
+					v *int,
+					_ dogma.ProjectionEventScope,
+					m dogma.Message,
+				) {
+					called = true
+					Expect(*v).To(Equal(123))
+					Expect(m).To(Equal(MessageA1))
+				}
+
+				ok, err := adaptor.HandleEvent(
+					ctx,
+					[]byte("<resource>"),
+					nil,
+					[]byte("<version 01>"),
+					nil, // scope
+					MessageA1,
+				)
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(ok).To(BeTrue())
+				Expect(called).To(BeTrue())
+			})
+		})
+
+		Describe("func Compact()", func() {
 			It("does not forward to the handler", func() {
 				handler.CompactFunc = func(
 					_ *int,
@@ -132,20 +99,68 @@ var _ = Describe("type adaptor", func() {
 			})
 		})
 
-		When("there is state", func() {
-			BeforeEach(func() {
+		Describe("func Query()", func() {
+			It("calls the query function with a new value", func() {
+				r := memoryprojection.Query(
+					queryable,
+					func(v *int) int {
+						return *v * 2
+					},
+				)
+				Expect(r).To(Equal(246))
+			})
+		})
+	})
+
+	When("there is existing state", func() {
+		BeforeEach(func() {
+			handler.HandleEventFunc = func(
+				v *int,
+				_ dogma.ProjectionEventScope,
+				_ dogma.Message,
+			) {
+				*v = 321
+			}
+
+			ok, err := adaptor.HandleEvent(
+				ctx,
+				[]byte("<resource>"),
+				nil,
+				[]byte("<version 01>"),
+				nil, // scope
+				MessageA1,
+			)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(ok).To(BeTrue())
+		})
+
+		Describe("func HandleEvent()", func() {
+			It("forwards the existing value to the handler", func() {
+				called := false
+				handler.HandleEventFunc = func(
+					v *int,
+					_ dogma.ProjectionEventScope,
+					m dogma.Message,
+				) {
+					called = true
+					Expect(*v).To(Equal(321))
+				}
+
 				ok, err := adaptor.HandleEvent(
 					ctx,
 					[]byte("<resource>"),
-					nil,
 					[]byte("<version 01>"),
+					[]byte("<version 02>"),
 					nil, // scope
 					MessageA1,
 				)
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(ok).To(BeTrue())
+				Expect(called).To(BeTrue())
 			})
+		})
 
+		Describe("func Compact()", func() {
 			It("forwards to the handler", func() {
 				called := false
 				handler.CompactFunc = func(
@@ -153,7 +168,7 @@ var _ = Describe("type adaptor", func() {
 					_ dogma.ProjectionCompactScope,
 				) {
 					called = true
-					Expect(*v).To(Equal(0))
+					Expect(*v).To(Equal(321))
 				}
 
 				err := adaptor.Compact(
@@ -162,6 +177,18 @@ var _ = Describe("type adaptor", func() {
 				)
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(called).To(BeTrue())
+			})
+		})
+
+		Describe("func Query()", func() {
+			It("calls the query function with the existing value", func() {
+				r := memoryprojection.Query(
+					queryable,
+					func(v *int) int {
+						return *v * 2
+					},
+				)
+				Expect(r).To(Equal(642))
 			})
 		})
 	})
