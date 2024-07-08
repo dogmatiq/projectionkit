@@ -20,25 +20,25 @@ type adaptor[T any] struct {
 	value     *T
 }
 
-// An Accessor is a function used to read the current state of an in-memory
+// A Querier is a function used to read the current state of an in-memory
 // projection.
 //
-// fn is called with the current state. The value may be accessed within the
+// fn is called with the current state. The value may be read within the
 // lifetime of the call to fn. fn MUST NOT retain a reference to the value after
 // the call returns. fn MUST NOT modify the projection state.
-type Accessor[T any] func(
+type Querier[T any] func(
 	ctx context.Context,
 	fn func(context.Context, T) error,
 ) error
 
 // New returns a new Dogma projection message handler that builds an in-memory
 // projection using h.
-func New[T any](h MessageHandler[T]) (dogma.ProjectionMessageHandler, Accessor[T]) {
+func New[T any](h MessageHandler[T]) (dogma.ProjectionMessageHandler, Querier[T]) {
 	a := &adaptor[T]{
 		handler:   h,
 		resources: map[string][]byte{},
 	}
-	return a, a.access
+	return a, a.query
 }
 
 // Configure produces a configuration for this handler by calling methods on
@@ -147,7 +147,7 @@ func (a *adaptor[T]) DeleteResource(_ context.Context, r []byte) error {
 	return nil
 }
 
-func (a *adaptor[T]) access(
+func (a *adaptor[T]) query(
 	ctx context.Context,
 	fn func(context.Context, T) error,
 ) error {
