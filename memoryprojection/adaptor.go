@@ -15,7 +15,7 @@ import (
 // queried using [Query].
 type QueryableMessageHandler[T any] interface {
 	dogma.ProjectionMessageHandler
-	query(context.Context, func(context.Context, T) error) error
+	query(func(T))
 }
 
 // adaptor adapts a [MessageHandler] to the [dogma.ProjectionMessageHandler]
@@ -35,18 +35,15 @@ type adaptor[T any] struct {
 // lifetime of the call to fn. fn MUST NOT retain a reference to the value after
 // the call returns. fn MUST NOT modify the projection state.
 func Query[T, R any](
-	ctx context.Context,
 	h QueryableMessageHandler[T],
-	fn func(context.Context, T) (R, error),
-) (result R, _ error) {
-	return result, h.query(
-		ctx,
-		func(ctx context.Context, v T) error {
-			var err error
-			result, err = fn(ctx, v)
-			return err
+	fn func(T) R,
+) (result R) {
+	h.query(
+		func(v T) {
+			result = fn(v)
 		},
 	)
+	return result
 }
 
 // New returns a new Dogma projection message handler that builds an in-memory
@@ -164,10 +161,7 @@ func (a *adaptor[T]) DeleteResource(_ context.Context, r []byte) error {
 	return nil
 }
 
-func (a *adaptor[T]) query(
-	ctx context.Context,
-	fn func(context.Context, T) error,
-) error {
+func (a *adaptor[T]) query(fn func(T)) {
 	a.m.RLock()
 
 	// If the value has not been initialized, just pass fn a new empty instance.
@@ -175,9 +169,9 @@ func (a *adaptor[T]) query(
 	// shared.
 	if a.value == nil {
 		a.m.RUnlock()
-		return fn(ctx, a.handler.New())
+		fn(a.handler.New())
+	} else {
+		defer a.m.RUnlock()
+		fn(*a.value)
 	}
-
-	defer a.m.RUnlock()
-	return fn(ctx, *a.value)
 }
