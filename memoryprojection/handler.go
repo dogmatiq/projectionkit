@@ -33,7 +33,7 @@ type MessageHandler[T any] interface {
 	// UnexpectedMessage value.
 	//
 	// The engine MAY call HandleEvent() from multiple goroutines concurrently.
-	HandleEvent(v T, s dogma.ProjectionEventScope, m dogma.Message)
+	HandleEvent(v T, s dogma.ProjectionEventScope, m dogma.Message) error
 
 	// Compact reduces the size of the projection's data.
 	//

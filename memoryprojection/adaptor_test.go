@@ -62,10 +62,11 @@ var _ = Describe("type adaptor", func() {
 					v *int,
 					_ dogma.ProjectionEventScope,
 					m dogma.Message,
-				) {
+				) error {
 					called = true
 					Expect(*v).To(Equal(123))
 					Expect(m).To(Equal(MessageA1))
+					return nil
 				}
 
 				ok, err := adaptor.HandleEvent(
@@ -118,8 +119,9 @@ var _ = Describe("type adaptor", func() {
 				v *int,
 				_ dogma.ProjectionEventScope,
 				_ dogma.Message,
-			) {
+			) error {
 				*v = 321
+				return nil
 			}
 
 			ok, err := adaptor.HandleEvent(
@@ -141,9 +143,10 @@ var _ = Describe("type adaptor", func() {
 					v *int,
 					_ dogma.ProjectionEventScope,
 					m dogma.Message,
-				) {
+				) error {
 					called = true
 					Expect(*v).To(Equal(321))
+					return nil
 				}
 
 				ok, err := adaptor.HandleEvent(

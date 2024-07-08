@@ -10,7 +10,7 @@ import (
 type MessageHandler[T any] struct {
 	ConfigureFunc   func(dogma.ProjectionConfigurer)
 	NewFunc         func() T
-	HandleEventFunc func(T, dogma.ProjectionEventScope, dogma.Message)
+	HandleEventFunc func(T, dogma.ProjectionEventScope, dogma.Message) error
 	CompactFunc     func(T, dogma.ProjectionCompactScope)
 }
 
@@ -51,15 +51,16 @@ func (h *MessageHandler[T]) New() T {
 // HandleEvent handles a domain event message that has been routed to this
 // handler.
 //
-// If h.HandleEventFunc is non-nil, it calls h.HandleEventFunc(v, s, m).
+// If h.HandleEventFunc is non-nil, it returns h.HandleEventFunc(v, s, m).
 func (h *MessageHandler[T]) HandleEvent(
 	v T,
 	s dogma.ProjectionEventScope,
 	m dogma.Message,
-) {
+) error {
 	if h.HandleEventFunc != nil {
-		h.HandleEventFunc(v, s, m)
+		return h.HandleEventFunc(v, s, m)
 	}
+	return nil
 }
 
 // Compact reduces the size of the projection's data.
