@@ -50,14 +50,8 @@ type MessageHandler[T any] interface {
 // NoCompactBehavior can be embedded in MessageHandler implementations to
 // indicate that the projection does not require its data to be compacted.
 //
-// It provides an implementation of MessageHandler.Compact() that always returns
-// a nil error.
+// It provides an implementation of MessageHandler.Compact() that does nothing.
 type NoCompactBehavior[T any] struct{}
 
-// Compact returns nil.
-func (NoCompactBehavior[T]) Compact(
-	T,
-	dogma.ProjectionCompactScope,
-) error {
-	return nil
-}
+// Compact does nothing.
+func (NoCompactBehavior[T]) Compact(T, dogma.ProjectionCompactScope) {}
