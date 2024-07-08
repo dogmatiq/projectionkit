@@ -17,21 +17,20 @@ import (
 var _ = Describe("type adaptor", func() {
 	var (
 		ctx       context.Context
-		handler   *fixtures.MessageHandler[*int]
+		handler   *fixtures.MessageHandler[int]
 		adaptor   dogma.ProjectionMessageHandler
-		queryable Queryable[*int]
+		queryable Queryable[int]
 	)
 
 	BeforeEach(func() {
 		ctx = context.Background()
 
-		handler = &fixtures.MessageHandler[*int]{}
+		handler = &fixtures.MessageHandler[int]{}
 		handler.ConfigureFunc = func(c dogma.ProjectionConfigurer) {
 			c.Identity("<projection>", "<key>")
 		}
-		handler.NewFunc = func() *int {
-			v := 123
-			return &v
+		handler.NewFunc = func() int {
+			return 123
 		}
 
 		adaptor, queryable = New(handler)
@@ -59,14 +58,14 @@ var _ = Describe("type adaptor", func() {
 			It("forwards a new value to the handler", func() {
 				called := false
 				handler.HandleEventFunc = func(
-					v *int,
+					v int,
 					_ dogma.ProjectionEventScope,
 					m dogma.Message,
-				) error {
+				) (int, error) {
 					called = true
-					Expect(*v).To(Equal(123))
+					Expect(v).To(Equal(123))
 					Expect(m).To(Equal(MessageA1))
-					return nil
+					return v, nil
 				}
 
 				ok, err := adaptor.HandleEvent(
@@ -86,10 +85,11 @@ var _ = Describe("type adaptor", func() {
 		Describe("func Compact()", func() {
 			It("does not forward to the handler", func() {
 				handler.CompactFunc = func(
-					_ *int,
+					_ int,
 					_ dogma.ProjectionCompactScope,
-				) {
+				) int {
 					Fail("unexpected call")
+					return 0
 				}
 
 				err := adaptor.Compact(
@@ -104,8 +104,8 @@ var _ = Describe("type adaptor", func() {
 			It("calls the query function with a new value", func() {
 				r := memoryprojection.Query(
 					queryable,
-					func(v *int) int {
-						return *v * 2
+					func(v int) int {
+						return v * 2
 					},
 				)
 				Expect(r).To(Equal(246))
@@ -116,12 +116,11 @@ var _ = Describe("type adaptor", func() {
 	When("there is existing state", func() {
 		BeforeEach(func() {
 			handler.HandleEventFunc = func(
-				v *int,
+				v int,
 				_ dogma.ProjectionEventScope,
 				_ dogma.Message,
-			) error {
-				*v = 321
-				return nil
+			) (int, error) {
+				return 321, nil
 			}
 
 			ok, err := adaptor.HandleEvent(
@@ -140,13 +139,13 @@ var _ = Describe("type adaptor", func() {
 			It("forwards the existing value to the handler", func() {
 				called := false
 				handler.HandleEventFunc = func(
-					v *int,
+					v int,
 					_ dogma.ProjectionEventScope,
 					m dogma.Message,
-				) error {
+				) (int, error) {
 					called = true
-					Expect(*v).To(Equal(321))
-					return nil
+					Expect(v).To(Equal(321))
+					return v, nil
 				}
 
 				ok, err := adaptor.HandleEvent(
@@ -167,11 +166,12 @@ var _ = Describe("type adaptor", func() {
 			It("forwards to the handler", func() {
 				called := false
 				handler.CompactFunc = func(
-					v *int,
+					v int,
 					_ dogma.ProjectionCompactScope,
-				) {
+				) int {
 					called = true
-					Expect(*v).To(Equal(321))
+					Expect(v).To(Equal(321))
+					return v
 				}
 
 				err := adaptor.Compact(
@@ -187,8 +187,8 @@ var _ = Describe("type adaptor", func() {
 			It("calls the query function with the existing value", func() {
 				r := memoryprojection.Query(
 					queryable,
-					func(v *int) int {
-						return *v * 2
+					func(v int) int {
+						return v * 2
 					},
 				)
 				Expect(r).To(Equal(642))

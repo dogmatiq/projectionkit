@@ -21,6 +21,8 @@ type MessageHandler[T any] interface {
 	New() T
 
 	// HandleEvent updates the projection to reflect the occurrence of an event.
+	// It may do so by modifying v in-place then returning it, or by returning
+	// an entirely new value.
 	//
 	// The engine MAY provide guarantees about the order in which event messages
 	// will be passed to HandleEvent(), however in the interest of engine
@@ -33,9 +35,11 @@ type MessageHandler[T any] interface {
 	// UnexpectedMessage value.
 	//
 	// The engine MAY call HandleEvent() from multiple goroutines concurrently.
-	HandleEvent(v T, s dogma.ProjectionEventScope, m dogma.Message) error
+	HandleEvent(v T, s dogma.ProjectionEventScope, m dogma.Message) (T, error)
 
-	// Compact reduces the size of the projection's data.
+	// Compact reduces the size of the projection's data. It may do so by
+	// modifying v in-place then returning it, or by returning an entirely new
+	// value.
 	//
 	// The implementation SHOULD attempt to decrease the size of the
 	// projection's data by whatever means available. For example, it may delete
@@ -44,7 +48,7 @@ type MessageHandler[T any] interface {
 	// The engine SHOULD call Compact() repeatedly throughout the lifetime of
 	// the projection. The precise scheduling of calls to Compact() are
 	// engine-defined. It MAY be called concurrently with any other method.
-	Compact(v T, s dogma.ProjectionCompactScope)
+	Compact(v T, s dogma.ProjectionCompactScope) T
 }
 
 // NoCompactBehavior can be embedded in MessageHandler implementations to

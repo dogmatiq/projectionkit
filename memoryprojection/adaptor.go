@@ -74,12 +74,19 @@ func (a *adaptor[T]) HandleEvent(
 		return false, nil
 	}
 
+	var value T
 	if a.value == nil {
-		v := a.handler.New()
-		a.value = &v
+		value = a.handler.New()
+	} else {
+		value = *a.value
 	}
 
-	a.handler.HandleEvent(*a.value, s, m)
+	value, err := a.handler.HandleEvent(value, s, m)
+	if err != nil {
+		return false, err
+	}
+
+	a.value = &value
 	a.resources[string(r)] = n
 
 	return true, nil
@@ -111,7 +118,8 @@ func (a *adaptor[T]) Compact(_ context.Context, s dogma.ProjectionCompactScope) 
 	defer a.m.Unlock()
 
 	if a.value != nil {
-		a.handler.Compact(*a.value, s)
+		value := a.handler.Compact(*a.value, s)
+		a.value = &value
 	}
 
 	return nil
