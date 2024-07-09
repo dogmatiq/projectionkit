@@ -12,6 +12,7 @@ import (
 
 // Queryable is a container for a value of type T that can be read using [Query].
 type Queryable[T any] interface {
+	dogma.ProjectionMessageHandler
 	query(func(T))
 }
 
@@ -45,12 +46,11 @@ func Query[T, R any](
 
 // New returns a new Dogma projection message handler that builds an in-memory
 // projection using h.
-func New[T any](h MessageHandler[T]) (dogma.ProjectionMessageHandler, Queryable[T]) {
-	a := &adaptor[T]{
+func New[T any](h MessageHandler[T]) Queryable[T] {
+	return &adaptor[T]{
 		handler:   h,
 		resources: map[string][]byte{},
 	}
-	return a, a
 }
 
 // Configure produces a configuration for this handler by calling methods on

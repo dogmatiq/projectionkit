@@ -16,10 +16,9 @@ import (
 
 var _ = Describe("type adaptor", func() {
 	var (
-		ctx       context.Context
-		handler   *fixtures.MessageHandler[int]
-		adaptor   dogma.ProjectionMessageHandler
-		queryable Queryable[int]
+		ctx     context.Context
+		handler *fixtures.MessageHandler[int]
+		adaptor Queryable[int]
 	)
 
 	BeforeEach(func() {
@@ -33,7 +32,7 @@ var _ = Describe("type adaptor", func() {
 			return 123
 		}
 
-		adaptor, queryable = New(handler)
+		adaptor = New(handler)
 	})
 
 	adaptortest.DescribeAdaptor(&ctx, &adaptor)
@@ -103,7 +102,7 @@ var _ = Describe("type adaptor", func() {
 		Describe("func Query()", func() {
 			It("calls the query function with a new value", func() {
 				r := memoryprojection.Query(
-					queryable,
+					adaptor,
 					func(v int) int {
 						return v * 2
 					},
@@ -186,7 +185,7 @@ var _ = Describe("type adaptor", func() {
 		Describe("func Query()", func() {
 			It("calls the query function with the existing value", func() {
 				r := memoryprojection.Query(
-					queryable,
+					adaptor,
 					func(v int) int {
 						return v * 2
 					},
