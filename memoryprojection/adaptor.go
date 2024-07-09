@@ -10,20 +10,13 @@ import (
 	"github.com/dogmatiq/projectionkit/resource"
 )
 
-// Queryable is a container for a value of type T that can be read using [Query].
-type Queryable[T any] interface {
-	dogma.ProjectionMessageHandler
-	query(func(T))
-}
-
-// adaptor adapts a [MessageHandler] to the [dogma.ProjectionMessageHandler]
-// interface.
-type adaptor[T any] struct {
-	handler MessageHandler[T]
+// Projection is an in-memory projection that builds a value of type T.
+type Projection[T any, H MessageHandler[T]] struct {
+	handler H
 
 	m         sync.RWMutex
 	resources map[string][]byte
-	value     *T
+	value     T
 }
 
 // Query queries a value of type T to produce a result of type R.
@@ -31,95 +24,87 @@ type adaptor[T any] struct {
 // q is called with the current value, which may be read within the lifetime of
 // the call to fn. fn MUST NOT retain a reference to the value after the call
 // returns. fn MUST NOT modify the value.
-func Query[T, R any](
-	v Queryable[T],
+func Query[T, R any, H MessageHandler[T]](
+	p *Projection[T, H],
 	q func(T) R,
 ) R {
-	var result R
-	v.query(
-		func(v T) {
-			result = q(v)
-		},
-	)
-	return result
+	p.m.RLock()
+	defer p.m.RUnlock()
+
+	return q(p.value)
 }
 
-// New returns a new Dogma projection message handler that builds an in-memory
-// projection using h.
-func New[T any](h MessageHandler[T]) Queryable[T] {
-	return &adaptor[T]{
-		handler:   h,
-		resources: map[string][]byte{},
+// New returns a new projection that uses the given handler to build an
+// in-memory value of type T.
+func New[H MessageHandler[T], T any](h H) *Projection[T, H] {
+	return &Projection[T, H]{
+		handler: h,
 	}
 }
 
 // Configure produces a configuration for this handler by calling methods on
 // the configurer c.
-func (a *adaptor[T]) Configure(c dogma.ProjectionConfigurer) {
-	a.handler.Configure(c)
+func (p *Projection[T, H]) Configure(c dogma.ProjectionConfigurer) {
+	p.handler.Configure(c)
 }
 
 // HandleEvent updates the projection to reflect the occurrence of an event.
-func (a *adaptor[T]) HandleEvent(
+func (p *Projection[T, H]) HandleEvent(
 	_ context.Context,
 	r, c, n []byte,
 	s dogma.ProjectionEventScope,
 	m dogma.Message,
 ) (bool, error) {
-	a.m.Lock()
-	defer a.m.Unlock()
+	p.m.Lock()
+	defer p.m.Unlock()
 
-	v := a.resources[string(r)]
+	v := p.resources[string(r)]
 	if !bytes.Equal(v, c) {
 		return false, nil
 	}
 
-	var value T
-	if a.value == nil {
-		value = a.handler.New()
-	} else {
-		value = *a.value
-	}
-
-	value, err := a.handler.HandleEvent(value, s, m)
+	value, err := p.handler.HandleEvent(p.value, s, m)
 	if err != nil {
 		return false, err
 	}
 
-	a.value = &value
-	a.resources[string(r)] = n
+	if p.resources == nil {
+		p.resources = make(map[string][]byte)
+	}
+	p.resources[string(r)] = n
+	p.value = value
 
 	return true, nil
 }
 
 // ResourceVersion returns the version of the resource r.
-func (a *adaptor[T]) ResourceVersion(_ context.Context, r []byte) ([]byte, error) {
-	a.m.RLock()
-	defer a.m.RUnlock()
+func (p *Projection[T, H]) ResourceVersion(_ context.Context, r []byte) ([]byte, error) {
+	p.m.RLock()
+	defer p.m.RUnlock()
 
-	return a.resources[string(r)], nil
+	return p.resources[string(r)], nil
 }
 
 // CloseResource informs the projection that the resource r will not be
 // used in any future calls to HandleEvent().
-func (a *adaptor[T]) CloseResource(ctx context.Context, r []byte) error {
-	return a.DeleteResource(ctx, r)
+func (p *Projection[T, H]) CloseResource(ctx context.Context, r []byte) error {
+	return p.DeleteResource(ctx, r)
 }
 
 // TimeoutHint returns a duration that is suitable for computing a deadline
 // for the handling of the given message by this handler.
-func (a *adaptor[T]) TimeoutHint(dogma.Message) time.Duration {
+func (p *Projection[T, H]) TimeoutHint(dogma.Message) time.Duration {
 	return 0
 }
 
 // Compact reduces the size of the projection's data.
-func (a *adaptor[T]) Compact(_ context.Context, s dogma.ProjectionCompactScope) error {
-	a.m.Lock()
-	defer a.m.Unlock()
+func (p *Projection[T, H]) Compact(_ context.Context, s dogma.ProjectionCompactScope) error {
+	p.m.Lock()
+	defer p.m.Unlock()
 
-	if a.value != nil {
-		value := a.handler.Compact(*a.value, s)
-		a.value = &value
+	if p.resources != nil {
+		// Only attempt to compact the value if some events have been applied.
+		p.value = p.handler.Compact(p.value, s)
 	}
 
 	return nil
@@ -127,17 +112,20 @@ func (a *adaptor[T]) Compact(_ context.Context, s dogma.ProjectionCompactScope) 
 
 // ResourceRepository returns a repository that can be used to manipulate the
 // handler's resource versions.
-func (a *adaptor[T]) ResourceRepository(context.Context) (resource.Repository, error) {
-	return a, nil
+func (p *Projection[T, H]) ResourceRepository(context.Context) (resource.Repository, error) {
+	return p, nil
 }
 
 // StoreResourceVersion sets the version of the resource r to v without
 // checking the current version.
-func (a *adaptor[T]) StoreResourceVersion(_ context.Context, r, v []byte) error {
-	a.m.Lock()
-	defer a.m.Unlock()
+func (p *Projection[T, H]) StoreResourceVersion(_ context.Context, r, v []byte) error {
+	p.m.Lock()
+	defer p.m.Unlock()
 
-	a.resources[string(r)] = v
+	if p.resources == nil {
+		p.resources = make(map[string][]byte)
+	}
+	p.resources[string(r)] = v
 
 	return nil
 }
@@ -145,39 +133,27 @@ func (a *adaptor[T]) StoreResourceVersion(_ context.Context, r, v []byte) error 
 // UpdateResourceVersion updates the version of the resource r to n.
 //
 // If c is not the current version of r, it returns false and no update occurs.
-func (a *adaptor[T]) UpdateResourceVersion(_ context.Context, r, c, n []byte) (bool, error) {
-	a.m.Lock()
-	defer a.m.Unlock()
+func (p *Projection[T, H]) UpdateResourceVersion(_ context.Context, r, c, n []byte) (bool, error) {
+	p.m.Lock()
+	defer p.m.Unlock()
 
-	v := a.resources[string(r)]
+	v := p.resources[string(r)]
 	if !bytes.Equal(v, c) {
 		return false, nil
 	}
 
-	a.resources[string(r)] = n
+	if p.resources == nil {
+		p.resources = make(map[string][]byte)
+	}
+	p.resources[string(r)] = n
 	return true, nil
 }
 
 // DeleteResource removes all information about the resource r.
-func (a *adaptor[T]) DeleteResource(_ context.Context, r []byte) error {
-	a.m.Lock()
-	defer a.m.Unlock()
+func (p *Projection[T, H]) DeleteResource(_ context.Context, r []byte) error {
+	p.m.Lock()
+	defer p.m.Unlock()
 
-	delete(a.resources, string(r))
+	delete(p.resources, string(r))
 	return nil
-}
-
-func (a *adaptor[T]) query(fn func(T)) {
-	a.m.RLock()
-
-	// If the value has not been initialized, just pass fn a new empty instance.
-	// There's no need to hold the mutex lock in this case as the value is not
-	// shared.
-	if a.value == nil {
-		a.m.RUnlock()
-		fn(a.handler.New())
-	} else {
-		defer a.m.RUnlock()
-		fn(*a.value)
-	}
 }

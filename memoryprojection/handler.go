@@ -17,9 +17,6 @@ type MessageHandler[T any] interface {
 	// RECOMMENDED that the engine only call Configure() once per handler.
 	Configure(c dogma.ProjectionConfigurer)
 
-	// New returns a new instance of the projection's data type.
-	New() T
-
 	// HandleEvent updates the projection to reflect the occurrence of an event.
 	// It may do so by modifying v in-place then returning it, or by returning
 	// an entirely new value.

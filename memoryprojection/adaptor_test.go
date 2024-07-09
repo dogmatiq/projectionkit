@@ -16,9 +16,9 @@ import (
 
 var _ = Describe("type adaptor", func() {
 	var (
-		ctx     context.Context
-		handler *fixtures.MessageHandler[int]
-		adaptor Queryable[int]
+		ctx        context.Context
+		handler    *fixtures.MessageHandler[int]
+		projection *Projection[int, *fixtures.MessageHandler[int]]
 	)
 
 	BeforeEach(func() {
@@ -28,24 +28,21 @@ var _ = Describe("type adaptor", func() {
 		handler.ConfigureFunc = func(c dogma.ProjectionConfigurer) {
 			c.Identity("<projection>", "<key>")
 		}
-		handler.NewFunc = func() int {
-			return 123
-		}
 
-		adaptor = New(handler)
+		projection = memoryprojection.New(handler)
 	})
 
-	adaptortest.DescribeAdaptor(&ctx, &adaptor)
+	adaptortest.DescribeAdaptor(&ctx, &projection)
 
 	Describe("func Configure()", func() {
 		It("forwards to the handler", func() {
-			Expect(identity.Key(adaptor)).To(Equal("<key>"))
+			Expect(identity.Key(projection)).To(Equal("<key>"))
 		})
 	})
 
 	Describe("func TimeoutHint()", func() {
 		It("returns zero", func() {
-			d := adaptor.TimeoutHint(
+			d := projection.TimeoutHint(
 				MessageA1,
 			)
 			Expect(d).To(BeEquivalentTo(0))
@@ -54,7 +51,7 @@ var _ = Describe("type adaptor", func() {
 
 	When("there is no state", func() {
 		Describe("func HandleEvent()", func() {
-			It("forwards a new value to the handler", func() {
+			It("forwards a zero value to the handler", func() {
 				called := false
 				handler.HandleEventFunc = func(
 					v int,
@@ -62,12 +59,12 @@ var _ = Describe("type adaptor", func() {
 					m dogma.Message,
 				) (int, error) {
 					called = true
-					Expect(v).To(Equal(123))
+					Expect(v).To(Equal(0))
 					Expect(m).To(Equal(MessageA1))
 					return v, nil
 				}
 
-				ok, err := adaptor.HandleEvent(
+				ok, err := projection.HandleEvent(
 					ctx,
 					[]byte("<resource>"),
 					nil,
@@ -91,7 +88,7 @@ var _ = Describe("type adaptor", func() {
 					return 0
 				}
 
-				err := adaptor.Compact(
+				err := projection.Compact(
 					context.Background(),
 					nil, // scope
 				)
@@ -100,14 +97,14 @@ var _ = Describe("type adaptor", func() {
 		})
 
 		Describe("func Query()", func() {
-			It("calls the query function with a new value", func() {
+			It("calls the query function with a zero value", func() {
 				r := memoryprojection.Query(
-					adaptor,
+					projection,
 					func(v int) int {
 						return v * 2
 					},
 				)
-				Expect(r).To(Equal(246))
+				Expect(r).To(Equal(0))
 			})
 		})
 	})
@@ -122,7 +119,7 @@ var _ = Describe("type adaptor", func() {
 				return 321, nil
 			}
 
-			ok, err := adaptor.HandleEvent(
+			ok, err := projection.HandleEvent(
 				ctx,
 				[]byte("<resource>"),
 				nil,
@@ -147,7 +144,7 @@ var _ = Describe("type adaptor", func() {
 					return v, nil
 				}
 
-				ok, err := adaptor.HandleEvent(
+				ok, err := projection.HandleEvent(
 					ctx,
 					[]byte("<resource>"),
 					[]byte("<version 01>"),
@@ -173,7 +170,7 @@ var _ = Describe("type adaptor", func() {
 					return v
 				}
 
-				err := adaptor.Compact(
+				err := projection.Compact(
 					context.Background(),
 					nil, // scope
 				)
@@ -185,7 +182,7 @@ var _ = Describe("type adaptor", func() {
 		Describe("func Query()", func() {
 			It("calls the query function with the existing value", func() {
 				r := memoryprojection.Query(
-					adaptor,
+					projection,
 					func(v int) int {
 						return v * 2
 					},
