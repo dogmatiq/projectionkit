@@ -55,4 +55,6 @@ type MessageHandler[T any] interface {
 type NoCompactBehavior[T any] struct{}
 
 // Compact does nothing.
-func (NoCompactBehavior[T]) Compact(T, dogma.ProjectionCompactScope) {}
+func (NoCompactBehavior[T]) Compact(v T, _ dogma.ProjectionCompactScope) T {
+	return v
+}
