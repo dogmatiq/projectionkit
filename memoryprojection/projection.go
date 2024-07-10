@@ -11,8 +11,9 @@ import (
 )
 
 // Projection is an in-memory projection that builds a value of type T.
-type Projection[T any] struct {
-	Handler   MessageHandler[T]
+type Projection[T any, H MessageHandler[T]] struct {
+	Handler H
+
 	m         sync.RWMutex
 	resources map[string][]byte
 	value     T
@@ -23,7 +24,7 @@ type Projection[T any] struct {
 // q is called with the current value, which may be read within the lifetime of
 // the call to fn. fn MUST NOT retain a reference to the value after the call
 // returns. fn MUST NOT modify the value.
-func Query[T, R any](p *Projection[T], q func(T) R) R {
+func Query[T, R any, H MessageHandler[T]](p *Projection[T, H], q func(T) R) R {
 	p.m.RLock()
 	defer p.m.RUnlock()
 
@@ -32,12 +33,12 @@ func Query[T, R any](p *Projection[T], q func(T) R) R {
 
 // Configure produces a configuration for this handler by calling methods on
 // the configurer c.
-func (p *Projection[T]) Configure(c dogma.ProjectionConfigurer) {
+func (p *Projection[T, H]) Configure(c dogma.ProjectionConfigurer) {
 	p.Handler.Configure(c)
 }
 
 // HandleEvent updates the projection to reflect the occurrence of an event.
-func (p *Projection[T]) HandleEvent(
+func (p *Projection[T, H]) HandleEvent(
 	_ context.Context,
 	r, c, n []byte,
 	s dogma.ProjectionEventScope,
@@ -66,7 +67,7 @@ func (p *Projection[T]) HandleEvent(
 }
 
 // ResourceVersion returns the version of the resource r.
-func (p *Projection[T]) ResourceVersion(_ context.Context, r []byte) ([]byte, error) {
+func (p *Projection[T, H]) ResourceVersion(_ context.Context, r []byte) ([]byte, error) {
 	p.m.RLock()
 	defer p.m.RUnlock()
 
@@ -75,18 +76,18 @@ func (p *Projection[T]) ResourceVersion(_ context.Context, r []byte) ([]byte, er
 
 // CloseResource informs the projection that the resource r will not be
 // used in any future calls to HandleEvent().
-func (p *Projection[T]) CloseResource(ctx context.Context, r []byte) error {
+func (p *Projection[T, H]) CloseResource(ctx context.Context, r []byte) error {
 	return p.DeleteResource(ctx, r)
 }
 
 // TimeoutHint returns a duration that is suitable for computing a deadline
 // for the handling of the given message by this handler.
-func (p *Projection[T]) TimeoutHint(dogma.Message) time.Duration {
+func (p *Projection[T, H]) TimeoutHint(dogma.Message) time.Duration {
 	return 0
 }
 
 // Compact reduces the size of the projection's data.
-func (p *Projection[T]) Compact(_ context.Context, s dogma.ProjectionCompactScope) error {
+func (p *Projection[T, H]) Compact(_ context.Context, s dogma.ProjectionCompactScope) error {
 	p.m.Lock()
 	defer p.m.Unlock()
 
@@ -100,13 +101,13 @@ func (p *Projection[T]) Compact(_ context.Context, s dogma.ProjectionCompactScop
 
 // ResourceRepository returns a repository that can be used to manipulate the
 // handler's resource versions.
-func (p *Projection[T]) ResourceRepository(context.Context) (resource.Repository, error) {
+func (p *Projection[T, H]) ResourceRepository(context.Context) (resource.Repository, error) {
 	return p, nil
 }
 
 // StoreResourceVersion sets the version of the resource r to v without
 // checking the current version.
-func (p *Projection[T]) StoreResourceVersion(_ context.Context, r, v []byte) error {
+func (p *Projection[T, H]) StoreResourceVersion(_ context.Context, r, v []byte) error {
 	p.m.Lock()
 	defer p.m.Unlock()
 
@@ -121,7 +122,7 @@ func (p *Projection[T]) StoreResourceVersion(_ context.Context, r, v []byte) err
 // UpdateResourceVersion updates the version of the resource r to n.
 //
 // If c is not the current version of r, it returns false and no update occurs.
-func (p *Projection[T]) UpdateResourceVersion(_ context.Context, r, c, n []byte) (bool, error) {
+func (p *Projection[T, H]) UpdateResourceVersion(_ context.Context, r, c, n []byte) (bool, error) {
 	p.m.Lock()
 	defer p.m.Unlock()
 
@@ -138,7 +139,7 @@ func (p *Projection[T]) UpdateResourceVersion(_ context.Context, r, c, n []byte)
 }
 
 // DeleteResource removes all information about the resource r.
-func (p *Projection[T]) DeleteResource(_ context.Context, r []byte) error {
+func (p *Projection[T, H]) DeleteResource(_ context.Context, r []byte) error {
 	p.m.Lock()
 	defer p.m.Unlock()
 

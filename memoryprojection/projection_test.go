@@ -18,7 +18,7 @@ var _ = Describe("type Projection", func() {
 	var (
 		ctx        context.Context
 		handler    *fixtures.MessageHandler[int]
-		projection *Projection[int]
+		projection *Projection[int, *fixtures.MessageHandler[int]]
 	)
 
 	BeforeEach(func() {
@@ -29,7 +29,7 @@ var _ = Describe("type Projection", func() {
 			c.Identity("<projection>", "<key>")
 		}
 
-		projection = &Projection[int]{
+		projection = &Projection[int, *fixtures.MessageHandler[int]]{
 			Handler: handler,
 		}
 	})
