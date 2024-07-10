@@ -12,7 +12,7 @@ import (
 
 // Projection is an in-memory projection that builds a value of type T.
 type Projection[T any] struct {
-	handler   MessageHandler[T]
+	Handler   MessageHandler[T]
 	m         sync.RWMutex
 	resources map[string][]byte
 	value     T
@@ -30,18 +30,10 @@ func Query[T, R any](p *Projection[T], q func(T) R) R {
 	return q(p.value)
 }
 
-// New returns a new projection that uses the given handler to build an
-// in-memory value of type T.
-func New[T any](h MessageHandler[T]) *Projection[T] {
-	return &Projection[T]{
-		handler: h,
-	}
-}
-
 // Configure produces a configuration for this handler by calling methods on
 // the configurer c.
 func (p *Projection[T]) Configure(c dogma.ProjectionConfigurer) {
-	p.handler.Configure(c)
+	p.Handler.Configure(c)
 }
 
 // HandleEvent updates the projection to reflect the occurrence of an event.
@@ -59,7 +51,7 @@ func (p *Projection[T]) HandleEvent(
 		return false, nil
 	}
 
-	value, err := p.handler.HandleEvent(p.value, s, m)
+	value, err := p.Handler.HandleEvent(p.value, s, m)
 	if err != nil {
 		return false, err
 	}
@@ -100,7 +92,7 @@ func (p *Projection[T]) Compact(_ context.Context, s dogma.ProjectionCompactScop
 
 	if p.resources != nil {
 		// Only attempt to compact the value if some events have been applied.
-		p.value = p.handler.Compact(p.value, s)
+		p.value = p.Handler.Compact(p.value, s)
 	}
 
 	return nil

@@ -14,7 +14,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("type adaptor", func() {
+var _ = Describe("type Projection", func() {
 	var (
 		ctx        context.Context
 		handler    *fixtures.MessageHandler[int]
@@ -29,7 +29,9 @@ var _ = Describe("type adaptor", func() {
 			c.Identity("<projection>", "<key>")
 		}
 
-		projection = memoryprojection.New(handler)
+		projection = &Projection[int]{
+			Handler: handler,
+		}
 	})
 
 	adaptortest.DescribeAdaptor(&ctx, &projection)
