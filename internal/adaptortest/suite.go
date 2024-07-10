@@ -13,9 +13,9 @@ import (
 
 // DescribeAdaptor declares generic behavioral tests for a specific adaptor
 // implementation.
-func DescribeAdaptor(
+func DescribeAdaptor[T dogma.ProjectionMessageHandler](
 	ctxP *context.Context,
-	adaptorP *dogma.ProjectionMessageHandler,
+	adaptorP *T,
 ) {
 	var (
 		ctx     context.Context
