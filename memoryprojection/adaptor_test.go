@@ -18,7 +18,7 @@ var _ = Describe("type adaptor", func() {
 	var (
 		ctx        context.Context
 		handler    *fixtures.MessageHandler[int]
-		projection *Projection[int, *fixtures.MessageHandler[int]]
+		projection *Projection[int]
 	)
 
 	BeforeEach(func() {
