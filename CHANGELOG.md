@@ -10,6 +10,12 @@ The format is based on [Keep a Changelog], and this project adheres to
 [keep a changelog]: https://keepachangelog.com/en/1.0.0/
 [semantic versioning]: https://semver.org/spec/v2.0.0.html
 
+## [0.7.3] - 2024-07-16
+
+### Added
+
+- Added support for `Disable()` method in `dogmatiq/dogma` v0.13.1.
+
 ## [0.7.2] - 2024-07-11
 
 ### Added
@@ -187,6 +193,7 @@ placeholder format (`?` for MySQL, `$1` for everything else).
 [0.7.0]: https://github.com/dogmatiq/projectionkit/releases/tag/v0.7.0
 [0.7.1]: https://github.com/dogmatiq/projectionkit/releases/tag/v0.7.1
 [0.7.2]: https://github.com/dogmatiq/projectionkit/releases/tag/v0.7.2
+[0.7.3]: https://github.com/dogmatiq/projectionkit/releases/tag/v0.7.3
 
 <!-- version template
 ## [0.0.1] - YYYY-MM-DD
