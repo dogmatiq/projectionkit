@@ -1,6 +1,8 @@
 module github.com/dogmatiq/projectionkit
 
-go 1.21
+go 1.22
+
+toolchain go1.22.3
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.30.4
@@ -8,7 +10,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.28
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.34.5
 	github.com/dogmatiq/cosyne v0.2.0
-	github.com/dogmatiq/dogma v0.13.1
+	github.com/dogmatiq/dogma v0.14.0
 	github.com/dogmatiq/sqltest v0.3.0
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.34.1
@@ -45,11 +47,13 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.5 // indirect
 	github.com/nxadm/tail v1.4.8 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	golang.org/x/crypto v0.25.0 // indirect
+	golang.org/x/crypto v0.26.0 // indirect
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56 // indirect
-	golang.org/x/net v0.27.0 // indirect
-	golang.org/x/sys v0.22.0 // indirect
-	golang.org/x/text v0.16.0 // indirect
+	golang.org/x/net v0.28.0 // indirect
+	golang.org/x/sys v0.23.0 // indirect
+	golang.org/x/text v0.17.0 // indirect
+	golang.org/x/tools v0.24.0 // indirect
+	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect

@@ -54,13 +54,6 @@ var _ = Describe("type Handler", func() {
 		})
 	})
 
-	Describe("func TimeoutHint()", func() {
-		It("returns 0", func() {
-			d := handler.TimeoutHint(MessageA1)
-			Expect(d).To(BeZero())
-		})
-	})
-
 	Describe("func Compact()", func() {
 		It("returns an error", func() {
 			err := handler.Compact(context.Background(), nil)

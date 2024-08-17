@@ -88,7 +88,7 @@ var _ = Describe("type adaptor", func() {
 							context.Context,
 							*sql.Tx,
 							dogma.ProjectionEventScope,
-							dogma.Message,
+							dogma.Event,
 						) error {
 							return terr
 						}

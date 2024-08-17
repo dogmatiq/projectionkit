@@ -3,7 +3,6 @@ package fixtures
 import (
 	"context"
 	"database/sql"
-	"time"
 
 	"github.com/dogmatiq/dogma"
 )
@@ -11,8 +10,7 @@ import (
 // MessageHandler is a test implementation of sql.MessageHandler.
 type MessageHandler struct {
 	ConfigureFunc   func(dogma.ProjectionConfigurer)
-	HandleEventFunc func(context.Context, *sql.Tx, dogma.ProjectionEventScope, dogma.Message) error
-	TimeoutHintFunc func(dogma.Message) time.Duration
+	HandleEventFunc func(context.Context, *sql.Tx, dogma.ProjectionEventScope, dogma.Event) error
 	CompactFunc     func(context.Context, *sql.DB, dogma.ProjectionCompactScope) error
 }
 
@@ -37,26 +35,13 @@ func (h *MessageHandler) HandleEvent(
 	ctx context.Context,
 	tx *sql.Tx,
 	s dogma.ProjectionEventScope,
-	m dogma.Message,
+	m dogma.Event,
 ) error {
 	if h.HandleEventFunc != nil {
 		return h.HandleEventFunc(ctx, tx, s, m)
 	}
 
 	return nil
-}
-
-// TimeoutHint returns a duration that is suitable for computing a deadline for
-// the handling of the given message by this handler.
-//
-// If h.TimeoutHintFunc is non-nil it returns h.TimeoutHintFunc(m), otherwise it
-// returns 0.
-func (h *MessageHandler) TimeoutHint(m dogma.Message) time.Duration {
-	if h.TimeoutHintFunc != nil {
-		return h.TimeoutHintFunc(m)
-	}
-
-	return 0
 }
 
 // Compact reduces the size of the projection's data.

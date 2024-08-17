@@ -42,15 +42,6 @@ var _ = Describe("type Projection", func() {
 		})
 	})
 
-	Describe("func TimeoutHint()", func() {
-		It("returns zero", func() {
-			d := projection.TimeoutHint(
-				MessageA1,
-			)
-			Expect(d).To(BeEquivalentTo(0))
-		})
-	})
-
 	When("there is no state", func() {
 		Describe("func HandleEvent()", func() {
 			It("forwards a zero value to the handler", func() {
@@ -58,7 +49,7 @@ var _ = Describe("type Projection", func() {
 				handler.HandleEventFunc = func(
 					v int,
 					_ dogma.ProjectionEventScope,
-					m dogma.Message,
+					m dogma.Event,
 				) (int, error) {
 					called = true
 					Expect(v).To(Equal(0))
@@ -116,7 +107,7 @@ var _ = Describe("type Projection", func() {
 			handler.HandleEventFunc = func(
 				v int,
 				_ dogma.ProjectionEventScope,
-				_ dogma.Message,
+				_ dogma.Event,
 			) (int, error) {
 				return 321, nil
 			}
@@ -139,7 +130,7 @@ var _ = Describe("type Projection", func() {
 				handler.HandleEventFunc = func(
 					v int,
 					_ dogma.ProjectionEventScope,
-					m dogma.Message,
+					m dogma.Event,
 				) (int, error) {
 					called = true
 					Expect(v).To(Equal(321))

@@ -2,7 +2,6 @@ package boltprojection
 
 import (
 	"context"
-	"time"
 
 	"github.com/dogmatiq/dogma"
 	"github.com/dogmatiq/projectionkit/internal/identity"
@@ -53,7 +52,7 @@ func (a *adaptor) HandleEvent(
 	ctx context.Context,
 	r, c, n []byte,
 	s dogma.ProjectionEventScope,
-	m dogma.Message,
+	m dogma.Event,
 ) (bool, error) {
 	return a.repo.UpdateResourceVersionFn(
 		ctx,
@@ -73,12 +72,6 @@ func (a *adaptor) ResourceVersion(ctx context.Context, r []byte) ([]byte, error)
 // used in any future calls to HandleEvent().
 func (a *adaptor) CloseResource(ctx context.Context, r []byte) error {
 	return a.repo.DeleteResource(ctx, r)
-}
-
-// TimeoutHint returns a duration that is suitable for computing a deadline
-// for the handling of the given message by this handler.
-func (a *adaptor) TimeoutHint(m dogma.Message) time.Duration {
-	return a.handler.TimeoutHint(m)
 }
 
 // Compact reduces the size of the projection's data.

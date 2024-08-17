@@ -159,7 +159,7 @@ func (rr *ResourceRepository) DeleteResource(ctx context.Context, r []byte) erro
 // and applies the supplied items within a single transaction.
 func (rr *ResourceRepository) createResourceWithinTx(
 	ctx context.Context,
-	r, c, n []byte,
+	r, _, n []byte,
 	items ...types.TransactWriteItem,
 ) (bool, error) {
 	_, err := awsx.Do(
@@ -203,7 +203,7 @@ func (rr *ResourceRepository) createResourceWithinTx(
 // and applies the supplied items within a single transaction.
 func (rr *ResourceRepository) deleteResourceWithinTx(
 	ctx context.Context,
-	r, c, n []byte,
+	r, c, _ []byte,
 	items ...types.TransactWriteItem,
 ) (bool, error) {
 	_, err := awsx.Do(

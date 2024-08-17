@@ -133,7 +133,7 @@ var _ = Describe("type adaptor", func() {
 			handler.HandleEventFunc = func(
 				context.Context,
 				dogma.ProjectionEventScope,
-				dogma.Message,
+				dogma.Event,
 			) ([]types.TransactWriteItem, error) {
 				return nil, terr
 			}
@@ -207,7 +207,7 @@ var _ = Describe("type adaptor", func() {
 				handler.HandleEventFunc = func(
 					context.Context,
 					dogma.ProjectionEventScope,
-					dogma.Message,
+					dogma.Event,
 				) ([]types.TransactWriteItem, error) {
 					return []types.TransactWriteItem{
 						{
@@ -237,22 +237,6 @@ var _ = Describe("type adaptor", func() {
 				Expect(err).Should(HaveOccurred())
 				Expect(errors.As(err, new(*types.TransactionCanceledException))).To(BeTrue())
 			})
-		})
-	})
-
-	Describe("func TimeoutHint()", func() {
-		It("forwards to the handler", func() {
-			handler.TimeoutHintFunc = func(
-				m dogma.Message,
-			) time.Duration {
-				Expect(m).To(BeIdenticalTo(MessageA1))
-				return 100 * time.Millisecond
-			}
-
-			d := adaptor.TimeoutHint(
-				MessageA1,
-			)
-			Expect(d).To(Equal(100 * time.Millisecond))
 		})
 	})
 

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"io/ioutil"
 	"os"
-	"time"
 
 	"github.com/dogmatiq/dogma"
 	. "github.com/dogmatiq/dogma/fixtures"
@@ -85,7 +84,7 @@ var _ = Describe("type adaptor", func() {
 				context.Context,
 				*bbolt.Tx,
 				dogma.ProjectionEventScope,
-				dogma.Message,
+				dogma.Event,
 			) error {
 				return terr
 			}
@@ -99,22 +98,6 @@ var _ = Describe("type adaptor", func() {
 				MessageA1,
 			)
 			Expect(err).Should(HaveOccurred())
-		})
-	})
-
-	Describe("func TimeoutHint()", func() {
-		It("forwards to the handler", func() {
-			handler.TimeoutHintFunc = func(
-				m dogma.Message,
-			) time.Duration {
-				Expect(m).To(BeIdenticalTo(MessageA1))
-				return 100 * time.Millisecond
-			}
-
-			d := adaptor.TimeoutHint(
-				MessageA1,
-			)
-			Expect(d).To(Equal(100 * time.Millisecond))
 		})
 	})
 

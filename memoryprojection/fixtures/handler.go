@@ -7,7 +7,7 @@ import (
 // MessageHandler is a test implementation of [memoryprojection.MessageHandler].
 type MessageHandler[T any] struct {
 	ConfigureFunc   func(dogma.ProjectionConfigurer)
-	HandleEventFunc func(T, dogma.ProjectionEventScope, dogma.Message) (T, error)
+	HandleEventFunc func(T, dogma.ProjectionEventScope, dogma.Event) (T, error)
 	CompactFunc     func(T, dogma.ProjectionCompactScope) T
 }
 
@@ -32,7 +32,7 @@ func (h *MessageHandler[T]) Configure(c dogma.ProjectionConfigurer) {
 func (h *MessageHandler[T]) HandleEvent(
 	v T,
 	s dogma.ProjectionEventScope,
-	m dogma.Message,
+	m dogma.Event,
 ) (T, error) {
 	if h != nil && h.HandleEventFunc != nil {
 		return h.HandleEventFunc(v, s, m)

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"sync"
-	"time"
 
 	"github.com/dogmatiq/dogma"
 	"github.com/dogmatiq/projectionkit/resource"
@@ -42,7 +41,7 @@ func (p *Projection[T, H]) HandleEvent(
 	_ context.Context,
 	r, c, n []byte,
 	s dogma.ProjectionEventScope,
-	m dogma.Message,
+	m dogma.Event,
 ) (bool, error) {
 	p.m.Lock()
 	defer p.m.Unlock()
@@ -78,12 +77,6 @@ func (p *Projection[T, H]) ResourceVersion(_ context.Context, r []byte) ([]byte,
 // used in any future calls to HandleEvent().
 func (p *Projection[T, H]) CloseResource(ctx context.Context, r []byte) error {
 	return p.DeleteResource(ctx, r)
-}
-
-// TimeoutHint returns a duration that is suitable for computing a deadline
-// for the handling of the given message by this handler.
-func (p *Projection[T, H]) TimeoutHint(dogma.Message) time.Duration {
-	return 0
 }
 
 // Compact reduces the size of the projection's data.

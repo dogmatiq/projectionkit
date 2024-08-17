@@ -26,7 +26,7 @@ func NewResourceRepository(
 }
 
 // ResourceVersion returns the version of the resource r.
-func (rr *ResourceRepository) ResourceVersion(ctx context.Context, r []byte) ([]byte, error) {
+func (rr *ResourceRepository) ResourceVersion(_ context.Context, r []byte) ([]byte, error) {
 	var v []byte
 
 	return v, rr.db.View(func(tx *bbolt.Tx) error {
@@ -40,7 +40,7 @@ func (rr *ResourceRepository) ResourceVersion(ctx context.Context, r []byte) ([]
 
 // StoreResourceVersion sets the version of the resource r to v without checking
 // the current version.
-func (rr *ResourceRepository) StoreResourceVersion(ctx context.Context, r, v []byte) error {
+func (rr *ResourceRepository) StoreResourceVersion(_ context.Context, r, v []byte) error {
 	return rr.db.Update(func(tx *bbolt.Tx) error {
 		b, err := makeHandlerBucket(tx, rr.key)
 		if err != nil {
@@ -63,7 +63,7 @@ func (rr *ResourceRepository) StoreResourceVersion(ctx context.Context, r, v []b
 //
 // If c is not the current version of r, it returns false and no update occurs.
 func (rr *ResourceRepository) UpdateResourceVersion(
-	ctx context.Context,
+	_ context.Context,
 	r, c, n []byte,
 ) (ok bool, err error) {
 	return ok, rr.db.Update(func(tx *bbolt.Tx) error {
@@ -73,8 +73,8 @@ func (rr *ResourceRepository) UpdateResourceVersion(
 	})
 }
 
-// UpdateResourceVersion updates the version of the resource r to n and performs
-// a user-defined operation within the same transaction.
+// UpdateResourceVersionFn updates the version of the resource r to n and
+// performs a user-defined operation within the same transaction.
 //
 // If c is not the current version of r, it returns false and no update occurs.
 func (rr *ResourceRepository) UpdateResourceVersionFn(
@@ -123,7 +123,7 @@ func (rr *ResourceRepository) updateResourceVersion(
 }
 
 // DeleteResource removes all information about the resource r.
-func (rr *ResourceRepository) DeleteResource(ctx context.Context, r []byte) error {
+func (rr *ResourceRepository) DeleteResource(_ context.Context, r []byte) error {
 	return rr.db.Update(func(tx *bbolt.Tx) error {
 		if b := handlerBucket(tx, rr.key); b != nil {
 			return b.Delete(r)
