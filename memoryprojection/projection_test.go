@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/dogmatiq/dogma"
-	. "github.com/dogmatiq/dogma/fixtures"
+	. "github.com/dogmatiq/enginekit/enginetest/stubs"
 	"github.com/dogmatiq/projectionkit/internal/adaptortest"
 	"github.com/dogmatiq/projectionkit/internal/identity"
 	"github.com/dogmatiq/projectionkit/memoryprojection"
@@ -53,7 +53,7 @@ var _ = Describe("type Projection", func() {
 				) (int, error) {
 					called = true
 					Expect(v).To(Equal(0))
-					Expect(m).To(Equal(MessageA1))
+					Expect(m).To(Equal(EventA1))
 					return v, nil
 				}
 
@@ -63,7 +63,7 @@ var _ = Describe("type Projection", func() {
 					nil,
 					[]byte("<version 01>"),
 					nil, // scope
-					MessageA1,
+					EventA1,
 				)
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(ok).To(BeTrue())
@@ -118,7 +118,7 @@ var _ = Describe("type Projection", func() {
 				nil,
 				[]byte("<version 01>"),
 				nil, // scope
-				MessageA1,
+				EventA1,
 			)
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(ok).To(BeTrue())
@@ -143,7 +143,7 @@ var _ = Describe("type Projection", func() {
 					[]byte("<version 01>"),
 					[]byte("<version 02>"),
 					nil, // scope
-					MessageA1,
+					EventA1,
 				)
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(ok).To(BeTrue())

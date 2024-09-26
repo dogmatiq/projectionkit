@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/dogmatiq/dogma"
-	. "github.com/dogmatiq/dogma/fixtures"
+	. "github.com/dogmatiq/enginekit/enginetest/stubs"
 	"github.com/dogmatiq/projectionkit/internal/adaptortest"
 	"github.com/dogmatiq/projectionkit/internal/identity"
 	. "github.com/dogmatiq/projectionkit/sqlprojection"
@@ -99,7 +99,7 @@ var _ = Describe("type adaptor", func() {
 							nil,
 							[]byte("<version 01>"),
 							nil,
-							MessageA1,
+							EventA1,
 						)
 						Expect(err).Should(HaveOccurred())
 					})

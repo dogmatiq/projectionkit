@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/dogmatiq/dogma"
-	. "github.com/dogmatiq/dogma/fixtures"
+	. "github.com/dogmatiq/enginekit/enginetest/stubs"
 	. "github.com/dogmatiq/projectionkit/dynamoprojection"
 	"github.com/dogmatiq/projectionkit/dynamoprojection/fixtures" // can't dot-import due to conflict
 	"github.com/dogmatiq/projectionkit/internal/adaptortest"
@@ -144,7 +144,7 @@ var _ = Describe("type adaptor", func() {
 				nil,
 				[]byte("<version 01>"),
 				nil,
-				MessageA1,
+				EventA1,
 			)
 			Expect(err).Should(HaveOccurred())
 		})
@@ -232,7 +232,7 @@ var _ = Describe("type adaptor", func() {
 					nil,
 					[]byte("<version 01>"),
 					nil,
-					MessageA1,
+					EventA1,
 				)
 				Expect(err).Should(HaveOccurred())
 				Expect(errors.As(err, new(*types.TransactionCanceledException))).To(BeTrue())

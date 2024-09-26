@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/dogmatiq/dogma"
-	. "github.com/dogmatiq/dogma/fixtures"
+	. "github.com/dogmatiq/enginekit/enginetest/stubs"
 	"github.com/dogmatiq/projectionkit/internal/identity"
 	. "github.com/dogmatiq/projectionkit/internal/unboundhandler"
 	. "github.com/onsi/ginkgo"
@@ -13,12 +13,12 @@ import (
 
 var _ = Describe("type Handler", func() {
 	var (
-		upstream *ProjectionMessageHandler
+		upstream *ProjectionMessageHandlerStub
 		handler  dogma.ProjectionMessageHandler
 	)
 
 	BeforeEach(func() {
-		upstream = &ProjectionMessageHandler{
+		upstream = &ProjectionMessageHandlerStub{
 			ConfigureFunc: func(c dogma.ProjectionConfigurer) {
 				c.Identity("<name>", "<key>")
 			},

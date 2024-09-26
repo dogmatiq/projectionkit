@@ -1,8 +1,8 @@
 module github.com/dogmatiq/projectionkit
 
-go 1.22
+go 1.23
 
-toolchain go1.22.3
+toolchain go1.23.1
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.31.0
@@ -11,6 +11,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.35.1
 	github.com/dogmatiq/cosyne v0.2.0
 	github.com/dogmatiq/dogma v0.14.2
+	github.com/dogmatiq/enginekit v0.11.0
 	github.com/dogmatiq/sqltest v0.3.0
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.34.2
@@ -51,7 +52,6 @@ require (
 	golang.org/x/net v0.28.0 // indirect
 	golang.org/x/sys v0.24.0 // indirect
 	golang.org/x/text v0.17.0 // indirect
-	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect

@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/dogmatiq/dogma"
-	"github.com/dogmatiq/dogma/fixtures"
+	"github.com/dogmatiq/enginekit/enginetest/stubs"
 	"github.com/dogmatiq/projectionkit/resource"
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/ginkgo/extensions/table"
@@ -37,7 +37,7 @@ func DescribeAdaptor[T dogma.ProjectionMessageHandler](
 				nil,
 				[]byte("<version 01>"),
 				nil,
-				fixtures.MessageA1,
+				stubs.EventA1,
 			)
 			gomega.Expect(ok).Should(gomega.BeTrue())
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
@@ -57,7 +57,7 @@ func DescribeAdaptor[T dogma.ProjectionMessageHandler](
 				[]byte("<version 01>"),
 				[]byte("<version 02>"),
 				nil,
-				fixtures.MessageA2,
+				stubs.EventA2,
 			)
 			gomega.Expect(ok).Should(gomega.BeTrue())
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
@@ -77,7 +77,7 @@ func DescribeAdaptor[T dogma.ProjectionMessageHandler](
 				[]byte("<version 02>"),
 				nil,
 				nil,
-				fixtures.MessageA3,
+				stubs.EventA3,
 			)
 			gomega.Expect(ok).Should(gomega.BeTrue())
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
@@ -97,7 +97,7 @@ func DescribeAdaptor[T dogma.ProjectionMessageHandler](
 				nil,
 				[]byte("<version 01>"),
 				nil,
-				fixtures.MessageA1,
+				stubs.EventA1,
 			)
 			gomega.Expect(ok).Should(gomega.BeTrue())
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
@@ -108,7 +108,7 @@ func DescribeAdaptor[T dogma.ProjectionMessageHandler](
 				[]byte("<incorrect current version>"),
 				[]byte("<version 02>"),
 				nil,
-				fixtures.MessageA2,
+				stubs.EventA2,
 			)
 			gomega.Expect(ok).Should(gomega.BeFalse())
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
@@ -121,7 +121,7 @@ func DescribeAdaptor[T dogma.ProjectionMessageHandler](
 				nil,
 				[]byte("<version 01>"),
 				nil,
-				fixtures.MessageA1,
+				stubs.EventA1,
 			)
 			gomega.Expect(ok).Should(gomega.BeTrue())
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
@@ -132,7 +132,7 @@ func DescribeAdaptor[T dogma.ProjectionMessageHandler](
 				[]byte("<incorrect current version>"),
 				nil,
 				nil,
-				fixtures.MessageA2,
+				stubs.EventA2,
 			)
 			gomega.Expect(ok).Should(gomega.BeFalse())
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
@@ -147,7 +147,7 @@ func DescribeAdaptor[T dogma.ProjectionMessageHandler](
 				nil,
 				[]byte("<version 01>"),
 				nil,
-				fixtures.MessageA1,
+				stubs.EventA1,
 			)
 			gomega.Expect(ok).Should(gomega.BeTrue())
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
@@ -178,7 +178,7 @@ func DescribeAdaptor[T dogma.ProjectionMessageHandler](
 				nil,
 				[]byte("<version 01>"),
 				nil,
-				fixtures.MessageA2,
+				stubs.EventA2,
 			)
 			gomega.Expect(ok).Should(gomega.BeTrue())
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())

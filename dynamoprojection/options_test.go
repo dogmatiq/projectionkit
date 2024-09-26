@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/dogmatiq/dogma"
-	. "github.com/dogmatiq/dogma/fixtures"
+	. "github.com/dogmatiq/enginekit/enginetest/stubs"
 	. "github.com/dogmatiq/projectionkit/dynamoprojection"
 	"github.com/dogmatiq/projectionkit/dynamoprojection/fixtures"
 	"github.com/dogmatiq/projectionkit/internal/identity"
@@ -622,7 +622,7 @@ var _ = Context("adding options", func() {
 					nil,
 					[]byte("<version 01>"),
 					nil,
-					MessageA1,
+					EventA1,
 				)
 				Expect(err).Should(HaveOccurred())
 				Expect(errors.As(err, new(*types.ResourceNotFoundException))).To(BeTrue())
@@ -652,7 +652,7 @@ var _ = Context("adding options", func() {
 					nil,
 					[]byte("<version 01>"),
 					nil,
-					MessageA1,
+					EventA1,
 				)
 				Expect(err).Should(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("no such host"))

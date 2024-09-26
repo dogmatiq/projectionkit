@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	. "github.com/dogmatiq/dogma/fixtures"
+	. "github.com/dogmatiq/enginekit/enginetest/stubs"
 	. "github.com/dogmatiq/projectionkit/resource"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -25,7 +25,7 @@ var _ = Describe("func StoreVersion()", func() {
 	It("returns an error if the handler does not implement RepositoryAware", func() {
 		err := StoreVersion(
 			context.Background(),
-			&ProjectionMessageHandler{},
+			&ProjectionMessageHandlerStub{},
 			[]byte("<resource>"),
 			[]byte("<version>"),
 		)
@@ -50,7 +50,7 @@ var _ = Describe("func UpdateVersion()", func() {
 	It("returns an error if the handler does not implement RepositoryAware", func() {
 		_, err := UpdateVersion(
 			context.Background(),
-			&ProjectionMessageHandler{},
+			&ProjectionMessageHandlerStub{},
 			[]byte("<resource>"),
 			[]byte("<current>"),
 			[]byte("<next>"),
@@ -74,7 +74,7 @@ var _ = Describe("func DeleteResource()", func() {
 	It("returns an error if the handler does not implement RepositoryAware", func() {
 		err := DeleteResource(
 			context.Background(),
-			&ProjectionMessageHandler{},
+			&ProjectionMessageHandlerStub{},
 			[]byte("<resource>"),
 		)
 
@@ -83,7 +83,7 @@ var _ = Describe("func DeleteResource()", func() {
 })
 
 type repositoryAwareStub struct {
-	ProjectionMessageHandler
+	ProjectionMessageHandlerStub
 }
 
 func (*repositoryAwareStub) ResourceRepository(context.Context) (Repository, error) {
