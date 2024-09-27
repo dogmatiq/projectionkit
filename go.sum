@@ -42,8 +42,8 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/dogmatiq/cosyne v0.2.0 h1:tO957BpS4I9kqSw31ds6Ef4CXvV8zPAqWzbXKElsGWg=
 github.com/dogmatiq/cosyne v0.2.0/go.mod h1:dD8EZjbRX7FFw9t6P7l1nwoZbA7YxtOCfl9ZZAHPucU=
-github.com/dogmatiq/dogma v0.14.2 h1:SrwuNGMbZ4W9jdxe9a9e7n1Fspo/dhsLLhMSVMdIQro=
-github.com/dogmatiq/dogma v0.14.2/go.mod h1:9lyVA+6V2+E/exV0IrBOrkUiyFwIATEhv+b0vnB2umQ=
+github.com/dogmatiq/dogma v0.14.3 h1:qwZqU1yqp80toUJcJBdFxLlh6xvlFd7jb7rycmriRUo=
+github.com/dogmatiq/dogma v0.14.3/go.mod h1:9lyVA+6V2+E/exV0IrBOrkUiyFwIATEhv+b0vnB2umQ=
 github.com/dogmatiq/enginekit v0.11.1 h1:zXOe4Ms/6cbDPvaZMzJiXGiG9Bq/nB6Liqyw/fIBKxI=
 github.com/dogmatiq/enginekit v0.11.1/go.mod h1:gDEDVDPAYstWK262NzHWKknox5MncDguQu+XW769jY4=
 github.com/dogmatiq/sqltest v0.3.0 h1:DCwyLWfVk/ZHsqq5Itq3H/Lqsh/CIQ6nIRwI4YLywFc=
