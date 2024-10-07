@@ -44,8 +44,8 @@ github.com/dogmatiq/cosyne v0.2.0 h1:tO957BpS4I9kqSw31ds6Ef4CXvV8zPAqWzbXKElsGWg
 github.com/dogmatiq/cosyne v0.2.0/go.mod h1:dD8EZjbRX7FFw9t6P7l1nwoZbA7YxtOCfl9ZZAHPucU=
 github.com/dogmatiq/dogma v0.15.0 h1:aXOTd2K4wLvlwHc1D9OsFREp0BusNJ9o9KssxURftmg=
 github.com/dogmatiq/dogma v0.15.0/go.mod h1:TF6xisRxQ2RE3JQwFr6MCI4nWLKQQp7KRWXVHOq9K0k=
-github.com/dogmatiq/enginekit v0.16.0 h1:1+Fr0117jihoiY2SABsSAGhJYLi8DeNv35rR8PWgBfk=
-github.com/dogmatiq/enginekit v0.16.0/go.mod h1:nODdKEljyHQHDRlwQrKD3NCJ/4y1jFFKYDwJ0yeHcVo=
+github.com/dogmatiq/enginekit v0.16.1 h1:SAXc4ikrROho5nL11AowfqHpzvw+JAEomErG7sTbeLA=
+github.com/dogmatiq/enginekit v0.16.1/go.mod h1:nODdKEljyHQHDRlwQrKD3NCJ/4y1jFFKYDwJ0yeHcVo=
 github.com/dogmatiq/sqltest v0.3.0 h1:DCwyLWfVk/ZHsqq5Itq3H/Lqsh/CIQ6nIRwI4YLywFc=
 github.com/dogmatiq/sqltest v0.3.0/go.mod h1:a8Da8NhU4m3lq5Sybhiv+ZQowSnGHWTIJHFNInVtffg=
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
