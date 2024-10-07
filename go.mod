@@ -11,7 +11,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.36.0
 	github.com/dogmatiq/cosyne v0.2.0
 	github.com/dogmatiq/dogma v0.15.0
-	github.com/dogmatiq/enginekit v0.16.0
+	github.com/dogmatiq/enginekit v0.16.1
 	github.com/dogmatiq/sqltest v0.3.0
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.34.2
