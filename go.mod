@@ -15,7 +15,7 @@ require (
 	github.com/dogmatiq/sqltest v0.3.0
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.36.2
-	go.etcd.io/bbolt v1.3.11
+	go.etcd.io/bbolt v1.4.0
 	go.uber.org/multierr v1.11.0
 )
 
@@ -49,7 +49,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/net v0.33.0 // indirect
-	golang.org/x/sys v0.28.0 // indirect
+	golang.org/x/sys v0.29.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
