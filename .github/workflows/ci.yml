@@ -14,5 +14,13 @@ on:
 jobs:
   ci:
     name: Shared
-    uses: dogmatiq/repos/.github/workflows/shared-go+persistence.yml@main
+    uses: dogmatiq/repos/.github/workflows/shared-go.yml@main
     secrets: inherit
+    with:
+      "dynamodb": true
+      "mariadb": true
+      "minio": true
+      "mysql": true
+      "postgres": true
+
+    
