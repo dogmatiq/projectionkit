@@ -14,7 +14,7 @@ require (
 	github.com/dogmatiq/enginekit v0.16.1
 	github.com/dogmatiq/sqltest v0.3.0
 	github.com/onsi/ginkgo v1.16.5
-	github.com/onsi/gomega v1.36.3
+	github.com/onsi/gomega v1.37.0
 	go.etcd.io/bbolt v1.4.0
 	go.uber.org/multierr v1.11.0
 )
