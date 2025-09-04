@@ -5,9 +5,7 @@ import (
 
 	"github.com/dogmatiq/dogma"
 	"github.com/dogmatiq/enginekit/enginetest/stubs"
-	"github.com/dogmatiq/projectionkit/resource"
 	"github.com/onsi/ginkgo"
-	"github.com/onsi/ginkgo/extensions/table"
 	"github.com/onsi/gomega"
 )
 
@@ -28,365 +26,79 @@ func DescribeAdaptor[T dogma.ProjectionMessageHandler](
 	})
 
 	ginkgo.Describe("func HandleEvent()", func() {
-		ginkgo.It("does not produce errors when OCC parameters are supplied correctly", func() {
-			ginkgo.By("persisting the initial resource version")
+		ginkgo.It("returns the new checkpoint offset", func() {
+			ginkgo.By("applying the event at offset 0")
 
-			ok, err := adaptor.HandleEvent(
-				context.Background(),
-				[]byte("<resource>"),
-				nil,
-				[]byte("<version 01>"),
-				nil,
+			cp, err := adaptor.HandleEvent(
+				ctx,
+				&stubs.ProjectionEventScopeStub{},
 				stubs.EventA1,
 			)
-			gomega.Expect(ok).Should(gomega.BeTrue())
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+			gomega.Expect(cp).Should(gomega.BeEquivalentTo(1))
 
-			v, err := adaptor.ResourceVersion(
-				context.Background(),
-				[]byte("<resource>"),
-			)
-			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
-			gomega.Expect(v).To(gomega.Equal([]byte("<version 01>")))
+			ginkgo.By("applying the event at offset 1")
 
-			ginkgo.By("persisting the next resource version")
-
-			ok, err = adaptor.HandleEvent(
-				context.Background(),
-				[]byte("<resource>"),
-				[]byte("<version 01>"),
-				[]byte("<version 02>"),
-				nil,
+			cp, err = adaptor.HandleEvent(
+				ctx,
+				&stubs.ProjectionEventScopeStub{
+					OffsetFunc:           func() uint64 { return 1 },
+					CheckpointOffsetFunc: func() uint64 { return 1 },
+				},
 				stubs.EventA2,
 			)
-			gomega.Expect(ok).Should(gomega.BeTrue())
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
-
-			v, err = adaptor.ResourceVersion(
-				context.Background(),
-				[]byte("<resource>"),
-			)
-			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
-			gomega.Expect(v).To(gomega.Equal([]byte("<version 02>")))
-
-			ginkgo.By("discarding a resource if the next resource version is empty")
-
-			ok, err = adaptor.HandleEvent(
-				context.Background(),
-				[]byte("<resource>"),
-				[]byte("<version 02>"),
-				nil,
-				nil,
-				stubs.EventA3,
-			)
-			gomega.Expect(ok).Should(gomega.BeTrue())
-			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
-
-			v, err = adaptor.ResourceVersion(
-				context.Background(),
-				[]byte("<resource>"),
-			)
-			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
-			gomega.Expect(v).To(gomega.BeEmpty())
+			gomega.Expect(cp).Should(gomega.BeEquivalentTo(2))
 		})
 
-		ginkgo.It("returns false if supplied resource version is not the current version", func() {
-			ok, err := adaptor.HandleEvent(
-				context.Background(),
-				[]byte("<resource>"),
-				nil,
-				[]byte("<version 01>"),
-				nil,
+		ginkgo.It("returns the actual checkpoint offset if the provided checkpoint offset is not current", func() {
+			cp, err := adaptor.HandleEvent(
+				ctx,
+				&stubs.ProjectionEventScopeStub{},
 				stubs.EventA1,
 			)
-			gomega.Expect(ok).Should(gomega.BeTrue())
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+			gomega.Expect(cp).Should(gomega.BeEquivalentTo(1))
 
-			ok, err = adaptor.HandleEvent(
-				context.Background(),
-				[]byte("<resource>"),
-				[]byte("<incorrect current version>"),
-				[]byte("<version 02>"),
-				nil,
+			cp, err = adaptor.HandleEvent(
+				ctx,
+				&stubs.ProjectionEventScopeStub{
+					CheckpointOffsetFunc: func() uint64 { return 123 },
+				},
 				stubs.EventA2,
 			)
-			gomega.Expect(ok).Should(gomega.BeFalse())
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
-		})
-
-		ginkgo.It("returns false if supplied resource version is not the current version when discarding a resource", func() {
-			ok, err := adaptor.HandleEvent(
-				context.Background(),
-				[]byte("<resource>"),
-				nil,
-				[]byte("<version 01>"),
-				nil,
-				stubs.EventA1,
-			)
-			gomega.Expect(ok).Should(gomega.BeTrue())
-			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
-
-			ok, err = adaptor.HandleEvent(
-				context.Background(),
-				[]byte("<resource>"),
-				[]byte("<incorrect current version>"),
-				nil,
-				nil,
-				stubs.EventA2,
-			)
-			gomega.Expect(ok).Should(gomega.BeFalse())
-			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+			gomega.Expect(cp).Should(gomega.BeEquivalentTo(1))
 		})
 	})
 
-	ginkgo.Describe("func ResourceVersion()", func() {
-		ginkgo.It("returns a resource version", func() {
-			ok, err := adaptor.HandleEvent(
-				context.Background(),
-				[]byte("<resource>"),
-				nil,
-				[]byte("<version 01>"),
-				nil,
+	ginkgo.Describe("func CheckpointOffset()", func() {
+		ginkgo.It("returns the checkpoint offset", func() {
+			s := &stubs.ProjectionEventScopeStub{}
+
+			want, err := adaptor.HandleEvent(
+				ctx,
+				s,
 				stubs.EventA1,
 			)
-			gomega.Expect(ok).Should(gomega.BeTrue())
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+			gomega.Expect(want).Should(gomega.BeEquivalentTo(1))
 
-			v, err := adaptor.ResourceVersion(
-				context.Background(),
-				[]byte("<resource>"),
+			got, err := adaptor.CheckpointOffset(
+				ctx,
+				s.StreamID(),
 			)
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
-			gomega.Expect(v).To(gomega.Equal([]byte("<version 01>")))
+			gomega.Expect(got).To(gomega.Equal(want))
 		})
 
-		ginkgo.It("returns nil if no current resource version present in the database", func() {
-			v, err := adaptor.ResourceVersion(
-				context.Background(),
-				[]byte("<resource>"),
+		ginkgo.It("returns 0 if no events from the stream have been applied", func() {
+			cp, err := adaptor.CheckpointOffset(
+				ctx,
+				"e108b1d5-f2c2-44f1-884d-a5cdc1d575f0",
 			)
 			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
-			gomega.Expect(v).To(gomega.BeEmpty())
-		})
-	})
-
-	ginkgo.Describe("func CloseResource()", func() {
-		ginkgo.It("removes a resource version", func() {
-			ok, err := adaptor.HandleEvent(
-				context.Background(),
-				[]byte("<resource>"),
-				nil,
-				[]byte("<version 01>"),
-				nil,
-				stubs.EventA2,
-			)
-			gomega.Expect(ok).Should(gomega.BeTrue())
-			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
-
-			err = adaptor.CloseResource(
-				context.Background(),
-				[]byte("<resource>"),
-			)
-			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
-
-			v, err := adaptor.ResourceVersion(
-				context.Background(),
-				[]byte("<resource>"),
-			)
-			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
-			gomega.Expect(v).To(gomega.BeEmpty())
-		})
-	})
-
-	ginkgo.Context("low-level resource API", func() {
-		ginkgo.When("the resource does not exist", func() {
-			ginkgo.It("stores the version", func() {
-				err := resource.StoreVersion(
-					ctx,
-					adaptor,
-					[]byte("<resource>"),
-					[]byte("<version>"),
-				)
-
-				gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
-
-				ver, err := adaptor.ResourceVersion(
-					ctx,
-					[]byte("<resource>"),
-				)
-
-				gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
-				gomega.Expect(ver).To(gomega.Equal([]byte("<version>")))
-			})
-
-			table.DescribeTable(
-				"it updates the version",
-				func(current []byte) {
-					ok, err := resource.UpdateVersion(
-						ctx,
-						adaptor,
-						[]byte("<resource>"),
-						current,
-						[]byte("<version>"),
-					)
-
-					gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
-					gomega.Expect(ok).To(gomega.BeTrue())
-
-					ver, err := adaptor.ResourceVersion(
-						ctx,
-						[]byte("<resource>"),
-					)
-
-					gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
-					gomega.Expect(ver).To(gomega.Equal([]byte("<version>")))
-				},
-				table.Entry("nil byte-slice", nil),
-				table.Entry("empty byte-slice", []byte{}),
-			)
-
-			ginkgo.It("does not update the version if the supplied current version is incorrect", func() {
-				ok, err := resource.UpdateVersion(
-					ctx,
-					adaptor,
-					[]byte("<resource>"),
-					[]byte("<incorrect>"),
-					[]byte("<version>"),
-				)
-
-				gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
-				gomega.Expect(ok).To(gomega.BeFalse())
-			})
-		})
-
-		ginkgo.When("the resource exists", func() {
-			ginkgo.BeforeEach(func() {
-				err := resource.StoreVersion(
-					ctx,
-					adaptor,
-					[]byte("<resource>"),
-					[]byte("<version>"),
-				)
-
-				gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
-			})
-
-			ginkgo.It("reports the expected version", func() {
-				ver, err := adaptor.ResourceVersion(
-					ctx,
-					[]byte("<resource>"),
-				)
-
-				gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
-				gomega.Expect(ver).To(gomega.Equal([]byte("<version>")))
-			})
-
-			ginkgo.It("stores the version", func() {
-				err := resource.StoreVersion(
-					ctx,
-					adaptor,
-					[]byte("<resource>"),
-					[]byte("<version>"),
-				)
-
-				gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
-
-				ver, err := adaptor.ResourceVersion(
-					ctx,
-					[]byte("<resource>"),
-				)
-
-				gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
-				gomega.Expect(ver).To(gomega.Equal([]byte("<version>")))
-			})
-
-			table.DescribeTable(
-				"it stores an empty version",
-				func(next []byte) {
-					err := resource.StoreVersion(
-						ctx,
-						adaptor,
-						[]byte("<resource>"),
-						next,
-					)
-
-					gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
-
-					ver, err := adaptor.ResourceVersion(
-						ctx,
-						[]byte("<resource>"),
-					)
-
-					gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
-					gomega.Expect(ver).To(gomega.BeEmpty())
-				},
-				table.Entry("nil byte-slice", nil),
-				table.Entry("empty byte-slice", []byte{}),
-			)
-
-			table.DescribeTable(
-				"it updates the version",
-				func(next []byte) {
-					ok, err := resource.UpdateVersion(
-						ctx,
-						adaptor,
-						[]byte("<resource>"),
-						[]byte("<version>"),
-						next,
-					)
-
-					gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
-					gomega.Expect(ok).To(gomega.BeTrue())
-
-					ver, err := adaptor.ResourceVersion(
-						ctx,
-						[]byte("<resource>"),
-					)
-
-					gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
-					gomega.Expect(ver).To(gomega.Equal(next))
-				},
-				table.Entry("nil byte-slice", nil),
-				table.Entry("empty byte-slice", []byte{}),
-				table.Entry("non-empty byte-slice", []byte("<next-version>")),
-			)
-
-			table.DescribeTable(
-				"it does not update the version if the supplied current version is incorrect",
-				func(current []byte) {
-					ok, err := resource.UpdateVersion(
-						ctx,
-						adaptor,
-						[]byte("<resource>"),
-						current,
-						[]byte("<version>"),
-					)
-
-					gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
-					gomega.Expect(ok).To(gomega.BeFalse())
-				},
-				table.Entry("nil byte-slice", nil),
-				table.Entry("empty byte-slice", []byte{}),
-				table.Entry("non-empty byte-slice", []byte("<incorrect>")),
-			)
-
-			ginkgo.It("can delete the resource", func() {
-				err := resource.DeleteResource(
-					ctx,
-					adaptor,
-					[]byte("<resource>"),
-				)
-
-				gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
-
-				ver, err := adaptor.ResourceVersion(
-					ctx,
-					[]byte("<resource>"),
-				)
-
-				gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
-				gomega.Expect(ver).To(gomega.BeEmpty())
-			})
+			gomega.Expect(cp).To(gomega.BeZero())
 		})
 	})
 }

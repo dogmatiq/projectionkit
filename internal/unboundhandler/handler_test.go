@@ -35,21 +35,14 @@ var _ = Describe("type Handler", func() {
 
 	Describe("func HandleEvent()", func() {
 		It("returns an error", func() {
-			_, err := handler.HandleEvent(context.Background(), nil, nil, nil, nil, nil)
+			_, err := handler.HandleEvent(context.Background(), nil, nil)
 			Expect(err).To(MatchError("projection handler has not been bound to a database"))
 		})
 	})
 
-	Describe("func ResourceVersion()", func() {
+	Describe("func CheckpointOffset()", func() {
 		It("returns an error", func() {
-			_, err := handler.ResourceVersion(context.Background(), nil)
-			Expect(err).To(MatchError("projection handler has not been bound to a database"))
-		})
-	})
-
-	Describe("func CloseResource()", func() {
-		It("returns an error", func() {
-			err := handler.CloseResource(context.Background(), nil)
+			_, err := handler.CheckpointOffset(context.Background(), "18819292-dbe7-4a89-b3e7-0aeb46939fa9")
 			Expect(err).To(MatchError("projection handler has not been bound to a database"))
 		})
 	})

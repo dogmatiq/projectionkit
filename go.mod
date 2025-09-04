@@ -10,8 +10,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.18.10
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.50.1
 	github.com/dogmatiq/cosyne v0.2.0
-	github.com/dogmatiq/dogma v0.15.0
-	github.com/dogmatiq/enginekit v0.16.2
+	github.com/dogmatiq/dogma v0.15.1-0.20250818015503-175a0b1f33d6
+	github.com/dogmatiq/enginekit v0.16.3-0.20250903212034-dc875a78d151
 	github.com/dogmatiq/sqltest v0.3.0
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.38.2
@@ -31,6 +31,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.34.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.38.2 // indirect
 	github.com/aws/smithy-go v1.23.0 // indirect
+	github.com/dogmatiq/primo v0.3.1 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/go-sql-driver/mysql v1.5.0 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect

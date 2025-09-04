@@ -16,7 +16,7 @@ type UpstreamHandler interface {
 // errUnbound is returned by any projection operation that requires a database.
 var errUnbound = errors.New("projection handler has not been bound to a database")
 
-// handler is an implementation of dogma.ProjectionMessageHandler that
+// handler is an implementation of [dogma.ProjectionMessageHandler] that
 // represents a projectionkit handler that has not been bound to a database.
 type handler struct {
 	UpstreamHandler
@@ -31,21 +31,16 @@ func New(h UpstreamHandler) dogma.ProjectionMessageHandler {
 }
 
 func (h handler) HandleEvent(
-	_ context.Context,
-	_, _, _ []byte,
-	_ dogma.ProjectionEventScope,
-	_ dogma.Event,
-) (bool, error) {
-	return false, errUnbound
+	context.Context,
+	dogma.ProjectionEventScope,
+	dogma.Event,
+) (uint64, error) {
+	return 0, errUnbound
 }
 
-func (h handler) ResourceVersion(context.Context, []byte) ([]byte, error) {
-	return nil, errUnbound
+func (h handler) CheckpointOffset(context.Context, string) (uint64, error) {
+	return 0, errUnbound
 
-}
-
-func (h handler) CloseResource(context.Context, []byte) error {
-	return errUnbound
 }
 
 func (h handler) Compact(context.Context, dogma.ProjectionCompactScope) error {
