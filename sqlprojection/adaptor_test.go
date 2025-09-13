@@ -12,7 +12,7 @@ import (
 	"github.com/dogmatiq/projectionkit/internal/adaptortest"
 	"github.com/dogmatiq/projectionkit/internal/identity"
 	. "github.com/dogmatiq/projectionkit/sqlprojection"
-	"github.com/dogmatiq/projectionkit/sqlprojection/fixtures" // can't dot-import due to conflict
+	"github.com/dogmatiq/projectionkit/sqlprojection/internal/fixtures" // can't dot-import due to conflict
 	"github.com/dogmatiq/sqltest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

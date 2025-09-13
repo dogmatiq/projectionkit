@@ -9,7 +9,7 @@ import (
 	"github.com/dogmatiq/projectionkit/internal/identity"
 	"github.com/dogmatiq/projectionkit/memoryprojection"
 	. "github.com/dogmatiq/projectionkit/memoryprojection"
-	"github.com/dogmatiq/projectionkit/memoryprojection/fixtures" // can't dot-import due to conflict
+	"github.com/dogmatiq/projectionkit/memoryprojection/internal/fixtures" // can't dot-import due to conflict
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
