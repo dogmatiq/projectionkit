@@ -1,9 +1,7 @@
 package memoryprojection_test
 
 import (
-	"context"
-
-	. "github.com/dogmatiq/projectionkit/dynamoprojection"
+	. "github.com/dogmatiq/projectionkit/memoryprojection"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -11,9 +9,9 @@ import (
 var _ = Describe("NoCompactBehavior", func() {
 	When("Compact() is called", func() {
 		It("returns nil", func() {
-			var v NoCompactBehavior
+			var v NoCompactBehavior[any]
 
-			err := v.Compact(context.Background(), nil, nil)
+			err := v.Compact(nil, nil)
 			Expect(err).ShouldNot(HaveOccurred())
 		})
 	})
