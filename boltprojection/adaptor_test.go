@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/dogmatiq/dogma"
+	"github.com/dogmatiq/enginekit/enginetest/stubs"
 	. "github.com/dogmatiq/enginekit/enginetest/stubs"
 	. "github.com/dogmatiq/projectionkit/boltprojection"
 	"github.com/dogmatiq/projectionkit/boltprojection/internal/fixtures" // can't dot-import due to conflict
@@ -79,10 +80,7 @@ var _ = Describe("type adaptor", func() {
 
 			_, err := adaptor.HandleEvent(
 				context.Background(),
-				[]byte("<resource>"),
-				nil,
-				[]byte("<version 01>"),
-				nil,
+				&stubs.ProjectionEventScopeStub{},
 				EventA1,
 			)
 			Expect(err).Should(HaveOccurred())
