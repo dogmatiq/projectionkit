@@ -6,7 +6,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/dogmatiq/dogma"
 	"github.com/dogmatiq/projectionkit/internal/identity"
-	"github.com/dogmatiq/projectionkit/internal/unboundhandler"
 	"github.com/dogmatiq/projectionkit/resource"
 )
 
@@ -32,10 +31,6 @@ func New(
 	h MessageHandler,
 	options ...HandlerOption,
 ) dogma.ProjectionMessageHandler {
-	if c == nil {
-		return unboundhandler.New(h)
-	}
-
 	var rrOpts []ResourceRepositoryOption
 	for _, opt := range options {
 		if rrOpt, ok := opt.(ResourceRepositoryOption); ok {

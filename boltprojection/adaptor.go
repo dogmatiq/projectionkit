@@ -5,7 +5,6 @@ import (
 
 	"github.com/dogmatiq/dogma"
 	"github.com/dogmatiq/projectionkit/internal/identity"
-	"github.com/dogmatiq/projectionkit/internal/unboundhandler"
 	"github.com/dogmatiq/projectionkit/resource"
 	"go.etcd.io/bbolt"
 )
@@ -27,10 +26,6 @@ func New(
 	db *bbolt.DB,
 	h MessageHandler,
 ) dogma.ProjectionMessageHandler {
-	if db == nil {
-		return unboundhandler.New(h)
-	}
-
 	return &adaptor{
 		db:      db,
 		handler: h,

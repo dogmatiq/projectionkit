@@ -130,16 +130,4 @@ var _ = Describe("type adaptor", func() {
 			},
 		)
 	}
-
-	Describe("func New()", func() {
-		It("returns an unbound handler if the database is nil", func() {
-			adaptor := New(nil, nil, handler)
-
-			err := adaptor.Compact(
-				context.Background(),
-				nil, // scope
-			)
-			Expect(err).To(MatchError("projection handler has not been bound to a database"))
-		})
-	})
 })

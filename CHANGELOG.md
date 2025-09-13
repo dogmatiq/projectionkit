@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 [keep a changelog]: https://keepachangelog.com/en/1.0.0/
 [semantic versioning]: https://semver.org/spec/v2.0.0.html
+[bc]: https://github.com/dogmatiq/.github/blob/main/VERSIONING.md#changelogs
 
 ## [Unreleased]
 
@@ -16,6 +17,9 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 - **[BC]** Added `Driver` parameter to `sqlprojection.New()` and removed `Option` parameters.
 - **[BC]** Added `Driver` parameter to `sqlprojection.NewResourceRepository()` and removed `Option` parameters.
+- **[BC]** `boltprojection.New()` no longer accepts a `nil` database.
+- **[BC]** `dynamoprojection.New()` no longer accepts a `nil` client.
+- **[BC]** `sqlprojection.New()` no longer accepts a `nil` database
 
 ### Removed
 

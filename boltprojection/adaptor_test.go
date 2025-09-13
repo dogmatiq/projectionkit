@@ -58,18 +58,6 @@ var _ = Describe("type adaptor", func() {
 
 	adaptortest.DescribeAdaptor(&ctx, &adaptor)
 
-	Describe("func New()", func() {
-		It("returns an unbound handler if the database is nil", func() {
-			adaptor = New(nil, handler)
-
-			err := adaptor.Compact(
-				context.Background(),
-				nil, // scope
-			)
-			Expect(err).To(MatchError("projection handler has not been bound to a database"))
-		})
-	})
-
 	Describe("func Configure()", func() {
 		It("forwards to the handler", func() {
 			Expect(identity.Key(adaptor)).To(Equal("<key>"))

@@ -65,7 +65,7 @@ func WithDecorateGetItem(
 	ResourceRepositoryOption
 } {
 	return &options{
-		applyOptionToAdaptorFunc: func(d *decorators) {},
+		applyOptionToAdaptorFunc: func(*decorators) {},
 		applyResourceRepositoryOptionFunc: func(d *decorators) {
 			d.decorateGetItem = dec
 		},
@@ -83,7 +83,7 @@ func WithDecoratePutItem(
 	ResourceRepositoryOption
 } {
 	return &options{
-		applyOptionToAdaptorFunc: func(d *decorators) {},
+		applyOptionToAdaptorFunc: func(*decorators) {},
 		applyResourceRepositoryOptionFunc: func(d *decorators) {
 			d.decoratePutItem = dec
 		},
@@ -101,7 +101,7 @@ func WithDecorateDeleteItem(
 	ResourceRepositoryOption
 } {
 	return &options{
-		applyOptionToAdaptorFunc: func(d *decorators) {},
+		applyOptionToAdaptorFunc: func(*decorators) {},
 		applyResourceRepositoryOptionFunc: func(d *decorators) {
 			d.decorateDeleteItem = dec
 		},
@@ -125,7 +125,7 @@ func WithDecorateTransactWriteItems(
 	ResourceRepositoryOption
 } {
 	return &options{
-		applyOptionToAdaptorFunc: func(d *decorators) {},
+		applyOptionToAdaptorFunc: func(*decorators) {},
 		applyResourceRepositoryOptionFunc: func(d *decorators) {
 			d.decorateTransactWriteItems = dec
 		},
