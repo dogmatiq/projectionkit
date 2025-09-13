@@ -41,8 +41,6 @@ github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ3
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/dogmatiq/cosyne v0.2.0 h1:tO957BpS4I9kqSw31ds6Ef4CXvV8zPAqWzbXKElsGWg=
-github.com/dogmatiq/cosyne v0.2.0/go.mod h1:dD8EZjbRX7FFw9t6P7l1nwoZbA7YxtOCfl9ZZAHPucU=
 github.com/dogmatiq/dogma v0.15.0 h1:aXOTd2K4wLvlwHc1D9OsFREp0BusNJ9o9KssxURftmg=
 github.com/dogmatiq/dogma v0.15.0/go.mod h1:TF6xisRxQ2RE3JQwFr6MCI4nWLKQQp7KRWXVHOq9K0k=
 github.com/dogmatiq/enginekit v0.16.2 h1:vgA2PwbcSrV8nyph4Mt/QJfLEAGC2NwuFs2FrhJEm2Y=

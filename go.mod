@@ -9,14 +9,12 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.31.8
 	github.com/aws/aws-sdk-go-v2/credentials v1.18.12
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.50.3
-	github.com/dogmatiq/cosyne v0.2.0
 	github.com/dogmatiq/dogma v0.15.0
 	github.com/dogmatiq/enginekit v0.16.2
 	github.com/dogmatiq/sqltest v0.3.0
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.38.2
 	go.etcd.io/bbolt v1.4.3
-	go.uber.org/multierr v1.11.0
 )
 
 require (
@@ -47,6 +45,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.5 // indirect
 	github.com/nxadm/tail v1.4.8 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	go.uber.org/multierr v1.11.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/crypto v0.41.0 // indirect
 	golang.org/x/net v0.43.0 // indirect
