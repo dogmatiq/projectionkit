@@ -14,8 +14,6 @@ import (
 
 var _ = Context("creating and dropping schema", func() {
 	for _, pair := range sqltest.CompatiblePairs() {
-		pair := pair // capture loop variable
-
 		When(
 			fmt.Sprintf(
 				"using %s with the '%s' driver",
@@ -25,15 +23,19 @@ var _ = Context("creating and dropping schema", func() {
 			func() {
 				var (
 					ctx      context.Context
+					driver   Driver
 					cancel   context.CancelFunc
 					database *sqltest.Database
 					db       *sql.DB
 				)
 
 				BeforeEach(func() {
+					var err error
+					driver, err = selectDriver(pair)
+					Expect(err).ShouldNot(HaveOccurred())
+
 					ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
 
-					var err error
 					database, err = sqltest.NewDatabase(ctx, pair.Driver, pair.Product)
 					Expect(err).ShouldNot(HaveOccurred())
 
@@ -50,28 +52,28 @@ var _ = Context("creating and dropping schema", func() {
 
 				Describe("func CreateSchema()", func() {
 					It("can be called when the schema already exists", func() {
-						err := CreateSchema(ctx, db)
+						err := driver.CreateSchema(ctx, db)
 						Expect(err).ShouldNot(HaveOccurred())
 
-						err = CreateSchema(ctx, db)
+						err = driver.CreateSchema(ctx, db)
 						Expect(err).ShouldNot(HaveOccurred())
 					})
 				})
 
 				Describe("func DropSchema()", func() {
 					It("can be called when the schema does not exist", func() {
-						err := DropSchema(ctx, db)
+						err := driver.DropSchema(ctx, db)
 						Expect(err).ShouldNot(HaveOccurred())
 					})
 
 					It("can be called when the schema has already been dropped", func() {
-						err := CreateSchema(ctx, db)
+						err := driver.CreateSchema(ctx, db)
 						Expect(err).ShouldNot(HaveOccurred())
 
-						err = DropSchema(ctx, db)
+						err = driver.DropSchema(ctx, db)
 						Expect(err).ShouldNot(HaveOccurred())
 
-						err = DropSchema(ctx, db)
+						err = driver.DropSchema(ctx, db)
 						Expect(err).ShouldNot(HaveOccurred())
 					})
 				})

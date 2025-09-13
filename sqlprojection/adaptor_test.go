@@ -40,6 +40,7 @@ var _ = Describe("type adaptor", func() {
 			func() {
 				var (
 					ctx      context.Context
+					driver   Driver
 					cancel   context.CancelFunc
 					database *sqltest.Database
 					db       *sql.DB
@@ -47,23 +48,26 @@ var _ = Describe("type adaptor", func() {
 				)
 
 				BeforeEach(func() {
+					var err error
+					driver, err = selectDriver(pair)
+					Expect(err).ShouldNot(HaveOccurred())
+
 					ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
 
-					var err error
 					database, err = sqltest.NewDatabase(ctx, pair.Driver, pair.Product)
 					Expect(err).ShouldNot(HaveOccurred())
 
 					db, err = database.Open()
 					Expect(err).ShouldNot(HaveOccurred())
 
-					err = CreateSchema(ctx, db)
+					err = driver.CreateSchema(ctx, db)
 					Expect(err).ShouldNot(HaveOccurred())
 
-					adaptor = New(db, handler)
+					adaptor = New(db, driver, handler)
 				})
 
 				AfterEach(func() {
-					err := DropSchema(ctx, db)
+					err := driver.DropSchema(ctx, db)
 					Expect(err).ShouldNot(HaveOccurred())
 
 					err = database.Close()
@@ -129,7 +133,7 @@ var _ = Describe("type adaptor", func() {
 
 	Describe("func New()", func() {
 		It("returns an unbound handler if the database is nil", func() {
-			adaptor := New(nil, handler)
+			adaptor := New(nil, nil, handler)
 
 			err := adaptor.Compact(
 				context.Background(),

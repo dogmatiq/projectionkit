@@ -13,10 +13,23 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+func selectDriver(p sqltest.Pair) (Driver, error) {
+	if p.Product == sqltest.SQLite {
+		return SQLiteDriver, nil
+	}
+
+	switch prod := p.Product.(type) {
+	case sqltest.MySQLCompatibleProduct:
+		return MySQLDriver, nil
+	case sqltest.PostgresCompatibleProduct:
+		return PostgresDriver, nil
+	default:
+		return nil, fmt.Errorf("unsupported product: %s", prod.Name())
+	}
+}
+
 var _ = Describe("type Driver (implementations)", func() {
 	for _, pair := range sqltest.CompatiblePairs() {
-		pair := pair // capture loop variable
-
 		When(
 			fmt.Sprintf(
 				"using %s with the '%s' driver",
@@ -42,7 +55,7 @@ var _ = Describe("type Driver (implementations)", func() {
 					db, err = database.Open()
 					Expect(err).ShouldNot(HaveOccurred())
 
-					driver, err = SelectDriver(ctx, db, BuiltInDrivers())
+					driver, err = selectDriver(pair)
 					Expect(err).ShouldNot(HaveOccurred())
 
 					err = driver.CreateSchema(ctx, db)

@@ -28,8 +28,8 @@ type adaptor struct {
 // drivers listed in the Drivers slice.
 func New(
 	db *sql.DB,
+	d Driver,
 	h MessageHandler,
-	options ...Option,
 ) dogma.ProjectionMessageHandler {
 	if db == nil {
 		return unboundhandler.New(h)
@@ -40,8 +40,8 @@ func New(
 		handler: h,
 		repo: NewResourceRepository(
 			db,
+			d,
 			identity.Key(h),
-			options...,
 		),
 	}
 }

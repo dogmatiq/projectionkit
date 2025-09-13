@@ -10,6 +10,19 @@ The format is based on [Keep a Changelog], and this project adheres to
 [keep a changelog]: https://keepachangelog.com/en/1.0.0/
 [semantic versioning]: https://semver.org/spec/v2.0.0.html
 
+## [Unreleased]
+
+### Changed
+
+- **[BC]** Added `Driver` parameter to `sqlprojection.New()` and removed `Option` parameters.
+- **[BC]** Added `Driver` parameter to `sqlprojection.NewResourceRepository()` and removed `Option` parameters.
+
+### Removed
+
+- **[BC]** Removed `sqlprojection.CreateSchema()` and `DropSchema()`, use the corresponding `Driver` method instead.
+- **[BC]** Removed `sqlprojection.SelectDriver()`.
+- **[BC]** Removed `sqlprojection.Option`, `WithDriver()` and `WithCandidateDrivers()`.
+
 ## [0.7.5] - 2024-09-29
 
 ### Changed
