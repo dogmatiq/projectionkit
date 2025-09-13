@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/dogmatiq/dogma"
+	"github.com/dogmatiq/enginekit/enginetest/stubs"
 	. "github.com/dogmatiq/enginekit/enginetest/stubs"
 	. "github.com/dogmatiq/projectionkit/dynamoprojection"
 	"github.com/dogmatiq/projectionkit/dynamoprojection/internal/fixtures" // can't dot-import due to conflict
@@ -128,10 +129,7 @@ var _ = Describe("type adaptor", func() {
 
 			_, err := adaptor.HandleEvent(
 				context.Background(),
-				[]byte("<resource>"),
-				nil,
-				[]byte("<version 01>"),
-				nil,
+				&stubs.ProjectionEventScopeStub{},
 				EventA1,
 			)
 			Expect(err).Should(HaveOccurred())
@@ -216,10 +214,7 @@ var _ = Describe("type adaptor", func() {
 
 				_, err := adaptor.HandleEvent(
 					context.Background(),
-					[]byte("<resource>"),
-					nil,
-					[]byte("<version 01>"),
-					nil,
+					&stubs.ProjectionEventScopeStub{},
 					EventA1,
 				)
 				Expect(err).Should(HaveOccurred())

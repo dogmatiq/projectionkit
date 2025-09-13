@@ -2,19 +2,26 @@ package dynamoprojection
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"strconv"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/dogmatiq/dogma"
+	"github.com/dogmatiq/projectionkit/dynamoprojection/internal/awsx"
 	"github.com/dogmatiq/projectionkit/internal/identity"
-	"github.com/dogmatiq/projectionkit/resource"
 )
 
-// adaptor adapts a dynamoprojection.ProjectionMessageHandler to the
-// dogma.ProjectionMessageHandler interface.
+// adaptor adapts a [ProjectionMessageHandler] to the
+// [dogma.ProjectionMessageHandler] interface.
 type adaptor struct {
-	client  *dynamodb.Client
-	handler MessageHandler
-	repo    *ResourceRepository
+	client     *dynamodb.Client
+	key        string
+	occTable   string
+	decorators decorators
+	handler    MessageHandler
 }
 
 // New returns a new Dogma projection message handler by binding a
@@ -31,22 +38,15 @@ func New(
 	h MessageHandler,
 	options ...HandlerOption,
 ) dogma.ProjectionMessageHandler {
-	var rrOpts []ResourceRepositoryOption
-	for _, opt := range options {
-		if rrOpt, ok := opt.(ResourceRepositoryOption); ok {
-			rrOpts = append(rrOpts, rrOpt)
-		}
+	a := &adaptor{
+		client:   c,
+		key:      identity.Key(h),
+		occTable: t,
+		handler:  h,
 	}
 
-	a := &adaptor{
-		client:  c,
-		handler: h,
-		repo: NewResourceRepository(
-			c,
-			identity.Key(h),
-			t,
-			rrOpts...,
-		),
+	for _, opt := range options {
+		opt.applyOptionToAdaptor(&a.decorators)
 	}
 
 	return a
@@ -61,27 +61,113 @@ func (a *adaptor) Configure(c dogma.ProjectionConfigurer) {
 // HandleEvent updates the projection to reflect the occurrence of an event.
 func (a *adaptor) HandleEvent(
 	ctx context.Context,
-	r, c, n []byte,
 	s dogma.ProjectionEventScope,
 	m dogma.Event,
-) (bool, error) {
+) (uint64, error) {
 	items, err := a.handler.HandleEvent(ctx, s, m)
 	if err != nil {
-		return false, err
+		return 0, err
 	}
 
-	return a.repo.UpdateResourceVersionAndTransactionItems(ctx, r, c, n, items...)
+	var (
+		id   = s.StreamID()
+		prev = s.CheckpointOffset()
+		next = s.Offset() + 1
+	)
+
+	var occItem types.TransactWriteItem
+
+	if s.CheckpointOffset() == 0 {
+		occItem.Put = &types.Put{
+			TableName:           aws.String(a.occTable),
+			ConditionExpression: aws.String(`attribute_not_exists(#K)`),
+			ExpressionAttributeNames: map[string]string{
+				"#K": keyAttr,
+			},
+			Item: map[string]types.AttributeValue{
+				keyAttr:    buildKeyAttr(a.key, id),
+				offsetAttr: buildOffsetAttr(next),
+			},
+		}
+	} else {
+		occItem.Update = &types.Update{
+			TableName: aws.String(a.occTable),
+			Key: map[string]types.AttributeValue{
+				keyAttr: buildKeyAttr(a.key, id),
+			},
+			ConditionExpression: aws.String(`attribute_exists(#K) AND #O = :P`),
+			UpdateExpression:    aws.String(`SET #O = :N`),
+			ExpressionAttributeNames: map[string]string{
+				"#K": keyAttr,
+				"#O": offsetAttr,
+			},
+			ExpressionAttributeValues: map[string]types.AttributeValue{
+				":P": buildOffsetAttr(prev),
+				":N": buildOffsetAttr(next),
+			},
+		}
+	}
+
+	_, err = awsx.Do(
+		ctx,
+		a.client.TransactWriteItems,
+		a.decorators.decorateTransactWriteItems,
+		&dynamodb.TransactWriteItemsInput{
+			TransactItems: append(
+				[]types.TransactWriteItem{occItem}, // must be first, see [isOCCConflict].
+				items...,
+			),
+		},
+	)
+
+	if isOCCConflict(err) {
+		return a.CheckpointOffset(ctx, id)
+	}
+
+	return next, err
 }
 
-// ResourceVersion returns the version of the resource r.
-func (a *adaptor) ResourceVersion(ctx context.Context, r []byte) ([]byte, error) {
-	return a.repo.ResourceVersion(ctx, r)
-}
+func (a *adaptor) CheckpointOffset(ctx context.Context, id string) (uint64, error) {
+	out, err := awsx.Do(
+		ctx,
+		a.client.GetItem,
+		a.decorators.decorateGetItem,
+		&dynamodb.GetItemInput{
+			TableName: aws.String(a.occTable),
+			Key: map[string]types.AttributeValue{
+				keyAttr: buildKeyAttr(a.key, id),
+			},
+		},
+	)
 
-// CloseResource informs the projection that the resource r will not be
-// used in any future calls to HandleEvent().
-func (a *adaptor) CloseResource(ctx context.Context, r []byte) error {
-	return a.repo.DeleteResource(ctx, r)
+	if err != nil || out.Item == nil {
+		return 0, err
+	}
+
+	n, ok := out.Item[offsetAttr].(*types.AttributeValueMemberN)
+	if !ok {
+		// CODE COVERAGE: This branch can not be easily covered without somehow
+		// breaking the integrity of the record in the projection OCC table.
+		return 0, fmt.Errorf(
+			"%q table is missing %q attribute",
+			a.occTable,
+			offsetAttr,
+		)
+	}
+
+	cp, err := strconv.ParseUint(n.Value, 10, 64)
+	if err != nil {
+		// CODE COVERAGE: This branch can not be easily covered without somehow
+		// breaking the integrity of the record in the projection OCC table.
+		return 0, fmt.Errorf(
+			"%q table has invalid %q attribute: %w",
+			a.occTable,
+			offsetAttr,
+			err,
+		)
+	}
+
+	return cp, nil
 }
 
 // Compact reduces the size of the projection's data.
@@ -89,8 +175,19 @@ func (a *adaptor) Compact(ctx context.Context, s dogma.ProjectionCompactScope) e
 	return a.handler.Compact(ctx, a.client, s)
 }
 
-// ResourceRepository returns a repository that can be used to manipulate the
-// handler's resource versions.
-func (a *adaptor) ResourceRepository(context.Context) (resource.Repository, error) {
-	return a.repo, nil
+// isOCCConflict determines if the error from a DynamoDB transaction is caused
+// by the conflict in OCC table.
+//
+// It assumes that the transaction item to update projection OCC table is the
+// first in the list, preceding transaction items created by the application
+// handler implementation.
+func isOCCConflict(err error) bool {
+	var txCancelErr *types.TransactionCanceledException
+	if errors.As(err, &txCancelErr) {
+		if *txCancelErr.CancellationReasons[0].Code == "ConditionalCheckFailed" {
+			return true
+		}
+	}
+
+	return false
 }
