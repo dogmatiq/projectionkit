@@ -47,7 +47,7 @@ func (a *adaptor) HandleEvent(
 	s dogma.ProjectionEventScope,
 	m dogma.Event,
 ) (uint64, error) {
-	id := []byte(s.StreamID())
+	id := uuidpb.MustParse(s.StreamID())
 	var cp uint64
 
 	return cp, a.db.Update(func(tx *bbolt.Tx) error {
@@ -75,7 +75,7 @@ func (a *adaptor) HandleEvent(
 		cp = s.Offset() + 1
 
 		return b.Put(
-			id,
+			id.AsBytes(),
 			binary.BigEndian.AppendUint64(nil, cp),
 		)
 	})
@@ -88,7 +88,7 @@ func (a *adaptor) CheckpointOffset(_ context.Context, id string) (uint64, error)
 
 	return cp, a.db.View(func(tx *bbolt.Tx) (err error) {
 		if b := handlerBucket(tx, a.key); b != nil {
-			cp, err = getCheckpointOffset(b, []byte(id))
+			cp, err = getCheckpointOffset(b, uuidpb.MustParse(id))
 		}
 		return err
 	})
@@ -132,8 +132,8 @@ func handlerBucket(tx *bbolt.Tx, hk *uuidpb.UUID) *bbolt.Bucket {
 }
 
 // getCheckpointOffset retrieves the checkpoint offset for a specific stream ID.
-func getCheckpointOffset(b *bbolt.Bucket, id []byte) (uint64, error) {
-	switch data := b.Get(id); len(data) {
+func getCheckpointOffset(b *bbolt.Bucket, id *uuidpb.UUID) (uint64, error) {
+	switch data := b.Get(id.AsBytes()); len(data) {
 	case 0:
 		return 0, nil
 	case 8:
