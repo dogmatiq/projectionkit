@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/dogmatiq/dogma"
+	"github.com/dogmatiq/enginekit/protobuf/uuidpb"
 	"github.com/dogmatiq/projectionkit/dynamoprojection/internal/awsx"
 	"github.com/dogmatiq/projectionkit/internal/identity"
 )
@@ -18,7 +19,7 @@ import (
 // [dogma.ProjectionMessageHandler] interface.
 type adaptor struct {
 	client     *dynamodb.Client
-	key        string
+	key        *uuidpb.UUID
 	occTable   string
 	decorators decorators
 	handler    MessageHandler
@@ -70,7 +71,7 @@ func (a *adaptor) HandleEvent(
 	}
 
 	var (
-		id   = s.StreamID()
+		id   = uuidpb.MustParse(s.StreamID())
 		prev = s.CheckpointOffset()
 		next = s.Offset() + 1
 	)
@@ -121,13 +122,17 @@ func (a *adaptor) HandleEvent(
 	)
 
 	if isOCCConflict(err) {
-		return a.CheckpointOffset(ctx, id)
+		return a.checkpointOffset(ctx, id)
 	}
 
 	return next, err
 }
 
 func (a *adaptor) CheckpointOffset(ctx context.Context, id string) (uint64, error) {
+	return a.checkpointOffset(ctx, uuidpb.MustParse(id))
+}
+
+func (a *adaptor) checkpointOffset(ctx context.Context, id *uuidpb.UUID) (uint64, error) {
 	out, err := awsx.Do(
 		ctx,
 		a.client.GetItem,
@@ -147,7 +152,7 @@ func (a *adaptor) CheckpointOffset(ctx context.Context, id string) (uint64, erro
 	n, ok := out.Item[offsetAttr].(*types.AttributeValueMemberN)
 	if !ok {
 		// CODE COVERAGE: This branch can not be easily covered without somehow
-		// breaking the integrity of the record in the projection OCC table.
+		// breaking the integrity of the record in the table.
 		return 0, fmt.Errorf(
 			"%q table is missing %q attribute",
 			a.occTable,
@@ -158,7 +163,7 @@ func (a *adaptor) CheckpointOffset(ctx context.Context, id string) (uint64, erro
 	cp, err := strconv.ParseUint(n.Value, 10, 64)
 	if err != nil {
 		// CODE COVERAGE: This branch can not be easily covered without somehow
-		// breaking the integrity of the record in the projection OCC table.
+		// breaking the integrity of the record in the table.
 		return 0, fmt.Errorf(
 			"%q table has invalid %q attribute: %w",
 			a.occTable,
@@ -176,11 +181,11 @@ func (a *adaptor) Compact(ctx context.Context, s dogma.ProjectionCompactScope) e
 }
 
 // isOCCConflict determines if the error from a DynamoDB transaction is caused
-// by the conflict in OCC table.
+// by the conflict in checkpoint table.
 //
-// It assumes that the transaction item to update projection OCC table is the
-// first in the list, preceding transaction items created by the application
-// handler implementation.
+// It assumes that the transaction item to update checkpoint table is the first
+// in the list, preceding transaction items created by the application handler
+// implementation.
 func isOCCConflict(err error) bool {
 	var txCancelErr *types.TransactionCanceledException
 	if errors.As(err, &txCancelErr) {

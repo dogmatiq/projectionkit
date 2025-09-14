@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/dogmatiq/dogma"
+	"github.com/dogmatiq/enginekit/protobuf/uuidpb"
 	"github.com/dogmatiq/projectionkit/internal/identity"
 	"go.etcd.io/bbolt"
 )
@@ -14,7 +15,7 @@ import (
 // dogma.ProjectionMessageHandler interface.
 type adaptor struct {
 	db      *bbolt.DB
-	key     string
+	key     *uuidpb.UUID
 	handler MessageHandler
 }
 
@@ -100,15 +101,15 @@ func (a *adaptor) Compact(ctx context.Context, s dogma.ProjectionCompactScope) e
 
 var (
 	// topBucket is the bucket at the root level that contains all data related
-	// to projection OCC.
-	topBucket = []byte("projection_occ")
+	// to projection checkpoint offsets.
+	topBucket = []byte("projection_checkpoint")
 )
 
 // makeHandlerBucket creates a bucket for the given handler key if it has not
 // been created yet.
 //
 // This function returns an error it tx is not writable.
-func makeHandlerBucket(tx *bbolt.Tx, hk string) (*bbolt.Bucket, error) {
+func makeHandlerBucket(tx *bbolt.Tx, hk *uuidpb.UUID) (*bbolt.Bucket, error) {
 	tb, err := tx.CreateBucketIfNotExists(topBucket)
 	if err != nil {
 		// CODE COVERAGE: This branch can not be easily covered without somehow
@@ -116,18 +117,18 @@ func makeHandlerBucket(tx *bbolt.Tx, hk string) (*bbolt.Bucket, error) {
 		return nil, err
 	}
 
-	return tb.CreateBucketIfNotExists([]byte(hk))
+	return tb.CreateBucketIfNotExists(hk.AsBytes())
 }
 
 // handlerBucket retrieves a bucket for the given handler key. If a bucket with
 // the given handler key does not exist, this function returns nil.
-func handlerBucket(tx *bbolt.Tx, hk string) *bbolt.Bucket {
+func handlerBucket(tx *bbolt.Tx, hk *uuidpb.UUID) *bbolt.Bucket {
 	tb := tx.Bucket(topBucket)
 	if tb == nil {
 		return nil
 	}
 
-	return tb.Bucket([]byte(hk))
+	return tb.Bucket(hk.AsBytes())
 }
 
 // getCheckpointOffset retrieves the checkpoint offset for a specific stream ID.

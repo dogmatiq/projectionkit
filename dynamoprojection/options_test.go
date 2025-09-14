@@ -74,11 +74,11 @@ var _ = Context("adding options", func() {
 			err := CreateTable(
 				ctx,
 				client,
-				"ProjectionOCCTable",
+				"ProjectionCheckpoint",
 				WithDecorateCreateTable(func(
 					in *dynamodb.CreateTableInput,
 				) []func(*dynamodb.Options) {
-					in.TableName = aws.String("ProjectionOCCTableAlternativeName")
+					in.TableName = aws.String("ProjectionCheckpointAlternativeName")
 					return nil
 				}),
 			)
@@ -88,14 +88,14 @@ var _ = Context("adding options", func() {
 				err := DeleteTable(
 					ctx,
 					client,
-					"ProjectionOCCTableAlternativeName",
+					"ProjectionCheckpointAlternativeName",
 				)
 				Expect(err).ShouldNot(HaveOccurred())
 
 				err = dynamodb.NewTableNotExistsWaiter(client).Wait(
 					ctx,
 					&dynamodb.DescribeTableInput{
-						TableName: aws.String("ProjectionOCCTable"),
+						TableName: aws.String("ProjectionCheckpoint"),
 					},
 					5*time.Second,
 				)
@@ -105,7 +105,7 @@ var _ = Context("adding options", func() {
 			err = dynamodb.NewTableExistsWaiter(client).Wait(
 				ctx,
 				&dynamodb.DescribeTableInput{
-					TableName: aws.String("ProjectionOCCTableAlternativeName"),
+					TableName: aws.String("ProjectionCheckpointAlternativeName"),
 				},
 				5*time.Second,
 			)
@@ -116,7 +116,7 @@ var _ = Context("adding options", func() {
 			err := CreateTable(
 				ctx,
 				client,
-				"ProjectionOCCTable",
+				"ProjectionCheckpoint",
 				WithDecorateCreateTable(func(
 					*dynamodb.CreateTableInput,
 				) []func(*dynamodb.Options) {
@@ -139,14 +139,14 @@ var _ = Context("adding options", func() {
 			err := CreateTable(
 				ctx,
 				client,
-				"ProjectionOCCTableAlternativeName",
+				"ProjectionCheckpointAlternativeName",
 			)
 			Expect(err).ShouldNot(HaveOccurred())
 
 			err = dynamodb.NewTableExistsWaiter(client).Wait(
 				ctx,
 				&dynamodb.DescribeTableInput{
-					TableName: aws.String("ProjectionOCCTableAlternativeName"),
+					TableName: aws.String("ProjectionCheckpointAlternativeName"),
 				},
 				5*time.Second,
 			)
@@ -155,11 +155,11 @@ var _ = Context("adding options", func() {
 			err = DeleteTable(
 				ctx,
 				client,
-				"ProjectionOCCTable",
+				"ProjectionCheckpoint",
 				WithDecorateDeleteTable(func(
 					in *dynamodb.DeleteTableInput,
 				) []func(*dynamodb.Options) {
-					in.TableName = aws.String("ProjectionOCCTableAlternativeName")
+					in.TableName = aws.String("ProjectionCheckpointAlternativeName")
 					return nil
 				}),
 			)
@@ -168,7 +168,7 @@ var _ = Context("adding options", func() {
 			err = dynamodb.NewTableNotExistsWaiter(client).Wait(
 				ctx,
 				&dynamodb.DescribeTableInput{
-					TableName: aws.String("ProjectionOCCTableAlternativeName"),
+					TableName: aws.String("ProjectionCheckpointAlternativeName"),
 				},
 				5*time.Second,
 			)
@@ -179,7 +179,7 @@ var _ = Context("adding options", func() {
 			err := DeleteTable(
 				ctx,
 				client,
-				"ProjectionOCCTable",
+				"ProjectionCheckpoint",
 				WithDecorateDeleteTable(func(
 					*dynamodb.DeleteTableInput,
 				) []func(*dynamodb.Options) {
@@ -200,7 +200,7 @@ var _ = Context("adding options", func() {
 	Describe("New() options", func() {
 		handler := &fixtures.MessageHandler{
 			ConfigureFunc: func(c dogma.ProjectionConfigurer) {
-				c.Identity("<projection>", "<key>")
+				c.Identity("<projection>", "35a2926d-3381-41e8-8189-7fb53104b8b5")
 			},
 		}
 
@@ -208,14 +208,14 @@ var _ = Context("adding options", func() {
 			err := CreateTable(
 				ctx,
 				client,
-				"ProjectionOCCTable",
+				"ProjectionCheckpoint",
 			)
 			Expect(err).ShouldNot(HaveOccurred())
 
 			err = dynamodb.NewTableExistsWaiter(client).Wait(
 				ctx,
 				&dynamodb.DescribeTableInput{
-					TableName: aws.String("ProjectionOCCTable"),
+					TableName: aws.String("ProjectionCheckpoint"),
 				},
 				5*time.Second,
 			)
@@ -226,14 +226,14 @@ var _ = Context("adding options", func() {
 			err := DeleteTable(
 				ctx,
 				client,
-				"ProjectionOCCTable",
+				"ProjectionCheckpoint",
 			)
 			Expect(err).ShouldNot(HaveOccurred())
 
 			err = dynamodb.NewTableNotExistsWaiter(client).Wait(
 				ctx,
 				&dynamodb.DescribeTableInput{
-					TableName: aws.String("ProjectionOCCTable"),
+					TableName: aws.String("ProjectionCheckpoint"),
 				},
 				5*time.Second,
 			)
@@ -244,7 +244,7 @@ var _ = Context("adding options", func() {
 			It("can modify the input of the operation", func() {
 				adaptor := New(
 					client,
-					"ProjectionOCCTable",
+					"ProjectionCheckpoint",
 					handler,
 					WithDecorateGetItem(
 						func(in *dynamodb.GetItemInput) []func(*dynamodb.Options) {
@@ -262,7 +262,7 @@ var _ = Context("adding options", func() {
 			It("can modify the operation via returned options", func() {
 				adaptor := New(
 					client,
-					"ProjectionOCCTable",
+					"ProjectionCheckpoint",
 					handler,
 					WithDecorateGetItem(
 						func(*dynamodb.GetItemInput) []func(*dynamodb.Options) {
@@ -287,7 +287,7 @@ var _ = Context("adding options", func() {
 			It("can modify the input of the operation", func() {
 				adaptor := New(
 					client,
-					"ProjectionOCCTable",
+					"ProjectionCheckpoint",
 					handler,
 					WithDecorateTransactWriteItems(
 						func(in *dynamodb.TransactWriteItemsInput) []func(*dynamodb.Options) {
@@ -324,7 +324,7 @@ var _ = Context("adding options", func() {
 			It("can modify the operation via returned options", func() {
 				adaptor := New(
 					client,
-					"ProjectionOCCTable",
+					"ProjectionCheckpoint",
 					handler,
 					WithDecorateTransactWriteItems(
 						func(gii *dynamodb.TransactWriteItemsInput) []func(*dynamodb.Options) {

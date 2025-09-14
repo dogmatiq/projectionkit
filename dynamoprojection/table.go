@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/dogmatiq/enginekit/protobuf/uuidpb"
 	"github.com/dogmatiq/projectionkit/dynamoprojection/internal/awsx"
 )
 
@@ -92,17 +93,21 @@ func DeleteTable(
 
 const (
 	// keyAttr is the name of the attribute that is the key of the projection
-	// OCC table. It is derived from the handler key and stream ID.
+	// checkpoint table. It is derived from the handler key and stream ID.
 	keyAttr = "Key"
 
 	// offsetAttr is the name of the checkpoint offset attribute in each item
-	// inside the DynamoDB projection OCC table.
+	// inside the DynamoDB projection checkpoint table.
 	offsetAttr = "Offset"
 )
 
-func buildKeyAttr(handler, streamID string) *types.AttributeValueMemberB {
+func buildKeyAttr(handler, streamID *uuidpb.UUID) *types.AttributeValueMemberB {
+	var v [32]byte
+	uuidpb.CopyBytes(handler, v[0:])
+	uuidpb.CopyBytes(streamID, v[16:])
+
 	return &types.AttributeValueMemberB{
-		Value: []byte(handler + " " + streamID),
+		Value: v[:],
 	}
 }
 

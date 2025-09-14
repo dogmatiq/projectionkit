@@ -27,7 +27,7 @@ var _ = Describe("type Projection", func() {
 
 		handler = &fixtures.MessageHandler[int]{}
 		handler.ConfigureFunc = func(c dogma.ProjectionConfigurer) {
-			c.Identity("<projection>", "<key>")
+			c.Identity("<projection>", "c6dc3a83-48dc-46dd-bc4e-8251f5509306")
 		}
 
 		projection = &Projection[int, *fixtures.MessageHandler[int]]{
@@ -39,7 +39,7 @@ var _ = Describe("type Projection", func() {
 
 	Describe("func Configure()", func() {
 		It("forwards to the handler", func() {
-			Expect(identity.Key(projection)).To(Equal("<key>"))
+			Expect(identity.Key(projection).AsString()).To(Equal("c6dc3a83-48dc-46dd-bc4e-8251f5509306"))
 		})
 	})
 

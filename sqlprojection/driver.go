@@ -3,6 +3,8 @@ package sqlprojection
 import (
 	"context"
 	"database/sql"
+
+	"github.com/dogmatiq/enginekit/protobuf/uuidpb"
 )
 
 // Driver is an interface for database-specific projection drivers.
@@ -13,38 +15,22 @@ type Driver interface {
 	// DropSchema drops the schema elements required by the driver.
 	DropSchema(ctx context.Context, db *sql.DB) error
 
-	// StoreVersion unconditionally updates the version for a specific handler
-	// and resource.
-	//
-	// v must be non-empty, to set an empty version, use DeleteResource().
-	StoreVersion(
+	// QueryCheckpointOffset returns the stored checkpoint offset for a specific
+	// handler and event stream.
+	QueryCheckpointOffset(
 		ctx context.Context,
 		db *sql.DB,
-		h string,
-		r, v []byte,
-	) error
+		h, s *uuidpb.UUID,
+	) (uint64, error)
 
-	// UpdateVersion updates the version for a specific handler and resource.
-	UpdateVersion(
+	// UpdateCheckpointOffset updates the checkpoint offset for a specific
+	// handler and event stream from c to n.
+	//
+	// It returns false if c is not the current checkpoint offset.
+	UpdateCheckpointOffset(
 		ctx context.Context,
 		tx *sql.Tx,
-		h string,
-		r, c, n []byte,
+		h, s *uuidpb.UUID,
+		c, n uint64,
 	) (bool, error)
-
-	// QueryVersion returns the version for a specific handler and resource.
-	QueryVersion(
-		ctx context.Context,
-		db *sql.DB,
-		h string,
-		r []byte,
-	) ([]byte, error)
-
-	// DeleteResource removes the version for a specific handler and resource.
-	DeleteResource(
-		ctx context.Context,
-		db *sql.DB,
-		h string,
-		r []byte,
-	) error
 }

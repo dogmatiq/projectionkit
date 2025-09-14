@@ -3,6 +3,8 @@ package sqlprojection
 import (
 	"context"
 	"database/sql"
+
+	"github.com/dogmatiq/enginekit/protobuf/uuidpb"
 )
 
 // MySQLDriver is a Driver for MySQL.
@@ -16,71 +18,70 @@ type mysqlDriver struct{}
 func (mysqlDriver) CreateSchema(ctx context.Context, db *sql.DB) error {
 	_, err := db.ExecContext(
 		ctx,
-		`CREATE TABLE IF NOT EXISTS projection_occ (
-			handler  VARBINARY(255) NOT NULL,
-			resource VARBINARY(255) NOT NULL,
-			version  VARBINARY(255) NOT NULL,
+		`CREATE TABLE IF NOT EXISTS projection_checkpoint (
+			handler           BINARY(16) NOT NULL,
+			stream            BINARY(16) NOT NULL,
+			checkpoint_offset BIGINT UNSIGNED NOT NULL,
 
-			PRIMARY KEY (handler, resource)
+			PRIMARY KEY (handler, stream)
 		) ENGINE=InnoDB;`,
 	)
 	return err
 }
 
 func (mysqlDriver) DropSchema(ctx context.Context, db *sql.DB) error {
-	_, err := db.ExecContext(ctx, `DROP TABLE IF EXISTS projection_occ`)
+	_, err := db.ExecContext(ctx, `DROP TABLE IF EXISTS projection_checkpoint`)
 	return err
 }
 
-func (mysqlDriver) StoreVersion(
+func (mysqlDriver) QueryCheckpointOffset(
 	ctx context.Context,
 	db *sql.DB,
-	h string,
-	r, v []byte,
-) error {
-	_, err := db.ExecContext(
+	h, s *uuidpb.UUID,
+) (uint64, error) {
+	row := db.QueryRowContext(
 		ctx,
-		`INSERT INTO projection_occ (
-			handler,
-			resource,
-			version
-		) VALUES (
-			?,
-			?,
-			?
-		) ON DUPLICATE KEY UPDATE
-			version = VALUES(version)`,
-		h,
-		r,
-		v,
+		`SELECT checkpoint_offset
+		FROM projection_checkpoint
+		WHERE handler = ?
+		AND stream = ?`,
+		h.AsBytes(),
+		s.AsBytes(),
 	)
 
-	return err
+	var cp uint64
+	err := row.Scan(&cp)
+
+	if err == sql.ErrNoRows {
+		return 0, nil
+	}
+
+	return cp, err
 }
 
-func (d mysqlDriver) UpdateVersion(
+func (d mysqlDriver) UpdateCheckpointOffset(
 	ctx context.Context,
 	tx *sql.Tx,
-	h string,
-	r, c, n []byte,
+	h, s *uuidpb.UUID,
+	c, n uint64,
 ) (bool, error) {
-	// If the "current" version is empty, we assumed it's correct and that there
-	// is no existing entry for this resource.
-	if len(c) == 0 {
+	// If the "current" checkpoint offset is zero, we assumed it's correct and
+	// that there is no existing row for this handler/stream.
+	if c == 0 {
 		res, err := tx.ExecContext(
 			ctx,
-			`INSERT INTO projection_occ (
+			`INSERT INTO projection_checkpoint (
 				handler,
-				resource,
-				version
+				stream,
+				checkpoint_offset
 			) VALUES (
 				?,
 				?,
 				?
 			) ON DUPLICATE KEY UPDATE
 				handler = handler`, // do nothing
-			h,
-			r,
+			h.AsBytes(),
+			s.AsBytes(),
 			n,
 		)
 		if err != nil {
@@ -97,33 +98,19 @@ func (d mysqlDriver) UpdateVersion(
 		err error
 	)
 
-	if len(n) == 0 {
-		// If the "next" version is empty, we can delete the row entirely.
-		res, err = tx.ExecContext(
-			ctx,
-			`DELETE FROM projection_occ
-			WHERE handler = ?
-			AND resource = ?
-			AND version = ?`,
-			h,
-			r,
-			c,
-		)
-	} else {
-		// Otherwise we simply update the existing row.
-		res, err = tx.ExecContext(
-			ctx,
-			`UPDATE projection_occ SET
-				version = ?
-			WHERE handler = ?
-			AND resource = ?
-			AND version = ?`,
-			n,
-			h,
-			r,
-			c,
-		)
-	}
+	// Otherwise we simply update the existing row.
+	res, err = tx.ExecContext(
+		ctx,
+		`UPDATE projection_checkpoint SET
+			checkpoint_offset = ?
+		WHERE handler = ?
+		AND stream = ?
+		AND checkpoint_offset = ?`,
+		n,
+		h.AsBytes(),
+		s.AsBytes(),
+		c,
+	)
 
 	if err != nil {
 		// CODE COVERAGE: This branch can not be easily covered without somehow
@@ -133,49 +120,4 @@ func (d mysqlDriver) UpdateVersion(
 
 	count, err := res.RowsAffected()
 	return count != 0, err
-}
-
-func (mysqlDriver) QueryVersion(
-	ctx context.Context,
-	db *sql.DB,
-	h string,
-	r []byte,
-) ([]byte, error) {
-	row := db.QueryRowContext(
-		ctx,
-		`SELECT
-			version
-		FROM projection_occ
-		WHERE handler = ?
-		AND resource = ?`,
-		h,
-		r,
-	)
-
-	var v []byte
-	err := row.Scan(&v)
-
-	if err == sql.ErrNoRows {
-		return nil, nil
-	}
-
-	return v, err
-}
-
-func (mysqlDriver) DeleteResource(
-	ctx context.Context,
-	db *sql.DB,
-	h string,
-	r []byte,
-) error {
-	_, err := db.ExecContext(
-		ctx,
-		`DELETE FROM projection_occ
-		WHERE handler = ?
-		AND resource = ?`,
-		h,
-		r,
-	)
-
-	return err
 }

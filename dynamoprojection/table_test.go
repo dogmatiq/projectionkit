@@ -65,28 +65,28 @@ var _ = Context("creating and deleting a table", func() {
 
 	Describe("func CreateTable()", func() {
 		It("can be called when the table already exists", func() {
-			err := CreateTable(ctx, client, "ProjectionOCCTable")
+			err := CreateTable(ctx, client, "ProjectionCheckpoint")
 			Expect(err).ShouldNot(HaveOccurred())
 
-			err = CreateTable(ctx, client, "ProjectionOCCTable")
+			err = CreateTable(ctx, client, "ProjectionCheckpoint")
 			Expect(err).ShouldNot(HaveOccurred())
 		})
 	})
 
 	Describe("func DeleteTable()", func() {
 		It("can be called when the table does not exist", func() {
-			err := DeleteTable(ctx, client, "ProjectionOCCTable")
+			err := DeleteTable(ctx, client, "ProjectionCheckpoint")
 			Expect(err).ShouldNot(HaveOccurred())
 		})
 
 		It("can be called when the table has already been deleted", func() {
-			err := CreateTable(ctx, client, "ProjectionOCCTable")
+			err := CreateTable(ctx, client, "ProjectionCheckpoint")
 			Expect(err).ShouldNot(HaveOccurred())
 
-			err = DeleteTable(ctx, client, "ProjectionOCCTable")
+			err = DeleteTable(ctx, client, "ProjectionCheckpoint")
 			Expect(err).ShouldNot(HaveOccurred())
 
-			err = DeleteTable(ctx, client, "ProjectionOCCTable")
+			err = DeleteTable(ctx, client, "ProjectionCheckpoint")
 			Expect(err).ShouldNot(HaveOccurred())
 		})
 	})

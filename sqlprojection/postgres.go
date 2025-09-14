@@ -3,6 +3,8 @@ package sqlprojection
 import (
 	"context"
 	"database/sql"
+
+	"github.com/dogmatiq/enginekit/protobuf/uuidpb"
 )
 
 // PostgresDriver is a Driver for PostgreSQL.
@@ -20,20 +22,34 @@ func (postgresDriver) CreateSchema(ctx context.Context, db *sql.DB) error {
 	}
 	defer tx.Rollback() // nolint:errcheck
 
-	_, err = tx.ExecContext(ctx, `CREATE SCHEMA IF NOT EXISTS projection`)
-	if err != nil {
+	if _, err := tx.ExecContext(
+		ctx,
+		`CREATE SCHEMA IF NOT EXISTS projection`,
+	); err != nil {
 		return err
 	}
 
-	_, err = tx.ExecContext(ctx, `CREATE TABLE IF NOT EXISTS projection.occ (
-			handler  BYTEA NOT NULL,
-			resource BYTEA NOT NULL,
-			version  BYTEA NOT NULL,
+	// We define a function to convert from BYTEA to UUID on the server-side so
+	// we are only sending 16 byte raw UUIDs over the write (instead of 36 byte
+	// hex-encoded strings).
+	if _, err = tx.ExecContext(
+		ctx,
+		`CREATE OR REPLACE FUNCTION projection.bytea_to_uuid (BYTEA) RETURNS UUID AS $$
+			SELECT ENCODE($1, 'hex')::UUID;
+		$$ LANGUAGE SQL IMMUTABLE;`); err != nil {
+		return err
+	}
 
-			PRIMARY KEY (handler, resource)
+	if _, err = tx.ExecContext(
+		ctx,
+		`CREATE TABLE IF NOT EXISTS projection.checkpoint (
+			handler           UUID NOT NULL,
+			stream            UUID NOT NULL,
+			checkpoint_offset BIGINT NOT NULL,
+
+			PRIMARY KEY (handler, stream)
 		)`,
-	)
-	if err != nil {
+	); err != nil {
 		return err
 	}
 
@@ -45,54 +61,53 @@ func (postgresDriver) DropSchema(ctx context.Context, db *sql.DB) error {
 	return err
 }
 
-func (postgresDriver) StoreVersion(
+func (postgresDriver) QueryCheckpointOffset(
 	ctx context.Context,
 	db *sql.DB,
-	h string,
-	r, v []byte,
-) error {
-	_, err := db.ExecContext(
+	h, s *uuidpb.UUID,
+) (uint64, error) {
+	row := db.QueryRowContext(
 		ctx,
-		`INSERT INTO projection.occ (
-			handler,
-			resource,
-			version
-		) VALUES (
-			$1,
-			$2,
-			$3
-		) ON CONFLICT (handler, resource) DO UPDATE SET
-			version = excluded.version`,
-		h,
-		r,
-		v,
+		`SELECT checkpoint_offset
+		FROM projection.checkpoint
+		WHERE handler = projection.bytea_to_uuid($1)
+		AND stream = projection.bytea_to_uuid($2)`,
+		h.AsBytes(),
+		s.AsBytes(),
 	)
 
-	return err
+	var cp uint64
+	err := row.Scan(&cp)
+
+	if err == sql.ErrNoRows {
+		return 0, nil
+	}
+
+	return cp, err
 }
 
-func (d postgresDriver) UpdateVersion(
+func (d postgresDriver) UpdateCheckpointOffset(
 	ctx context.Context,
 	tx *sql.Tx,
-	h string,
-	r, c, n []byte,
+	h, s *uuidpb.UUID,
+	c, n uint64,
 ) (bool, error) {
-	// If the "current" version is empty, we assumed it's correct and that there
-	// is no existing entry for this resource.
-	if len(c) == 0 {
+	// If the "current" checkpoint offset is zero, we assumed it's correct and
+	// that there is no existing row for this handler/stream.
+	if c == 0 {
 		res, err := tx.ExecContext(
 			ctx,
-			`INSERT INTO projection.occ (
+			`INSERT INTO projection.checkpoint (
 				handler,
-				resource,
-				version
+				stream,
+				checkpoint_offset
 			) VALUES (
-				$1,
-				$2,
+				projection.bytea_to_uuid($1),
+				projection.bytea_to_uuid($2),
 				$3
 			) ON CONFLICT DO NOTHING`,
-			h,
-			r,
+			h.AsBytes(),
+			s.AsBytes(),
 			n,
 		)
 		if err != nil {
@@ -109,33 +124,19 @@ func (d postgresDriver) UpdateVersion(
 		err error
 	)
 
-	if len(n) == 0 {
-		// If the "next" version is empty, we can delete the row entirely.
-		res, err = tx.ExecContext(
-			ctx,
-			`DELETE FROM projection.occ
-			WHERE handler = $1
-			AND resource = $2
-			AND version = $3`,
-			h,
-			r,
-			c,
-		)
-	} else {
-		// Otherwise we simply update the existing row.
-		res, err = tx.ExecContext(
-			ctx,
-			`UPDATE projection.occ SET
-				version = $1
-			WHERE handler = $2
-			AND resource = $3
-			AND version = $4`,
-			n,
-			h,
-			r,
-			c,
-		)
-	}
+	// Otherwise we simply update the existing row.
+	res, err = tx.ExecContext(
+		ctx,
+		`UPDATE projection.checkpoint SET
+			checkpoint_offset = $1
+		WHERE handler = projection.bytea_to_uuid($2)
+		AND stream = projection.bytea_to_uuid($3)
+		AND checkpoint_offset = $4`,
+		n,
+		h.AsBytes(),
+		s.AsBytes(),
+		c,
+	)
 
 	if err != nil {
 		// CODE COVERAGE: This branch can not be easily covered without somehow
@@ -145,49 +146,4 @@ func (d postgresDriver) UpdateVersion(
 
 	count, err := res.RowsAffected()
 	return count != 0, err
-}
-
-func (postgresDriver) QueryVersion(
-	ctx context.Context,
-	db *sql.DB,
-	h string,
-	r []byte,
-) ([]byte, error) {
-	row := db.QueryRowContext(
-		ctx,
-		`SELECT
-			version
-		FROM projection.occ
-		WHERE handler = $1
-		AND resource = $2`,
-		h,
-		r,
-	)
-
-	var v []byte
-	err := row.Scan(&v)
-
-	if err == sql.ErrNoRows {
-		return nil, nil
-	}
-
-	return v, err
-}
-
-func (postgresDriver) DeleteResource(
-	ctx context.Context,
-	db *sql.DB,
-	h string,
-	r []byte,
-) error {
-	_, err := db.ExecContext(
-		ctx,
-		`DELETE FROM projection.occ
-		WHERE handler = $1
-		AND resource = $2`,
-		h,
-		r,
-	)
-
-	return err
 }

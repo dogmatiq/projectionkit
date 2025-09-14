@@ -3,7 +3,6 @@ package boltprojection_test
 import (
 	"context"
 	"errors"
-	"io/ioutil"
 	"os"
 
 	"github.com/dogmatiq/dogma"
@@ -30,7 +29,7 @@ var _ = Describe("type adaptor", func() {
 	BeforeEach(func() {
 		ctx = context.Background()
 
-		f, err := ioutil.TempFile("", "*.boltdb")
+		f, err := os.CreateTemp("", "*.boltdb")
 		Expect(err).ShouldNot(HaveOccurred())
 		f.Close()
 
@@ -41,7 +40,7 @@ var _ = Describe("type adaptor", func() {
 
 		handler = &fixtures.MessageHandler{}
 		handler.ConfigureFunc = func(c dogma.ProjectionConfigurer) {
-			c.Identity("<projection>", "<key>")
+			c.Identity("<projection>", "87bb65eb-a5db-4213-8f5c-4ddbc97aa711")
 		}
 
 		adaptor = New(db, handler)
@@ -61,7 +60,7 @@ var _ = Describe("type adaptor", func() {
 
 	Describe("func Configure()", func() {
 		It("forwards to the handler", func() {
-			Expect(identity.Key(adaptor)).To(Equal("<key>"))
+			Expect(identity.Key(adaptor).AsString()).To(Equal("87bb65eb-a5db-4213-8f5c-4ddbc97aa711"))
 		})
 	})
 
