@@ -52,12 +52,3 @@ type Driver interface {
 		r []byte,
 	) error
 }
-
-// BuiltInDrivers returns a list of the built-in drivers.
-func BuiltInDrivers() []Driver {
-	return []Driver{
-		MySQLDriver,
-		PostgresDriver,
-		SQLiteDriver,
-	}
-}
