@@ -7,10 +7,6 @@ import (
 
 // Driver is an interface for database-specific projection drivers.
 type Driver interface {
-	// IsCompatibleWith returns nil if this driver can be used to store
-	// projections on db.
-	IsCompatibleWith(ctx context.Context, db *sql.DB) error
-
 	// CreateSchema creates the schema elements required by the driver.
 	CreateSchema(ctx context.Context, db *sql.DB) error
 

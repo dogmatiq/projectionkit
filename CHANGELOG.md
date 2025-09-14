@@ -26,6 +26,7 @@ The format is based on [Keep a Changelog], and this project adheres to
 - **[BC]** Removed `sqlprojection.CreateSchema()` and `DropSchema()`, use the corresponding `Driver` method instead.
 - **[BC]** Removed `sqlprojection.SelectDriver()`.
 - **[BC]** Removed `sqlprojection.BuiltInDrivers()`, `WithDriver()`, `WithCandidateDrivers()` and `sqlprojection.Option`.
+- **[BC]** Removed `sqlprojection.Driver.IsCompatibleWith()`.
 - **[BC]** Removed `fixtures` packages.
 
 ## [0.7.5] - 2024-09-29

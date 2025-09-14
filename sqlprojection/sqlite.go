@@ -13,17 +13,6 @@ var SQLiteDriver Driver = sqliteDriver{}
 
 type sqliteDriver struct{}
 
-func (sqliteDriver) IsCompatibleWith(ctx context.Context, db *sql.DB) error {
-	// Verify that we're using SQLite and that $1-style placeholders are
-	// supported.
-	_, err := db.ExecContext(
-		ctx,
-		`SELECT sqlite_version() WHERE 1 = $1`,
-		1,
-	)
-	return err
-}
-
 func (sqliteDriver) CreateSchema(ctx context.Context, db *sql.DB) error {
 	_, err := db.ExecContext(
 		ctx,

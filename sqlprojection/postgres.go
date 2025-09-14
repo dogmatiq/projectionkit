@@ -13,17 +13,6 @@ var PostgresDriver Driver = postgresDriver{}
 
 type postgresDriver struct{}
 
-func (postgresDriver) IsCompatibleWith(ctx context.Context, db *sql.DB) error {
-	// Verify that we're using PostgreSQL and that $1-style placeholders are
-	// supported.
-	_, err := db.ExecContext(
-		ctx,
-		`SELECT pg_backend_pid() WHERE 1 = $1`,
-		1,
-	)
-	return err
-}
-
 func (postgresDriver) CreateSchema(ctx context.Context, db *sql.DB) error {
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
