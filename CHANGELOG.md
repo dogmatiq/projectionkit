@@ -11,7 +11,7 @@ The format is based on [Keep a Changelog], and this project adheres to
 [semantic versioning]: https://semver.org/spec/v2.0.0.html
 [bc]: https://github.com/dogmatiq/.github/blob/main/VERSIONING.md#changelogs
 
-## [Unreleased]
+## [0.8.0] - 2025-09-19
 
 ### Changed
 
@@ -229,6 +229,7 @@ placeholder format (`?` for MySQL, `$1` for everything else).
 [0.7.3]: https://github.com/dogmatiq/projectionkit/releases/tag/v0.7.3
 [0.7.4]: https://github.com/dogmatiq/projectionkit/releases/tag/v0.7.4
 [0.7.5]: https://github.com/dogmatiq/projectionkit/releases/tag/v0.7.5
+[0.8.0]: https://github.com/dogmatiq/projectionkit/releases/tag/v0.8.0
 
 <!-- version template
 ## [0.0.1] - YYYY-MM-DD
