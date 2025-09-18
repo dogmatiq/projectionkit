@@ -3,21 +3,13 @@ package dynamoprojection
 import (
 	"context"
 	"errors"
+	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/dogmatiq/enginekit/protobuf/uuidpb"
 	"github.com/dogmatiq/projectionkit/dynamoprojection/internal/awsx"
-)
-
-const (
-	// handlerAndResourceAttr is the name of the attribute that combines the
-	// identifier of the handler and resource in each item inside the DynamoDB
-	// projection OCC table.
-	handlerAndResourceAttr = "HandlerAndResource"
-	// resourceVersionAttr is the name of the resource version attribute in
-	// each item inside the DynamoDB projection OCC table.
-	resourceVersionAttr = "Version"
 )
 
 // CreateTable creates an AWS DynamoDB table that stores information about
@@ -33,7 +25,6 @@ func CreateTable(
 	name string,
 	options ...TableOption,
 ) error {
-
 	decorators := &decorators{}
 	for _, opt := range options {
 		opt.applyTableOption(decorators)
@@ -47,13 +38,13 @@ func CreateTable(
 			TableName: aws.String(name),
 			AttributeDefinitions: []types.AttributeDefinition{
 				{
-					AttributeName: aws.String(handlerAndResourceAttr),
+					AttributeName: aws.String(keyAttr),
 					AttributeType: types.ScalarAttributeTypeB,
 				},
 			},
 			KeySchema: []types.KeySchemaElement{
 				{
-					AttributeName: aws.String(handlerAndResourceAttr),
+					AttributeName: aws.String(keyAttr),
 					KeyType:       types.KeyTypeHash,
 				},
 			},
@@ -98,4 +89,30 @@ func DeleteTable(
 	}
 
 	return err
+}
+
+const (
+	// keyAttr is the name of the attribute that is the key of the projection
+	// checkpoint table. It is derived from the handler key and stream ID.
+	keyAttr = "Key"
+
+	// offsetAttr is the name of the checkpoint offset attribute in each item
+	// inside the DynamoDB projection checkpoint table.
+	offsetAttr = "Offset"
+)
+
+func buildKeyAttr(handler, streamID *uuidpb.UUID) *types.AttributeValueMemberB {
+	var v [32]byte
+	uuidpb.CopyBytes(handler, v[0:])
+	uuidpb.CopyBytes(streamID, v[16:])
+
+	return &types.AttributeValueMemberB{
+		Value: v[:],
+	}
+}
+
+func buildOffsetAttr(cp uint64) *types.AttributeValueMemberN {
+	return &types.AttributeValueMemberN{
+		Value: strconv.FormatUint(cp, 10),
+	}
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/dogmatiq/dogma"
+	"github.com/dogmatiq/enginekit/enginetest/stubs"
 	. "github.com/dogmatiq/enginekit/enginetest/stubs"
 	"github.com/dogmatiq/projectionkit/internal/adaptortest"
 	"github.com/dogmatiq/projectionkit/internal/identity"
@@ -26,7 +27,7 @@ var _ = Describe("type Projection", func() {
 
 		handler = &fixtures.MessageHandler[int]{}
 		handler.ConfigureFunc = func(c dogma.ProjectionConfigurer) {
-			c.Identity("<projection>", "<key>")
+			c.Identity("<projection>", "c6dc3a83-48dc-46dd-bc4e-8251f5509306")
 		}
 
 		projection = &Projection[int, *fixtures.MessageHandler[int]]{
@@ -38,7 +39,7 @@ var _ = Describe("type Projection", func() {
 
 	Describe("func Configure()", func() {
 		It("forwards to the handler", func() {
-			Expect(identity.Key(projection)).To(Equal("<key>"))
+			Expect(identity.Key(projection).AsString()).To(Equal("c6dc3a83-48dc-46dd-bc4e-8251f5509306"))
 		})
 	})
 
@@ -57,16 +58,13 @@ var _ = Describe("type Projection", func() {
 					return v, nil
 				}
 
-				ok, err := projection.HandleEvent(
+				cp, err := projection.HandleEvent(
 					ctx,
-					[]byte("<resource>"),
-					nil,
-					[]byte("<version 01>"),
-					nil, // scope
+					&stubs.ProjectionEventScopeStub{},
 					EventA1,
 				)
 				Expect(err).ShouldNot(HaveOccurred())
-				Expect(ok).To(BeTrue())
+				Expect(cp).To(BeEquivalentTo(1))
 				Expect(called).To(BeTrue())
 			})
 		})
@@ -74,8 +72,8 @@ var _ = Describe("type Projection", func() {
 		Describe("func Compact()", func() {
 			It("does not forward to the handler", func() {
 				handler.CompactFunc = func(
-					_ int,
-					_ dogma.ProjectionCompactScope,
+					int,
+					dogma.ProjectionCompactScope,
 				) int {
 					Fail("unexpected call")
 					return 0
@@ -112,16 +110,13 @@ var _ = Describe("type Projection", func() {
 				return 321, nil
 			}
 
-			ok, err := projection.HandleEvent(
+			cp, err := projection.HandleEvent(
 				ctx,
-				[]byte("<resource>"),
-				nil,
-				[]byte("<version 01>"),
-				nil, // scope
+				&stubs.ProjectionEventScopeStub{},
 				EventA1,
 			)
 			Expect(err).ShouldNot(HaveOccurred())
-			Expect(ok).To(BeTrue())
+			Expect(cp).To(BeEquivalentTo(1))
 		})
 
 		Describe("func HandleEvent()", func() {
@@ -137,16 +132,16 @@ var _ = Describe("type Projection", func() {
 					return v, nil
 				}
 
-				ok, err := projection.HandleEvent(
+				cp, err := projection.HandleEvent(
 					ctx,
-					[]byte("<resource>"),
-					[]byte("<version 01>"),
-					[]byte("<version 02>"),
-					nil, // scope
+					&stubs.ProjectionEventScopeStub{
+						OffsetFunc:           func() uint64 { return 1 },
+						CheckpointOffsetFunc: func() uint64 { return 1 },
+					},
 					EventA1,
 				)
 				Expect(err).ShouldNot(HaveOccurred())
-				Expect(ok).To(BeTrue())
+				Expect(cp).To(BeEquivalentTo(2))
 				Expect(called).To(BeTrue())
 			})
 		})

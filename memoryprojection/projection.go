@@ -1,21 +1,19 @@
 package memoryprojection
 
 import (
-	"bytes"
 	"context"
 	"sync"
 
 	"github.com/dogmatiq/dogma"
-	"github.com/dogmatiq/projectionkit/resource"
 )
 
 // Projection is an in-memory projection that builds a value of type T.
 type Projection[T any, H MessageHandler[T]] struct {
 	Handler H
 
-	m         sync.RWMutex
-	resources map[string][]byte
-	value     T
+	m           sync.RWMutex
+	checkpoints map[string]uint64
+	value       T
 }
 
 // Query queries a value of type T to produce a result of type R.
@@ -39,44 +37,43 @@ func (p *Projection[T, H]) Configure(c dogma.ProjectionConfigurer) {
 // HandleEvent updates the projection to reflect the occurrence of an event.
 func (p *Projection[T, H]) HandleEvent(
 	_ context.Context,
-	r, c, n []byte,
 	s dogma.ProjectionEventScope,
 	m dogma.Event,
-) (bool, error) {
+) (uint64, error) {
 	p.m.Lock()
 	defer p.m.Unlock()
 
-	v := p.resources[string(r)]
-	if !bytes.Equal(v, c) {
-		return false, nil
+	id := s.StreamID()
+	cp := p.checkpoints[id]
+
+	if s.CheckpointOffset() != cp {
+		return cp, nil
 	}
 
 	value, err := p.Handler.HandleEvent(p.value, s, m)
 	if err != nil {
-		return false, err
+		return 0, err
 	}
 
-	if p.resources == nil {
-		p.resources = make(map[string][]byte)
+	if p.checkpoints == nil {
+		p.checkpoints = map[string]uint64{}
 	}
-	p.resources[string(r)] = n
+
+	cp = s.Offset() + 1
+	p.checkpoints[id] = cp
 	p.value = value
 
-	return true, nil
+	return cp, nil
 }
 
-// ResourceVersion returns the version of the resource r.
-func (p *Projection[T, H]) ResourceVersion(_ context.Context, r []byte) ([]byte, error) {
+// CheckpointOffset returns the offset at which the handler expects to
+// resume handling events from a specific stream.
+func (p *Projection[T, H]) CheckpointOffset(_ context.Context, id string) (uint64, error) {
 	p.m.RLock()
 	defer p.m.RUnlock()
 
-	return p.resources[string(r)], nil
-}
+	return p.checkpoints[id], nil
 
-// CloseResource informs the projection that the resource r will not be
-// used in any future calls to HandleEvent().
-func (p *Projection[T, H]) CloseResource(ctx context.Context, r []byte) error {
-	return p.DeleteResource(ctx, r)
 }
 
 // Compact reduces the size of the projection's data.
@@ -84,58 +81,10 @@ func (p *Projection[T, H]) Compact(_ context.Context, s dogma.ProjectionCompactS
 	p.m.Lock()
 	defer p.m.Unlock()
 
-	if p.resources != nil {
+	if p.checkpoints != nil {
 		// Only attempt to compact the value if some events have been applied.
 		p.value = p.Handler.Compact(p.value, s)
 	}
 
-	return nil
-}
-
-// ResourceRepository returns a repository that can be used to manipulate the
-// handler's resource versions.
-func (p *Projection[T, H]) ResourceRepository(context.Context) (resource.Repository, error) {
-	return p, nil
-}
-
-// StoreResourceVersion sets the version of the resource r to v without
-// checking the current version.
-func (p *Projection[T, H]) StoreResourceVersion(_ context.Context, r, v []byte) error {
-	p.m.Lock()
-	defer p.m.Unlock()
-
-	if p.resources == nil {
-		p.resources = make(map[string][]byte)
-	}
-	p.resources[string(r)] = v
-
-	return nil
-}
-
-// UpdateResourceVersion updates the version of the resource r to n.
-//
-// If c is not the current version of r, it returns false and no update occurs.
-func (p *Projection[T, H]) UpdateResourceVersion(_ context.Context, r, c, n []byte) (bool, error) {
-	p.m.Lock()
-	defer p.m.Unlock()
-
-	v := p.resources[string(r)]
-	if !bytes.Equal(v, c) {
-		return false, nil
-	}
-
-	if p.resources == nil {
-		p.resources = make(map[string][]byte)
-	}
-	p.resources[string(r)] = n
-	return true, nil
-}
-
-// DeleteResource removes all information about the resource r.
-func (p *Projection[T, H]) DeleteResource(_ context.Context, r []byte) error {
-	p.m.Lock()
-	defer p.m.Unlock()
-
-	delete(p.resources, string(r))
 	return nil
 }

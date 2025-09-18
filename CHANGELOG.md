@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 ### Changed
 
+- **[BC]** Updated to Dogma v0.16.0.
 - **[BC]** Added `Driver` parameter to `sqlprojection.New()` and removed `Option` parameters.
 - **[BC]** Added `Driver` parameter to `sqlprojection.NewResourceRepository()` and removed `Option` parameters.
 - **[BC]** `boltprojection.New()` no longer accepts a `nil` database.

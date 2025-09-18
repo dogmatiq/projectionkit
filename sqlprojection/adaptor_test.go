@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/dogmatiq/dogma"
+	"github.com/dogmatiq/enginekit/enginetest/stubs"
 	. "github.com/dogmatiq/enginekit/enginetest/stubs"
 	"github.com/dogmatiq/projectionkit/internal/adaptortest"
 	"github.com/dogmatiq/projectionkit/internal/identity"
@@ -24,7 +25,7 @@ var _ = Describe("type adaptor", func() {
 	BeforeEach(func() {
 		handler = &fixtures.MessageHandler{}
 		handler.ConfigureFunc = func(c dogma.ProjectionConfigurer) {
-			c.Identity("<projection>", "<key>")
+			c.Identity("<projection>", "26902c80-a1b8-43d1-99ae-ea5651656e63")
 		}
 	})
 
@@ -80,7 +81,7 @@ var _ = Describe("type adaptor", func() {
 
 				Describe("func Configure()", func() {
 					It("forwards to the handler", func() {
-						Expect(identity.Key(adaptor)).To(Equal("<key>"))
+						Expect(identity.Key(adaptor).AsString()).To(Equal("26902c80-a1b8-43d1-99ae-ea5651656e63"))
 					})
 				})
 
@@ -99,10 +100,7 @@ var _ = Describe("type adaptor", func() {
 
 						_, err := adaptor.HandleEvent(
 							context.Background(),
-							[]byte("<resource>"),
-							nil,
-							[]byte("<version 01>"),
-							nil,
+							&stubs.ProjectionEventScopeStub{},
 							EventA1,
 						)
 						Expect(err).Should(HaveOccurred())

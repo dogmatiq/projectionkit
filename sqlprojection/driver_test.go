@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/dogmatiq/enginekit/protobuf/uuidpb"
 	. "github.com/dogmatiq/projectionkit/sqlprojection"
 	"github.com/dogmatiq/sqltest"
 	. "github.com/onsi/ginkgo"
@@ -38,11 +39,13 @@ var _ = Describe("type Driver (implementations)", func() {
 			),
 			func() {
 				var (
-					ctx      context.Context
-					cancel   context.CancelFunc
-					database *sqltest.Database
-					driver   Driver
-					db       *sql.DB
+					ctx        context.Context
+					cancel     context.CancelFunc
+					database   *sqltest.Database
+					driver     Driver
+					db         *sql.DB
+					handlerKey *uuidpb.UUID
+					streamID   *uuidpb.UUID
 				)
 
 				BeforeEach(func() {
@@ -60,6 +63,9 @@ var _ = Describe("type Driver (implementations)", func() {
 
 					err = driver.CreateSchema(ctx, db)
 					Expect(err).ShouldNot(HaveOccurred())
+
+					handlerKey = uuidpb.Generate()
+					streamID = uuidpb.Generate()
 				})
 
 				AfterEach(func() {
@@ -72,107 +78,90 @@ var _ = Describe("type Driver (implementations)", func() {
 					cancel()
 				})
 
-				When("the resource does not exist", func() {
-					It("reports an empty version", func() {
-						ver, err := driver.QueryVersion(
+				When("no checkpoint offset has been stored", func() {
+					It("reports the zero offset", func() {
+						cp, err := driver.QueryCheckpointOffset(
 							ctx,
 							db,
-							"<handler>",
-							[]byte("<resource>"),
+							handlerKey,
+							streamID,
 						)
-
 						Expect(err).ShouldNot(HaveOccurred())
-						Expect(ver).To(BeEmpty())
+						Expect(cp).To(BeZero())
 					})
 
-					It("stores the version", func() {
-						err := driver.StoreVersion(
-							ctx,
-							db,
-							"<handler>",
-							[]byte("<resource>"),
-							[]byte("<version>"),
-						)
-
-						Expect(err).ShouldNot(HaveOccurred())
-
-						ver, err := driver.QueryVersion(
-							ctx,
-							db,
-							"<handler>",
-							[]byte("<resource>"),
-						)
-
-						Expect(err).ShouldNot(HaveOccurred())
-						Expect(ver).To(Equal([]byte("<version>")))
-					})
-
-					table.DescribeTable(
-						"it updates the version",
-						func(current []byte) {
-							tx, err := db.BeginTx(ctx, nil)
-							Expect(err).ShouldNot(HaveOccurred())
-							defer tx.Rollback() // nolint:errcheck
-
-							ok, err := driver.UpdateVersion(
-								ctx,
-								tx,
-								"<handler>",
-								[]byte("<resource>"),
-								current,
-								[]byte("<version>"),
-							)
-							Expect(err).ShouldNot(HaveOccurred())
-							Expect(ok).To(BeTrue())
-
-							err = tx.Commit()
-							Expect(err).ShouldNot(HaveOccurred())
-
-							ver, err := driver.QueryVersion(
-								ctx,
-								db,
-								"<handler>",
-								[]byte("<resource>"),
-							)
-
-							Expect(err).ShouldNot(HaveOccurred())
-							Expect(ver).To(Equal([]byte("<version>")))
-						},
-						table.Entry("nil byte-slice", nil),
-						table.Entry("empty byte-slice", []byte{}),
-					)
-
-					It("does not update the version if the supplied current version is incorrect", func() {
+					It("updates the checkpoint offset", func() {
 						tx, err := db.BeginTx(ctx, nil)
 						Expect(err).ShouldNot(HaveOccurred())
-						defer tx.Rollback()
+						defer tx.Rollback() // nolint:errcheck
 
-						ok, err := driver.UpdateVersion(
+						ok, err := driver.UpdateCheckpointOffset(
 							ctx,
 							tx,
-							"<handler>",
-							[]byte("<resource>"),
-							[]byte("<incorrect>"),
-							[]byte("<version>"),
+							handlerKey,
+							streamID,
+							0,
+							123,
+						)
+						Expect(err).ShouldNot(HaveOccurred())
+						Expect(ok).To(BeTrue())
+
+						err = tx.Commit()
+						Expect(err).ShouldNot(HaveOccurred())
+
+						cp, err := driver.QueryCheckpointOffset(
+							ctx,
+							db,
+							handlerKey,
+							streamID,
+						)
+						Expect(err).ShouldNot(HaveOccurred())
+						Expect(cp).To(BeEquivalentTo(123))
+					})
+
+					It("does not update the checkpoint offset if the supplied 'current' offset is incorrect", func() {
+						tx, err := db.BeginTx(ctx, nil)
+						Expect(err).ShouldNot(HaveOccurred())
+						defer tx.Rollback() // nolint:errcheck
+
+						ok, err := driver.UpdateCheckpointOffset(
+							ctx,
+							tx,
+							handlerKey,
+							streamID,
+							123,
+							123,
 						)
 						Expect(err).ShouldNot(HaveOccurred())
 						Expect(ok).To(BeFalse())
+
+						err = tx.Commit()
+						Expect(err).ShouldNot(HaveOccurred())
+
+						cp, err := driver.QueryCheckpointOffset(
+							ctx,
+							db,
+							handlerKey,
+							streamID,
+						)
+						Expect(err).ShouldNot(HaveOccurred())
+						Expect(cp).To(BeZero())
 					})
 				})
 
-				When("the resource exists", func() {
+				When("a checkpoint offset has been stored", func() {
 					BeforeEach(func() {
 						tx, err := db.BeginTx(ctx, nil)
 						Expect(err).ShouldNot(HaveOccurred())
 						defer tx.Rollback()
 
-						ok, err := driver.UpdateVersion(
+						ok, err := driver.UpdateCheckpointOffset(
 							ctx,
 							tx,
-							"<handler>",
-							[]byte("<resource>"),
-							nil,
-							[]byte("<version>"),
+							handlerKey,
+							streamID,
+							0,
+							123,
 						)
 						Expect(err).ShouldNot(HaveOccurred())
 						Expect(ok).To(BeTrue())
@@ -181,118 +170,81 @@ var _ = Describe("type Driver (implementations)", func() {
 						Expect(err).ShouldNot(HaveOccurred())
 					})
 
-					It("reports the expected version", func() {
-						ver, err := driver.QueryVersion(
+					It("reports the stored checkpoint offset", func() {
+						cp, err := driver.QueryCheckpointOffset(
 							ctx,
 							db,
-							"<handler>",
-							[]byte("<resource>"),
+							handlerKey,
+							streamID,
 						)
-
 						Expect(err).ShouldNot(HaveOccurred())
-						Expect(ver).To(Equal([]byte("<version>")))
+						Expect(cp).To(BeEquivalentTo(123))
 					})
 
-					It("stores the version", func() {
-						err := driver.StoreVersion(
-							ctx,
-							db,
-							"<handler>",
-							[]byte("<resource>"),
-							[]byte("<version>"),
-						)
+					It("updates the checkpoint offset", func() {
+						tx, err := db.BeginTx(ctx, nil)
+						Expect(err).ShouldNot(HaveOccurred())
+						defer tx.Rollback()
 
+						ok, err := driver.UpdateCheckpointOffset(
+							ctx,
+							tx,
+							handlerKey,
+							streamID,
+							123,
+							456,
+						)
+						Expect(err).ShouldNot(HaveOccurred())
+						Expect(ok).To(BeTrue())
+
+						err = tx.Commit()
 						Expect(err).ShouldNot(HaveOccurred())
 
-						ver, err := driver.QueryVersion(
+						cp, err := driver.QueryCheckpointOffset(
 							ctx,
 							db,
-							"<handler>",
-							[]byte("<resource>"),
+							handlerKey,
+							streamID,
 						)
-
 						Expect(err).ShouldNot(HaveOccurred())
-						Expect(ver).To(Equal([]byte("<version>")))
+						Expect(cp).To(BeEquivalentTo(456))
 					})
 
 					table.DescribeTable(
-						"it updates the version",
-						func(next []byte) {
+						"it does not update the checkpoint offset if the supplied 'current' offset is incorrect",
+						func(current int) {
 							tx, err := db.BeginTx(ctx, nil)
 							Expect(err).ShouldNot(HaveOccurred())
 							defer tx.Rollback()
 
-							ok, err := driver.UpdateVersion(
+							ok, err := driver.UpdateCheckpointOffset(
 								ctx,
 								tx,
-								"<handler>",
-								[]byte("<resource>"),
-								[]byte("<version>"),
-								next,
+								handlerKey,
+								streamID,
+								uint64(current),
+								456,
 							)
 							Expect(err).ShouldNot(HaveOccurred())
-							Expect(ok).To(BeTrue())
+							Expect(ok).To(BeFalse())
 
 							err = tx.Commit()
 							Expect(err).ShouldNot(HaveOccurred())
 
-							ver, err := driver.QueryVersion(
+							cp, err := driver.QueryCheckpointOffset(
 								ctx,
 								db,
-								"<handler>",
-								[]byte("<resource>"),
-							)
-
-							Expect(err).ShouldNot(HaveOccurred())
-							Expect(ver).To(Equal(next))
-						},
-						table.Entry("nil byte-slice", nil),
-						table.Entry("empty byte-slice", []byte{}),
-						table.Entry("non-empty byte-slice", []byte("<next-version>")),
-					)
-
-					table.DescribeTable(
-						"it does not update the version if the supplied current version is incorrect",
-						func(current []byte) {
-							tx, err := db.BeginTx(ctx, nil)
-							Expect(err).ShouldNot(HaveOccurred())
-							defer tx.Rollback()
-
-							ok, err := driver.UpdateVersion(
-								ctx,
-								tx,
-								"<handler>",
-								[]byte("<resource>"),
-								current,
-								[]byte("<version>"),
+								handlerKey,
+								streamID,
 							)
 							Expect(err).ShouldNot(HaveOccurred())
-							Expect(ok).To(BeFalse())
+							Expect(cp).To(BeEquivalentTo(123))
 						},
-						table.Entry("nil byte-slice", nil),
-						table.Entry("empty byte-slice", []byte{}),
-						table.Entry("non-empty byte-slice", []byte("<incorrect>")),
+						table.Entry("zero", 0),
+						table.Entry("less than actual", 122),
+						table.Entry("greater than actual", 124),
+						table.Entry("same as new value", 456),
 					)
-
-					It("can delete the resource", func() {
-						err := driver.DeleteResource(
-							ctx,
-							db,
-							"<handler>",
-							[]byte("<resource>"),
-						)
-						Expect(err).ShouldNot(HaveOccurred())
-
-						ver, err := driver.QueryVersion(
-							ctx,
-							db,
-							"<handler>",
-							[]byte("<resource>"),
-						)
-
-						Expect(err).ShouldNot(HaveOccurred())
-						Expect(ver).To(BeEmpty())
-					})
 				})
 			},
 		)

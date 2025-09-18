@@ -5,16 +5,16 @@ import (
 	"database/sql"
 
 	"github.com/dogmatiq/dogma"
-	"github.com/dogmatiq/projectionkit/internal/identity"
-	"github.com/dogmatiq/projectionkit/resource"
+	"github.com/dogmatiq/enginekit/protobuf/uuidpb"
 )
 
 // adaptor adapts an sqlprojection.ProjectionMessageHandler to the
-// dogma.ProjectionMessageHandler interface.
+// [dogma.ProjectionMessageHandler] interface.
 type adaptor struct {
 	db      *sql.DB
+	key     *uuidpb.UUID
+	driver  Driver
 	handler MessageHandler
-	repo    *ResourceRepository
 }
 
 // New returns a new Dogma projection message handler by binding an SQL-specific
@@ -32,12 +32,8 @@ func New(
 ) dogma.ProjectionMessageHandler {
 	return &adaptor{
 		db:      db,
+		driver:  d,
 		handler: h,
-		repo: NewResourceRepository(
-			db,
-			d,
-			identity.Key(h),
-		),
 	}
 }
 
@@ -50,37 +46,57 @@ func (a *adaptor) Configure(c dogma.ProjectionConfigurer) {
 // HandleEvent updates the projection to reflect the occurrence of an event.
 func (a *adaptor) HandleEvent(
 	ctx context.Context,
-	r, c, n []byte,
 	s dogma.ProjectionEventScope,
 	m dogma.Event,
-) (bool, error) {
-	return a.repo.UpdateResourceVersionFn(
+) (uint64, error) {
+	tx, err := a.db.BeginTx(ctx, nil)
+	if err != nil {
+		return 0, err
+	}
+	defer tx.Rollback() // nolint:errcheck
+
+	id := uuidpb.MustParse(s.StreamID())
+	cp := s.Offset() + 1
+
+	ok, err := a.driver.UpdateCheckpointOffset(
 		ctx,
-		r, c, n,
-		func(ctx context.Context, tx *sql.Tx) error {
-			return a.handler.HandleEvent(ctx, tx, s, m)
-		},
+		tx,
+		a.key,
+		id,
+		s.CheckpointOffset(),
+		cp,
+	)
+	if err != nil {
+		return 0, err
+	}
+
+	if ok {
+		if err := a.handler.HandleEvent(ctx, tx, s, m); err != nil {
+			return 0, err
+		}
+		return cp, tx.Commit()
+	}
+
+	return a.driver.QueryCheckpointOffset(
+		ctx,
+		a.db,
+		a.key,
+		id,
 	)
 }
 
-// ResourceVersion returns the version of the resource r.
-func (a *adaptor) ResourceVersion(ctx context.Context, r []byte) ([]byte, error) {
-	return a.repo.ResourceVersion(ctx, r)
-}
-
-// CloseResource informs the projection that the resource r will not be
-// used in any future calls to HandleEvent().
-func (a *adaptor) CloseResource(ctx context.Context, r []byte) error {
-	return a.repo.DeleteResource(ctx, r)
+// CheckpointOffset returns the offset at which the handler expects to
+// resume handling events from a specific stream.
+func (a *adaptor) CheckpointOffset(ctx context.Context, id string) (uint64, error) {
+	return a.driver.QueryCheckpointOffset(
+		ctx,
+		a.db,
+		a.key,
+		uuidpb.MustParse(id),
+	)
 }
 
 // Compact reduces the size of the projection's data.
 func (a *adaptor) Compact(ctx context.Context, s dogma.ProjectionCompactScope) error {
 	return a.handler.Compact(ctx, a.db, s)
-}
-
-// ResourceRepository returns a repository that can be used to manipulate the
-// handler's resource versions.
-func (a *adaptor) ResourceRepository(context.Context) (resource.Repository, error) {
-	return a.repo, nil
 }

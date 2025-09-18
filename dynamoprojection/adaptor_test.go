@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/dogmatiq/dogma"
+	"github.com/dogmatiq/enginekit/enginetest/stubs"
 	. "github.com/dogmatiq/enginekit/enginetest/stubs"
 	. "github.com/dogmatiq/projectionkit/dynamoprojection"
 	"github.com/dogmatiq/projectionkit/dynamoprojection/internal/fixtures" // can't dot-import due to conflict
@@ -74,32 +75,32 @@ var _ = Describe("type adaptor", func() {
 
 		handler = &fixtures.MessageHandler{}
 		handler.ConfigureFunc = func(c dogma.ProjectionConfigurer) {
-			c.Identity("<projection>", "<key>")
+			c.Identity("<projection>", "03fb836b-8770-4eda-a896-dea5fa4b030a")
 		}
 
-		err = CreateTable(ctx, client, "ProjectionOCCTable")
+		err = CreateTable(ctx, client, "ProjectionCheckpoint")
 		Expect(err).ShouldNot(HaveOccurred())
 
 		err = dynamodb.NewTableExistsWaiter(client).Wait(
 			ctx,
 			&dynamodb.DescribeTableInput{
-				TableName: aws.String("ProjectionOCCTable"),
+				TableName: aws.String("ProjectionCheckpoint"),
 			},
 			5*time.Second,
 		)
 		Expect(err).ShouldNot(HaveOccurred())
 
-		adaptor = New(client, "ProjectionOCCTable", handler)
+		adaptor = New(client, "ProjectionCheckpoint", handler)
 	})
 
 	AfterEach(func() {
-		err := DeleteTable(ctx, client, "ProjectionOCCTable")
+		err := DeleteTable(ctx, client, "ProjectionCheckpoint")
 		Expect(err).ShouldNot(HaveOccurred())
 
 		err = dynamodb.NewTableNotExistsWaiter(client).Wait(
 			ctx,
 			&dynamodb.DescribeTableInput{
-				TableName: aws.String("ProjectionOCCTable"),
+				TableName: aws.String("ProjectionCheckpoint"),
 			},
 			5*time.Second,
 		)
@@ -110,7 +111,7 @@ var _ = Describe("type adaptor", func() {
 
 	Describe("func Configure()", func() {
 		It("forwards to the handler", func() {
-			Expect(identity.Key(adaptor)).To(Equal("<key>"))
+			Expect(identity.Key(adaptor).AsString()).To(Equal("03fb836b-8770-4eda-a896-dea5fa4b030a"))
 		})
 	})
 
@@ -128,10 +129,7 @@ var _ = Describe("type adaptor", func() {
 
 			_, err := adaptor.HandleEvent(
 				context.Background(),
-				[]byte("<resource>"),
-				nil,
-				[]byte("<version 01>"),
-				nil,
+				&stubs.ProjectionEventScopeStub{},
 				EventA1,
 			)
 			Expect(err).Should(HaveOccurred())
@@ -216,10 +214,7 @@ var _ = Describe("type adaptor", func() {
 
 				_, err := adaptor.HandleEvent(
 					context.Background(),
-					[]byte("<resource>"),
-					nil,
-					[]byte("<version 01>"),
-					nil,
+					&stubs.ProjectionEventScopeStub{},
 					EventA1,
 				)
 				Expect(err).Should(HaveOccurred())
