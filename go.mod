@@ -9,8 +9,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.31.8
 	github.com/aws/aws-sdk-go-v2/credentials v1.18.12
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.50.3
-	github.com/dogmatiq/dogma v0.15.1-0.20250818015503-175a0b1f33d6
-	github.com/dogmatiq/enginekit v0.16.3-0.20250903212034-dc875a78d151
+	github.com/dogmatiq/dogma v0.16.0
+	github.com/dogmatiq/enginekit v0.17.0
 	github.com/dogmatiq/sqltest v0.3.0
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.38.2
@@ -52,7 +52,7 @@ require (
 	golang.org/x/net v0.43.0 // indirect
 	golang.org/x/sys v0.35.0 // indirect
 	golang.org/x/text v0.28.0 // indirect
-	google.golang.org/protobuf v1.36.8 // indirect
+	google.golang.org/protobuf v1.36.9 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 )
