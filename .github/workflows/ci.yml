@@ -20,5 +20,8 @@ jobs:
     with:
       "dynamodb": true
       "mariadb": true
+      "minio": true
       "mysql": true
       "postgres": true
+
+    
