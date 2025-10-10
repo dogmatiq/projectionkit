@@ -17,7 +17,7 @@ var _ = Describe("func Key()", func() {
 			ConfigureFunc: func(c dogma.ProjectionConfigurer) {
 				c.Identity("<name>", id.AsString())
 				c.Routes(
-					dogma.HandlesEvent[EventStub[TypeA]](),
+					dogma.HandlesEvent[*EventStub[TypeA]](),
 				)
 			},
 		}
