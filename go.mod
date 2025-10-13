@@ -10,7 +10,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.18.16
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.51.0
 	github.com/dogmatiq/dogma v0.17.1
-	github.com/dogmatiq/enginekit v0.18.1
+	github.com/dogmatiq/enginekit v0.19.4
 	github.com/dogmatiq/sqltest v0.3.0
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.38.2
