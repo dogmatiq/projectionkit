@@ -4,104 +4,121 @@ import (
 	"context"
 	"errors"
 	"os"
+	"testing"
 
 	"github.com/dogmatiq/dogma"
-	"github.com/dogmatiq/enginekit/enginetest/stubs"
 	. "github.com/dogmatiq/enginekit/enginetest/stubs"
 	. "github.com/dogmatiq/projectionkit/boltprojection"
 	"github.com/dogmatiq/projectionkit/boltprojection/internal/fixtures" // can't dot-import due to conflict
 	"github.com/dogmatiq/projectionkit/internal/adaptortest"
 	"github.com/dogmatiq/projectionkit/internal/identity"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 	"go.etcd.io/bbolt"
 )
 
-var _ = Describe("type adaptor", func() {
-	var (
-		ctx     context.Context
-		handler *fixtures.MessageHandler
-		db      *bbolt.DB
-		tmpfile string
-		adaptor dogma.ProjectionMessageHandler
-	)
+func TestAdaptor(t *testing.T) {
+	setup := func(t *testing.T) (deps struct {
+		DB      *bbolt.DB
+		Handler *fixtures.MessageHandler
+		Adaptor dogma.ProjectionMessageHandler
+	}) {
+		t.Helper()
 
-	BeforeEach(func() {
-		ctx = context.Background()
+		tmp, err := os.CreateTemp("", "*.boltdb")
+		if err != nil {
+			t.Fatal(err)
+		}
+		tmp.Close()
 
-		f, err := os.CreateTemp("", "*.boltdb")
-		Expect(err).ShouldNot(HaveOccurred())
-		f.Close()
+		t.Cleanup(func() {
+			os.Remove(tmp.Name())
+		})
 
-		tmpfile = f.Name()
+		deps.DB, err = bbolt.Open(tmp.Name(), 0600, bbolt.DefaultOptions)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() {
+			deps.DB.Close()
+		})
 
-		db, err = bbolt.Open(tmpfile, 0600, bbolt.DefaultOptions)
-		Expect(err).ShouldNot(HaveOccurred())
-
-		handler = &fixtures.MessageHandler{}
-		handler.ConfigureFunc = func(c dogma.ProjectionConfigurer) {
-			c.Identity("<projection>", "87bb65eb-a5db-4213-8f5c-4ddbc97aa711")
+		deps.Handler = &fixtures.MessageHandler{
+			ConfigureFunc: func(c dogma.ProjectionConfigurer) {
+				c.Identity("<projection>", "87bb65eb-a5db-4213-8f5c-4ddbc97aa711")
+			},
 		}
 
-		adaptor = New(db, handler)
+		deps.Adaptor = New(deps.DB, deps.Handler)
+
+		return deps
+	}
+
+	t.Run("common adaptor behavior", func(t *testing.T) {
+		deps := setup(t)
+		adaptortest.TestAdaptor(t, deps.Adaptor)
 	})
 
-	AfterEach(func() {
-		if db != nil {
-			db.Close()
-		}
+	t.Run("func Configure()", func(t *testing.T) {
+		t.Run("it forwards to the handler", func(t *testing.T) {
+			deps := setup(t)
 
-		if tmpfile != "" {
-			os.Remove(tmpfile)
-		}
-	})
+			got := identity.Key(deps.Adaptor).AsString()
+			want := "87bb65eb-a5db-4213-8f5c-4ddbc97aa711"
 
-	adaptortest.DescribeAdaptor(&ctx, &adaptor)
-
-	Describe("func Configure()", func() {
-		It("forwards to the handler", func() {
-			Expect(identity.Key(adaptor).AsString()).To(Equal("87bb65eb-a5db-4213-8f5c-4ddbc97aa711"))
+			if got != want {
+				t.Fatalf("unexpected identity: got %q, want %q", got, want)
+			}
 		})
 	})
 
-	Describe("func HandleEvent()", func() {
-		It("returns an error if the application's message handler fails", func() {
-			terr := errors.New("handle event test error")
+	t.Run("func HandleEvent()", func(t *testing.T) {
+		t.Run("it returns an error if the application's message handler fails", func(t *testing.T) {
+			deps := setup(t)
 
-			handler.HandleEventFunc = func(
+			want := errors.New("handle event test error")
+
+			deps.Handler.HandleEventFunc = func(
 				context.Context,
 				*bbolt.Tx,
 				dogma.ProjectionEventScope,
 				dogma.Event,
 			) error {
-				return terr
+				return want
 			}
 
-			_, err := adaptor.HandleEvent(
-				context.Background(),
-				&stubs.ProjectionEventScopeStub{},
+			_, got := deps.Adaptor.HandleEvent(
+				t.Context(),
+				&ProjectionEventScopeStub{},
 				EventA1,
 			)
-			Expect(err).Should(HaveOccurred())
+			if got != want {
+				t.Fatalf("unexpected error: got %v, want %v", got, want)
+			}
 		})
 	})
 
-	Describe("func Compact()", func() {
-		It("forwards to the handler", func() {
-			handler.CompactFunc = func(
+	t.Run("func Compact()", func(t *testing.T) {
+		t.Run("it forwards to the handler", func(t *testing.T) {
+			deps := setup(t)
+			want := errors.New("<error>")
+
+			deps.Handler.CompactFunc = func(
 				_ context.Context,
-				d *bbolt.DB,
+				db *bbolt.DB,
 				_ dogma.ProjectionCompactScope,
 			) error {
-				Expect(d).To(BeIdenticalTo(db))
-				return errors.New("<error>")
+				if db != deps.DB {
+					t.Fatalf("unexpected DB: got %p, want %p", db, deps.DB)
+				}
+				return want
 			}
 
-			err := adaptor.Compact(
-				context.Background(),
+			got := deps.Adaptor.Compact(
+				t.Context(),
 				nil, // scope
 			)
-			Expect(err).To(MatchError("<error>"))
+			if got != want {
+				t.Fatalf("unexpected error: got %v, want %v", got, want)
+			}
 		})
 	})
-})
+}

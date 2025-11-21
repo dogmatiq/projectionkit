@@ -88,3 +88,15 @@ func (p *Projection[T, H]) Compact(_ context.Context, s dogma.ProjectionCompactS
 
 	return nil
 }
+
+// Reset resets the projection to its initial state.
+func (p *Projection[T, H]) Reset(context.Context, dogma.ProjectionResetScope) error {
+	p.m.Lock()
+	defer p.m.Unlock()
+
+	p.checkpoints = nil
+	var zero T
+	p.value = zero
+
+	return nil
+}

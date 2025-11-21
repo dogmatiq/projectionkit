@@ -2,12 +2,20 @@ package adaptortest
 
 import (
 	"context"
+	"testing"
 
 	"github.com/dogmatiq/dogma"
 	"github.com/dogmatiq/enginekit/enginetest/stubs"
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/gomega"
 )
+
+func TestAdaptor[T dogma.ProjectionMessageHandler](
+	t *testing.T,
+	adaptor T,
+) {
+	t.Helper()
+}
 
 // DescribeAdaptor declares generic behavioral tests for a specific adaptor
 // implementation.
