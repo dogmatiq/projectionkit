@@ -3,8 +3,6 @@ package sqlprojection
 import (
 	"context"
 	"database/sql"
-
-	"github.com/dogmatiq/enginekit/protobuf/uuidpb"
 )
 
 // SQLiteDriver is Driver for SQLite.
@@ -37,7 +35,7 @@ func (sqliteDriver) DropSchema(ctx context.Context, db *sql.DB) error {
 func (sqliteDriver) QueryCheckpointOffset(
 	ctx context.Context,
 	db *sql.DB,
-	h, s *uuidpb.UUID,
+	h, s []byte,
 ) (uint64, error) {
 	row := db.QueryRowContext(
 		ctx,
@@ -45,8 +43,8 @@ func (sqliteDriver) QueryCheckpointOffset(
 		FROM projection_checkpoint
 		WHERE handler = ?
 		AND stream = ?`,
-		h.AsBytes(),
-		s.AsBytes(),
+		h,
+		s,
 	)
 
 	var cp uint64
@@ -59,10 +57,10 @@ func (sqliteDriver) QueryCheckpointOffset(
 	return cp, err
 }
 
-func (d sqliteDriver) UpdateCheckpointOffset(
+func (sqliteDriver) UpdateCheckpointOffset(
 	ctx context.Context,
 	tx *sql.Tx,
-	h, s *uuidpb.UUID,
+	h, s []byte,
 	c, n uint64,
 ) (bool, error) {
 	// If the "current" checkpoint offset is zero, we assumed it's correct and
@@ -79,8 +77,8 @@ func (d sqliteDriver) UpdateCheckpointOffset(
 				?,
 				?
 			) ON CONFLICT DO NOTHING`,
-			h.AsBytes(),
-			s.AsBytes(),
+			h,
+			s,
 			n,
 		)
 		if err != nil {
@@ -106,17 +104,29 @@ func (d sqliteDriver) UpdateCheckpointOffset(
 		AND stream = ?
 		AND checkpoint_offset = ?`,
 		n,
-		h.AsBytes(),
-		s.AsBytes(),
+		h,
+		s,
 		c,
 	)
 
 	if err != nil {
-		// CODE COVERAGE: This branch can not be easily covered without somehow
-		// breaking the SQL connection or the schema in some way.
 		return false, err
 	}
 
 	count, err := res.RowsAffected()
 	return count != 0, err
+}
+
+func (sqliteDriver) DeleteCheckpointOffsets(
+	ctx context.Context,
+	tx *sql.Tx,
+	h []byte,
+) error {
+	_, err := tx.ExecContext(
+		ctx,
+		`DELETE FROM projection_checkpoint
+		WHERE handler = ?`,
+		h,
+	)
+	return err
 }

@@ -7,44 +7,22 @@ import (
 // MessageHandler is a specialization of [dogma.ProjectionMessageHandler] that
 // builds an in-memory projection represented by a value of type T.
 type MessageHandler[T any] interface {
-	// Configure produces a configuration for this handler by calling methods on
-	// the configurer c.
+	// Configure declares the handler's configuration by calling methods on c.
 	//
-	// The implementation MUST allow for multiple calls to Configure(). Each
-	// call SHOULD produce the same configuration.
+	// The configuration includes the handler's identity and message routes.
 	//
-	// The engine MUST call Configure() before calling HandleEvent(). It is
-	// RECOMMENDED that the engine only call Configure() once per handler.
+	// The engine calls this method at least once during startup. It must
+	// produce the same configuration each time it's called.
 	Configure(c dogma.ProjectionConfigurer)
 
-	// HandleEvent updates the projection to reflect the occurrence of an event.
-	// It may do so by modifying v in-place then returning it, or by returning
-	// an entirely new value.
-	//
-	// The engine MAY provide guarantees about the order in which event messages
-	// will be passed to HandleEvent(), however in the interest of engine
-	// portability the implementation SHOULD NOT assume that HandleEvent() will
-	// be called with events in the same order that they were recorded.
-	//
-	// The engine MUST NOT call HandleEvent() with any message of a type that
-	// has not been configured for consumption by a prior call to Configure().
-	// If any such message is passed, the implementation MUST panic with the
-	// UnexpectedMessage value.
-	//
-	// The engine MAY call HandleEvent() from multiple goroutines concurrently.
+	// HandleEvent updates the projection to reflect the occurrence of a
+	// [dogma.Event]. It may do so by modifying v in-place then returning it, or
+	// by returning an entirely new value.
 	HandleEvent(v T, s dogma.ProjectionEventScope, m dogma.Event) (T, error)
 
-	// Compact reduces the size of the projection's data. It may do so by
-	// modifying v in-place then returning it, or by returning an entirely new
-	// value.
-	//
-	// The implementation SHOULD attempt to decrease the size of the
-	// projection's data by whatever means available. For example, it may delete
-	// any unused data, or collapse multiple data sets into one.
-	//
-	// The engine SHOULD call Compact() repeatedly throughout the lifetime of
-	// the projection. The precise scheduling of calls to Compact() are
-	// engine-defined. It MAY be called concurrently with any other method.
+	// Compact reduces the projection's size by removing or consolidating data.
+	// It may do so by modifying v in-place then returning it, or by returning
+	// an entirely new value.
 	Compact(v T, s dogma.ProjectionCompactScope) T
 }
 

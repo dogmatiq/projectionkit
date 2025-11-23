@@ -3,8 +3,7 @@ package dynamoprojection_test
 import (
 	"context"
 	"errors"
-	"os"
-	"time"
+	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -12,233 +11,206 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/dogmatiq/dogma"
-	"github.com/dogmatiq/enginekit/enginetest/stubs"
 	. "github.com/dogmatiq/enginekit/enginetest/stubs"
+	"github.com/dogmatiq/enginekit/protobuf/uuidpb"
 	. "github.com/dogmatiq/projectionkit/dynamoprojection"
+	"github.com/dogmatiq/projectionkit/dynamoprojection/internal/dynamox"
 	"github.com/dogmatiq/projectionkit/dynamoprojection/internal/fixtures" // can't dot-import due to conflict
-	"github.com/dogmatiq/projectionkit/internal/adaptortest"
-	"github.com/dogmatiq/projectionkit/internal/identity"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"github.com/dogmatiq/projectionkit/internal/handlertest"
+	"github.com/testcontainers/testcontainers-go"
+	dynamotc "github.com/testcontainers/testcontainers-go/modules/dynamodb"
+	"github.com/testcontainers/testcontainers-go/wait"
 )
 
-var _ = Describe("type adaptor", func() {
-	var (
-		ctx     context.Context
-		handler *fixtures.MessageHandler
-		client  *dynamodb.Client
-		adaptor dogma.ProjectionMessageHandler
+func TestAdaptor(t *testing.T) {
+	container, err := dynamotc.Run(
+		t.Context(),
+		"amazon/dynamodb-local",
+		dynamotc.WithDisableTelemetry(),
+		testcontainers.WithWaitStrategy(
+			wait.
+				ForHTTP("/").
+				WithPort("8000").
+				WithStatusCodeMatcher(func(int) bool {
+					// Accept any status, we just want to know when it's up.
+					return true
+				}),
+		),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Cleanup(func() {
+		if err := container.Terminate(context.Background()); err != nil {
+			t.Log(err)
+		}
+	})
+
+	endpoint, err := container.ConnectionString(t.Context())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cfg, err := config.LoadDefaultConfig(
+		context.Background(),
+		config.WithRegion("us-east-1"),
+		config.WithCredentialsProvider(
+			credentials.NewStaticCredentialsProvider("id", "secret", ""),
+		),
+		config.WithRetryer(
+			func() aws.Retryer {
+				return aws.NopRetryer{}
+			},
+		),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	client := dynamodb.NewFromConfig(
+		cfg,
+		func(opts *dynamodb.Options) {
+			opts.BaseEndpoint = aws.String("http://" + endpoint)
+		},
 	)
 
-	BeforeEach(func() {
-		ctx = context.Background()
+	setup := func(t *testing.T) (deps struct {
+		Handler *fixtures.MessageHandler
+		Adaptor dogma.ProjectionMessageHandler
+	}) {
+		t.Helper()
 
-		endpoint := os.Getenv("DOGMATIQ_TEST_DYNAMODB_ENDPOINT")
-		if endpoint == "" {
-			endpoint = "http://localhost:28000"
+		deps.Handler = &fixtures.MessageHandler{
+			ConfigureFunc: func(c dogma.ProjectionConfigurer) {
+				c.Identity("<projection>", handlertest.IdentityKey)
+			},
 		}
 
-		cfg, err := config.LoadDefaultConfig(
-			ctx,
-			config.WithRegion("us-east-1"),
-			config.WithEndpointResolverWithOptions(
-				aws.EndpointResolverWithOptionsFunc(
-					func(
-						service, region string,
-						options ...interface{},
-					) (aws.Endpoint, error) {
-						return aws.Endpoint{
-							PartitionID: "aws",
-							URL:         endpoint,
-						}, nil
-					},
-				),
-			),
-			config.WithCredentialsProvider(
-				credentials.StaticCredentialsProvider{
-					Value: aws.Credentials{
-						AccessKeyID:     "id",
-						SecretAccessKey: "secret",
-						SessionToken:    "",
-					},
-				},
-			),
-			config.WithRetryer(
-				func() aws.Retryer {
-					return aws.NopRetryer{}
-				},
-			),
+		deps.Adaptor = New(
+			client,
+			"ProjectionCheckpoint-"+uuidpb.Generate().AsString(),
+			deps.Handler,
 		)
-		Expect(err).ShouldNot(HaveOccurred())
 
-		client = dynamodb.NewFromConfig(cfg)
+		return deps
+	}
 
-		handler = &fixtures.MessageHandler{}
-		handler.ConfigureFunc = func(c dogma.ProjectionConfigurer) {
-			c.Identity("<projection>", "03fb836b-8770-4eda-a896-dea5fa4b030a")
-		}
+	handlertest.Run(
+		t,
+		func(t *testing.T) dogma.ProjectionMessageHandler {
+			return setup(t).Adaptor
+		},
+	)
 
-		err = CreateTable(ctx, client, "ProjectionCheckpoint")
-		Expect(err).ShouldNot(HaveOccurred())
+	t.Run("func HandleEvent()", func(t *testing.T) {
+		t.Run("it forwards to the handler", func(t *testing.T) {
+			deps := setup(t)
+			want := errors.New("<error>")
 
-		err = dynamodb.NewTableExistsWaiter(client).Wait(
-			ctx,
-			&dynamodb.DescribeTableInput{
-				TableName: aws.String("ProjectionCheckpoint"),
-			},
-			5*time.Second,
-		)
-		Expect(err).ShouldNot(HaveOccurred())
-
-		adaptor = New(client, "ProjectionCheckpoint", handler)
-	})
-
-	AfterEach(func() {
-		err := DeleteTable(ctx, client, "ProjectionCheckpoint")
-		Expect(err).ShouldNot(HaveOccurred())
-
-		err = dynamodb.NewTableNotExistsWaiter(client).Wait(
-			ctx,
-			&dynamodb.DescribeTableInput{
-				TableName: aws.String("ProjectionCheckpoint"),
-			},
-			5*time.Second,
-		)
-		Expect(err).ShouldNot(HaveOccurred())
-	})
-
-	adaptortest.DescribeAdaptor(&ctx, &adaptor)
-
-	Describe("func Configure()", func() {
-		It("forwards to the handler", func() {
-			Expect(identity.Key(adaptor).AsString()).To(Equal("03fb836b-8770-4eda-a896-dea5fa4b030a"))
-		})
-	})
-
-	Describe("func HandleEvent()", func() {
-		It("returns an error if the application's message handler fails", func() {
-			terr := errors.New("handle event test error")
-
-			handler.HandleEventFunc = func(
-				context.Context,
-				dogma.ProjectionEventScope,
-				dogma.Event,
+			deps.Handler.HandleEventFunc = func(
+				ctx context.Context,
+				s dogma.ProjectionEventScope,
+				m dogma.Event,
 			) ([]types.TransactWriteItem, error) {
-				return nil, terr
+				return nil, want
 			}
 
-			_, err := adaptor.HandleEvent(
-				context.Background(),
-				&stubs.ProjectionEventScopeStub{},
+			_, got := deps.Adaptor.HandleEvent(
+				t.Context(),
+				&ProjectionEventScopeStub{},
 				EventA1,
 			)
-			Expect(err).Should(HaveOccurred())
-		})
 
-		When("transaction items returned by a user cause conflict", func() {
-			BeforeEach(func() {
-				_, err := client.CreateTable(
-					ctx,
-					&dynamodb.CreateTableInput{
-						TableName: aws.String("TestTable"),
-						AttributeDefinitions: []types.AttributeDefinition{
-							{
-								AttributeName: aws.String("PK"),
-								AttributeType: types.ScalarAttributeTypeS,
-							},
-						},
-						KeySchema: []types.KeySchemaElement{
-							{
-								AttributeName: aws.String("PK"),
-								KeyType:       types.KeyTypeHash,
-							},
-						},
-						BillingMode: types.BillingModePayPerRequest,
-					},
-				)
-				if !errors.As(err, new(*types.ResourceInUseException)) {
-					Expect(err).ShouldNot(HaveOccurred())
-				}
-
-				err = dynamodb.NewTableExistsWaiter(client).Wait(
-					ctx,
-					&dynamodb.DescribeTableInput{
-						TableName: aws.String("TestTable"),
-					},
-					5*time.Second,
-				)
-				Expect(err).ShouldNot(HaveOccurred())
-			})
-
-			AfterEach(func() {
-				_, err := client.DeleteTable(
-					ctx,
-					&dynamodb.DeleteTableInput{
-						TableName: aws.String("TestTable"),
-					},
-				)
-				Expect(err).ShouldNot(HaveOccurred())
-
-				err = dynamodb.NewTableNotExistsWaiter(client).Wait(
-					ctx,
-					&dynamodb.DescribeTableInput{
-						TableName: aws.String("TestTable"),
-					},
-					5*time.Second,
-				)
-				Expect(err).ShouldNot(HaveOccurred())
-			})
-
-			It("returns an error", func() {
-				handler.HandleEventFunc = func(
-					context.Context,
-					dogma.ProjectionEventScope,
-					dogma.Event,
-				) ([]types.TransactWriteItem, error) {
-					return []types.TransactWriteItem{
-						{
-							ConditionCheck: &types.ConditionCheck{
-								TableName: aws.String("TestTable"),
-								Key: map[string]types.AttributeValue{
-									"PK": &types.AttributeValueMemberS{
-										Value: "<value>",
-									},
-								},
-								ConditionExpression: aws.String(
-									"attribute_exists(PK)",
-								),
-							},
-						},
-					}, nil
-				}
-
-				_, err := adaptor.HandleEvent(
-					context.Background(),
-					&stubs.ProjectionEventScopeStub{},
-					EventA1,
-				)
-				Expect(err).Should(HaveOccurred())
-				Expect(errors.As(err, new(*types.TransactionCanceledException))).To(BeTrue())
-			})
+			if got != want {
+				t.Fatalf("unexpected error: got %v, want %v", got, want)
+			}
 		})
 	})
 
-	Describe("func Compact()", func() {
-		It("forwards to the handler", func() {
-			handler.CompactFunc = func(
-				_ context.Context,
-				c *dynamodb.Client,
-				_ dogma.ProjectionCompactScope,
-			) error {
-				Expect(c).To(BeIdenticalTo(client))
-				return errors.New("<error>")
+	t.Run("when transaction items returned by the handler cause conflict", func(t *testing.T) {
+		t.Run("it returns an error", func(t *testing.T) {
+			deps := setup(t)
+
+			table := "TestTable-" + uuidpb.Generate().AsString()
+
+			if err := dynamox.CreateTableIfNotExists(
+				t.Context(),
+				client,
+				table,
+				nil,
+				dynamox.KeyAttr{
+					Name:    aws.String("PK"),
+					Type:    types.ScalarAttributeTypeS,
+					KeyType: types.KeyTypeHash,
+				},
+			); err != nil {
+				t.Fatal(err)
 			}
 
-			err := adaptor.Compact(
-				context.Background(),
-				nil, // scope
+			deps.Handler.HandleEventFunc = func(
+				ctx context.Context,
+				s dogma.ProjectionEventScope,
+				m dogma.Event,
+			) ([]types.TransactWriteItem, error) {
+				return []types.TransactWriteItem{
+					{
+						ConditionCheck: &types.ConditionCheck{
+							TableName: aws.String(table),
+							Key: map[string]types.AttributeValue{
+								"PK": &types.AttributeValueMemberS{
+									Value: "<value>",
+								},
+							},
+							ConditionExpression: aws.String(
+								"attribute_exists(PK)",
+							),
+						},
+					},
+				}, nil
+			}
+
+			_, err := deps.Adaptor.HandleEvent(
+				t.Context(),
+				&ProjectionEventScopeStub{},
+				EventA1,
 			)
-			Expect(err).To(MatchError("<error>"))
+
+			if err == nil {
+				t.Fatal("expected an error")
+			}
+
+			var ex *types.TransactionCanceledException
+			if !errors.As(err, &ex) {
+				t.Fatalf("unexpected error: got %T(%s), want %T", err, err, ex)
+			}
+		})
+
+		t.Run("func Compact()", func(t *testing.T) {
+			t.Run("it forwards to the handler", func(t *testing.T) {
+				deps := setup(t)
+				want := errors.New("<error>")
+
+				deps.Handler.CompactFunc = func(
+					ctx context.Context,
+					c *dynamodb.Client,
+					s dogma.ProjectionCompactScope,
+				) error {
+					if c != client {
+						t.Fatalf("unexpected client: got %p, want %p", c, client)
+					}
+					return want
+				}
+
+				got := deps.Adaptor.Compact(
+					t.Context(),
+					&ProjectionCompactScopeStub{},
+				)
+
+				if got != want {
+					t.Fatalf("unexpected error: got %v, want %v", got, want)
+				}
+			})
 		})
 	})
-})
+}

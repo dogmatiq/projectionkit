@@ -9,53 +9,47 @@ import (
 	"github.com/dogmatiq/enginekit/protobuf/uuidpb"
 	"github.com/dogmatiq/projectionkit/internal/identity"
 	"go.etcd.io/bbolt"
+	"go.etcd.io/bbolt/errors"
 )
 
-// adaptor adapts a boltprojection.ProjectionMessageHandler to the
-// dogma.ProjectionMessageHandler interface.
+// adaptor wraps a [MessageHandler] to provide the
+// [dogma.ProjectionMessageHandler] interface.
 type adaptor struct {
-	db      *bbolt.DB
-	key     *uuidpb.UUID
-	handler MessageHandler
+	DB      *bbolt.DB
+	Handler MessageHandler
+
+	handlerKey [16]byte
 }
 
-// New returns a new Dogma projection message handler by binding a
-// BoltDB-specific projection handler to a BoltDB database.
-//
-// If db is nil the returned handler will return an error whenever an operation
-// that requires the database is performed.
+// New returns a new [dogma.ProjectionMessageHandler] that binds a
+// BoltDB-specific [MessageHandler] to a BoltDB database.
 func New(
 	db *bbolt.DB,
-	h MessageHandler,
+	handler MessageHandler,
 ) dogma.ProjectionMessageHandler {
 	return &adaptor{
-		db:      db,
-		key:     identity.Key(h),
-		handler: h,
+		DB:      db,
+		Handler: handler,
+
+		handlerKey: identity.Key(handler),
 	}
 }
 
-// Configure produces a configuration for this handler by calling methods on
-// the configurer c.
 func (a *adaptor) Configure(c dogma.ProjectionConfigurer) {
-	a.handler.Configure(c)
+	a.Handler.Configure(c)
 }
 
-// HandleEvent updates the projection to reflect the occurrence of an event.
 func (a *adaptor) HandleEvent(
 	ctx context.Context,
 	s dogma.ProjectionEventScope,
 	m dogma.Event,
 ) (uint64, error) {
-	id := uuidpb.MustParse(s.StreamID())
+	id := uuidpb.MustParseAsByteArray(s.StreamID())
 	var cp uint64
 
-	return cp, a.db.Update(func(tx *bbolt.Tx) error {
-		b, err := makeHandlerBucket(tx, a.key)
+	return cp, a.DB.Update(func(tx *bbolt.Tx) error {
+		b, err := makeBucketForHandler(tx, a.handlerKey)
 		if err != nil {
-			// CODE COVERAGE: This branch can not be easily covered without
-			// somehow breaking the BoltDB connection or the database file in
-			// some way.
 			return err
 		}
 
@@ -68,72 +62,101 @@ func (a *adaptor) HandleEvent(
 			return nil
 		}
 
-		if err := a.handler.HandleEvent(ctx, tx, s, m); err != nil {
+		if err := a.Handler.HandleEvent(ctx, tx, s, m); err != nil {
 			return err
 		}
 
 		cp = s.Offset() + 1
 
 		return b.Put(
-			id.AsBytes(),
+			id[:],
 			binary.BigEndian.AppendUint64(nil, cp),
 		)
 	})
 }
 
-// CheckpointOffset returns the offset at which the handler expects to
-// resume handling events from a specific stream.
 func (a *adaptor) CheckpointOffset(_ context.Context, id string) (uint64, error) {
 	var cp uint64
 
-	return cp, a.db.View(func(tx *bbolt.Tx) (err error) {
-		if b := handlerBucket(tx, a.key); b != nil {
-			cp, err = getCheckpointOffset(b, uuidpb.MustParse(id))
+	return cp, a.DB.View(func(tx *bbolt.Tx) (err error) {
+		if b := bucketForHandler(tx, a.handlerKey); b != nil {
+			cp, err = getCheckpointOffset(b, uuidpb.MustParseAsByteArray(id))
 		}
 		return err
 	})
 }
 
-// Compact reduces the size of the projection's data.
 func (a *adaptor) Compact(ctx context.Context, s dogma.ProjectionCompactScope) error {
-	return a.handler.Compact(ctx, a.db, s)
+	return a.Handler.Compact(ctx, a.DB, s)
+}
+
+func (a *adaptor) Reset(ctx context.Context, s dogma.ProjectionResetScope) error {
+	return a.DB.Update(func(tx *bbolt.Tx) error {
+		if err := a.Handler.Reset(ctx, tx, s); err != nil {
+			return err
+		}
+
+		return deleteBucketForHandler(tx, a.handlerKey)
+	})
 }
 
 var (
-	// topBucket is the bucket at the root level that contains all data related
-	// to projection checkpoint offsets.
-	topBucket = []byte("projection_checkpoint")
+	// checkpointBucket is the bucket at the root level that contains all data
+	// related to projection checkpoint offsets.
+	checkpointBucket = []byte("projection_checkpoint")
 )
 
-// makeHandlerBucket creates a bucket for the given handler key if it has not
-// been created yet.
+// makeBucketForHandler returns the bucket for storing checkpoint offsets for
+// the handler with the given key, creating it if it does not already exist.
 //
-// This function returns an error it tx is not writable.
-func makeHandlerBucket(tx *bbolt.Tx, hk *uuidpb.UUID) (*bbolt.Bucket, error) {
-	tb, err := tx.CreateBucketIfNotExists(topBucket)
+// It returns an error if the transaction is not writable.
+func makeBucketForHandler(tx *bbolt.Tx, hk [16]byte) (*bbolt.Bucket, error) {
+	b, err := tx.CreateBucketIfNotExists(checkpointBucket)
 	if err != nil {
-		// CODE COVERAGE: This branch can not be easily covered without somehow
-		// breaking the BoltDB connection or the database file in some way.
 		return nil, err
 	}
 
-	return tb.CreateBucketIfNotExists(hk.AsBytes())
+	return b.CreateBucketIfNotExists(hk[:])
 }
 
-// handlerBucket retrieves a bucket for the given handler key. If a bucket with
-// the given handler key does not exist, this function returns nil.
-func handlerBucket(tx *bbolt.Tx, hk *uuidpb.UUID) *bbolt.Bucket {
-	tb := tx.Bucket(topBucket)
-	if tb == nil {
+// bucketForHandler returns the bucket for storing checkpoint offsets for the
+// handler with the given key.
+//
+// It returns nil if the bucket does not exist.
+func bucketForHandler(tx *bbolt.Tx, hk [16]byte) *bbolt.Bucket {
+	b := tx.Bucket(checkpointBucket)
+	if b == nil {
 		return nil
 	}
 
-	return tb.Bucket(hk.AsBytes())
+	return b.Bucket(hk[:])
+}
+
+// deleteBucketForHandler deletes the bucket for storing checkpoint offsets for
+// the handler with the given key.
+//
+// It does nothing if the bucket does not exist.
+func deleteBucketForHandler(tx *bbolt.Tx, hk [16]byte) error {
+	b := tx.Bucket(checkpointBucket)
+	if b == nil {
+		return nil
+	}
+
+	err := b.DeleteBucket(hk[:])
+
+	if err == errors.ErrBucketNotFound {
+		return nil
+	}
+
+	return err
 }
 
 // getCheckpointOffset retrieves the checkpoint offset for a specific stream ID.
-func getCheckpointOffset(b *bbolt.Bucket, id *uuidpb.UUID) (uint64, error) {
-	switch data := b.Get(id.AsBytes()); len(data) {
+//
+// b is a handler-specific bucket returned by [makeBucketForHandler] or
+// [bucketForHandler].
+func getCheckpointOffset(b *bbolt.Bucket, id [16]byte) (uint64, error) {
+	switch data := b.Get(id[:]); len(data) {
 	case 0:
 		return 0, nil
 	case 8:

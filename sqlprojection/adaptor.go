@@ -6,62 +6,57 @@ import (
 
 	"github.com/dogmatiq/dogma"
 	"github.com/dogmatiq/enginekit/protobuf/uuidpb"
+	"github.com/dogmatiq/projectionkit/internal/identity"
 )
 
 // adaptor adapts an sqlprojection.ProjectionMessageHandler to the
 // [dogma.ProjectionMessageHandler] interface.
 type adaptor struct {
-	db      *sql.DB
-	key     *uuidpb.UUID
-	driver  Driver
-	handler MessageHandler
+	DB      *sql.DB
+	Driver  Driver
+	Handler MessageHandler
+
+	handlerKey [16]byte
 }
 
-// New returns a new Dogma projection message handler by binding an SQL-specific
-// projection handler to an SQL database.
-//
-// If db is nil the returned handler will return an error whenever an operation
-// that requires the database is performed.
-//
-// By default an appropriate Driver implementation is chosen from the built-in
-// drivers listed in the Drivers slice.
+// New returns a new [dogma.ProjectionMessageHandler] that binds an
+// SQL-specific [MessageHandler] to an SQL database.
 func New(
 	db *sql.DB,
 	d Driver,
 	h MessageHandler,
 ) dogma.ProjectionMessageHandler {
 	return &adaptor{
-		db:      db,
-		driver:  d,
-		handler: h,
+		DB:      db,
+		Driver:  d,
+		Handler: h,
+
+		handlerKey: identity.Key(h),
 	}
 }
 
-// Configure produces a configuration for this handler by calling methods on
-// the configurer c.
 func (a *adaptor) Configure(c dogma.ProjectionConfigurer) {
-	a.handler.Configure(c)
+	a.Handler.Configure(c)
 }
 
-// HandleEvent updates the projection to reflect the occurrence of an event.
 func (a *adaptor) HandleEvent(
 	ctx context.Context,
 	s dogma.ProjectionEventScope,
 	m dogma.Event,
 ) (uint64, error) {
-	tx, err := a.db.BeginTx(ctx, nil)
+	tx, err := a.DB.BeginTx(ctx, nil)
 	if err != nil {
 		return 0, err
 	}
 	defer tx.Rollback() // nolint:errcheck
 
-	id := uuidpb.MustParse(s.StreamID())
+	id := uuidpb.MustParseAsBytes(s.StreamID())
 	cp := s.Offset() + 1
 
-	ok, err := a.driver.UpdateCheckpointOffset(
+	ok, err := a.Driver.UpdateCheckpointOffset(
 		ctx,
 		tx,
-		a.key,
+		a.handlerKey[:],
 		id,
 		s.CheckpointOffset(),
 		cp,
@@ -71,32 +66,51 @@ func (a *adaptor) HandleEvent(
 	}
 
 	if ok {
-		if err := a.handler.HandleEvent(ctx, tx, s, m); err != nil {
+		if err := a.Handler.HandleEvent(ctx, tx, s, m); err != nil {
 			return 0, err
 		}
 		return cp, tx.Commit()
 	}
 
-	return a.driver.QueryCheckpointOffset(
+	return a.Driver.QueryCheckpointOffset(
 		ctx,
-		a.db,
-		a.key,
+		a.DB,
+		a.handlerKey[:],
 		id,
 	)
 }
 
-// CheckpointOffset returns the offset at which the handler expects to
-// resume handling events from a specific stream.
 func (a *adaptor) CheckpointOffset(ctx context.Context, id string) (uint64, error) {
-	return a.driver.QueryCheckpointOffset(
+	return a.Driver.QueryCheckpointOffset(
 		ctx,
-		a.db,
-		a.key,
-		uuidpb.MustParse(id),
+		a.DB,
+		a.handlerKey[:],
+		uuidpb.MustParseAsBytes(id),
 	)
 }
 
-// Compact reduces the size of the projection's data.
 func (a *adaptor) Compact(ctx context.Context, s dogma.ProjectionCompactScope) error {
-	return a.handler.Compact(ctx, a.db, s)
+	return a.Handler.Compact(ctx, a.DB, s)
+}
+
+func (a *adaptor) Reset(ctx context.Context, s dogma.ProjectionResetScope) error {
+	tx, err := a.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback() // nolint:errcheck
+
+	if err := a.Handler.Reset(ctx, tx, s); err != nil {
+		return err
+	}
+
+	if err := a.Driver.DeleteCheckpointOffsets(
+		ctx,
+		tx,
+		a.handlerKey[:],
+	); err != nil {
+		return err
+	}
+
+	return tx.Commit()
 }

@@ -3,8 +3,6 @@ package sqlprojection
 import (
 	"context"
 	"database/sql"
-
-	"github.com/dogmatiq/enginekit/protobuf/uuidpb"
 )
 
 // PostgresDriver is a Driver for PostgreSQL.
@@ -64,7 +62,7 @@ func (postgresDriver) DropSchema(ctx context.Context, db *sql.DB) error {
 func (postgresDriver) QueryCheckpointOffset(
 	ctx context.Context,
 	db *sql.DB,
-	h, s *uuidpb.UUID,
+	h, s []byte,
 ) (uint64, error) {
 	row := db.QueryRowContext(
 		ctx,
@@ -72,8 +70,8 @@ func (postgresDriver) QueryCheckpointOffset(
 		FROM projection.checkpoint
 		WHERE handler = projection.bytea_to_uuid($1)
 		AND stream = projection.bytea_to_uuid($2)`,
-		h.AsBytes(),
-		s.AsBytes(),
+		h,
+		s,
 	)
 
 	var cp uint64
@@ -86,10 +84,10 @@ func (postgresDriver) QueryCheckpointOffset(
 	return cp, err
 }
 
-func (d postgresDriver) UpdateCheckpointOffset(
+func (postgresDriver) UpdateCheckpointOffset(
 	ctx context.Context,
 	tx *sql.Tx,
-	h, s *uuidpb.UUID,
+	h, s []byte,
 	c, n uint64,
 ) (bool, error) {
 	// If the "current" checkpoint offset is zero, we assumed it's correct and
@@ -106,8 +104,8 @@ func (d postgresDriver) UpdateCheckpointOffset(
 				projection.bytea_to_uuid($2),
 				$3
 			) ON CONFLICT DO NOTHING`,
-			h.AsBytes(),
-			s.AsBytes(),
+			h,
+			s,
 			n,
 		)
 		if err != nil {
@@ -133,17 +131,31 @@ func (d postgresDriver) UpdateCheckpointOffset(
 		AND stream = projection.bytea_to_uuid($3)
 		AND checkpoint_offset = $4`,
 		n,
-		h.AsBytes(),
-		s.AsBytes(),
+		h,
+		s,
 		c,
 	)
 
 	if err != nil {
-		// CODE COVERAGE: This branch can not be easily covered without somehow
-		// breaking the SQL connection or the schema in some way.
 		return false, err
 	}
 
 	count, err := res.RowsAffected()
 	return count != 0, err
+}
+
+// DeleteCheckpointOffsets deletes all checkpoint offsets for a specific
+// handler.
+func (postgresDriver) DeleteCheckpointOffsets(
+	ctx context.Context,
+	tx *sql.Tx,
+	h []byte,
+) error {
+	_, err := tx.ExecContext(
+		ctx,
+		`DELETE FROM projection.checkpoint
+		WHERE handler = $1`,
+		h,
+	)
+	return err
 }
