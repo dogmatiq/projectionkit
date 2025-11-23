@@ -11,6 +11,18 @@ The format is based on [Keep a Changelog], and this project adheres to
 [semantic versioning]: https://semver.org/spec/v2.0.0.html
 [bc]: https://github.com/dogmatiq/.github/blob/main/VERSIONING.md#changelogs
 
+## [Unreleased]
+
+### Changed
+
+This release updates projectionkit for compatibility with Dogma v0.18.0.
+
+- **[BC]** Added `boltprojection.MessageHandler.Reset()`.
+- **[BC]** Added `dynamoprojection.MessageHandler.Reset()`.
+- **[BC]** Added `sqlprojection.MessageHandler.Reset()`.
+- **[BC]** Changed table definition used by `dynamoprojection` to allow
+  efficient querying of all checkpoint offsets for a specific projection.
+
 ## [0.8.0] - 2025-09-19
 
 ### Changed

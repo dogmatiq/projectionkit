@@ -4,128 +4,148 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
-	"time"
+	"testing"
 
 	"github.com/dogmatiq/dogma"
-	"github.com/dogmatiq/enginekit/enginetest/stubs"
 	. "github.com/dogmatiq/enginekit/enginetest/stubs"
-	"github.com/dogmatiq/projectionkit/internal/adaptortest"
-	"github.com/dogmatiq/projectionkit/internal/identity"
+	"github.com/dogmatiq/projectionkit/internal/handlertest"
 	. "github.com/dogmatiq/projectionkit/sqlprojection"
 	"github.com/dogmatiq/projectionkit/sqlprojection/internal/fixtures" // can't dot-import due to conflict
-	"github.com/dogmatiq/sqltest"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("type adaptor", func() {
-	var handler *fixtures.MessageHandler
-
-	BeforeEach(func() {
-		handler = &fixtures.MessageHandler{}
-		handler.ConfigureFunc = func(c dogma.ProjectionConfigurer) {
-			c.Identity("<projection>", "26902c80-a1b8-43d1-99ae-ea5651656e63")
-		}
+func runTests(
+	t *testing.T,
+	driverName, dsn string,
+	driver Driver,
+) {
+	db, err := sql.Open(driverName, dsn)
+	if err != nil {
+		t.Fatalf("cannot open test database: %s", err)
+	}
+	t.Cleanup(func() {
+		db.Close()
 	})
 
-	for _, pair := range sqltest.CompatiblePairs() {
-		pair := pair // capture loop variable
+	setup := func(t *testing.T) (deps struct {
+		Handler *fixtures.MessageHandler
+		Adaptor dogma.ProjectionMessageHandler
+	}) {
+		t.Helper()
 
-		When(
-			fmt.Sprintf(
-				"using %s with the '%s' driver",
-				pair.Product.Name(),
-				pair.Driver.Name(),
-			),
-			func() {
-				var (
-					ctx      context.Context
-					driver   Driver
-					cancel   context.CancelFunc
-					database *sqltest.Database
-					db       *sql.DB
-					adaptor  dogma.ProjectionMessageHandler
-				)
+		if err := driver.CreateSchema(t.Context(), db); err != nil {
+			t.Fatalf("cannot create schema: %s", err)
+		}
 
-				BeforeEach(func() {
-					var err error
-					driver, err = selectDriver(pair)
-					Expect(err).ShouldNot(HaveOccurred())
+		t.Cleanup(func() {
+			if err := driver.DropSchema(context.Background(), db); err != nil {
+				t.Fatalf("cannot drop schema: %s", err)
+			}
+		})
 
-					ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
-
-					database, err = sqltest.NewDatabase(ctx, pair.Driver, pair.Product)
-					Expect(err).ShouldNot(HaveOccurred())
-
-					db, err = database.Open()
-					Expect(err).ShouldNot(HaveOccurred())
-
-					err = driver.CreateSchema(ctx, db)
-					Expect(err).ShouldNot(HaveOccurred())
-
-					adaptor = New(db, driver, handler)
-				})
-
-				AfterEach(func() {
-					err := driver.DropSchema(ctx, db)
-					Expect(err).ShouldNot(HaveOccurred())
-
-					err = database.Close()
-					Expect(err).ShouldNot(HaveOccurred())
-
-					cancel()
-				})
-
-				adaptortest.DescribeAdaptor(&ctx, &adaptor)
-
-				Describe("func Configure()", func() {
-					It("forwards to the handler", func() {
-						Expect(identity.Key(adaptor).AsString()).To(Equal("26902c80-a1b8-43d1-99ae-ea5651656e63"))
-					})
-				})
-
-				Describe("func HandleEvent()", func() {
-					It("returns an error if the application's message handler fails", func() {
-						terr := errors.New("handle event test error")
-
-						handler.HandleEventFunc = func(
-							context.Context,
-							*sql.Tx,
-							dogma.ProjectionEventScope,
-							dogma.Event,
-						) error {
-							return terr
-						}
-
-						_, err := adaptor.HandleEvent(
-							context.Background(),
-							&stubs.ProjectionEventScopeStub{},
-							EventA1,
-						)
-						Expect(err).Should(HaveOccurred())
-					})
-				})
-
-				Describe("func Compact()", func() {
-					It("forwards to the handler", func() {
-						handler.CompactFunc = func(
-							_ context.Context,
-							d *sql.DB,
-							_ dogma.ProjectionCompactScope,
-						) error {
-							Expect(d).To(BeIdenticalTo(db))
-							return errors.New("<error>")
-						}
-
-						err := adaptor.Compact(
-							context.Background(),
-							nil, // scope
-						)
-						Expect(err).To(MatchError("<error>"))
-					})
-				})
+		deps.Handler = &fixtures.MessageHandler{
+			ConfigureFunc: func(c dogma.ProjectionConfigurer) {
+				c.Identity("<projection>", handlertest.IdentityKey)
 			},
-		)
+		}
+
+		deps.Adaptor = New(db, driver, deps.Handler)
+
+		return deps
 	}
-})
+
+	handlertest.Run(
+		t,
+		func(t *testing.T) dogma.ProjectionMessageHandler {
+			return setup(t).Adaptor
+		},
+	)
+
+	t.Run("func HandleEvent()", func(t *testing.T) {
+		t.Run("it forwards to the handler", func(t *testing.T) {
+			deps := setup(t)
+			want := errors.New("<error>")
+
+			deps.Handler.HandleEventFunc = func(
+				context.Context,
+				*sql.Tx,
+				dogma.ProjectionEventScope,
+				dogma.Event,
+			) error {
+				return want
+			}
+
+			_, got := deps.Adaptor.HandleEvent(
+				t.Context(),
+				&ProjectionEventScopeStub{},
+				EventA1,
+			)
+
+			if got != want {
+				t.Fatalf("unexpected error: got %v, want %v", got, want)
+			}
+		})
+	})
+
+	t.Run("func Compact()", func(t *testing.T) {
+		t.Run("it forwards to the handler", func(t *testing.T) {
+			deps := setup(t)
+			want := errors.New("<error>")
+
+			deps.Handler.CompactFunc = func(
+				_ context.Context,
+				d *sql.DB,
+				_ dogma.ProjectionCompactScope,
+			) error {
+				if d != db {
+					t.Fatal("received unexpected db instance")
+				}
+				return want
+			}
+
+			got := deps.Adaptor.Compact(
+				t.Context(),
+				&ProjectionCompactScopeStub{},
+			)
+
+			if got != want {
+				t.Fatalf("unexpected error: got %v, want %v", got, want)
+			}
+		})
+	})
+
+	t.Run("schema management", func(t *testing.T) {
+		t.Run("func CreateSchema()", func(t *testing.T) {
+			t.Run("it can be called when the schema already exists", func(t *testing.T) {
+				if err := driver.CreateSchema(t.Context(), db); err != nil {
+					t.Fatalf("unable to create schema the first time: %s", err)
+				}
+
+				if err := driver.CreateSchema(t.Context(), db); err != nil {
+					t.Fatalf("unable to create schema the second time: %s", err)
+				}
+			})
+		})
+
+		t.Run("func DropSchema()", func(t *testing.T) {
+			t.Run("it can be called when the schema does not exist", func(t *testing.T) {
+				if err := driver.DropSchema(t.Context(), db); err != nil {
+					t.Fatal(err)
+				}
+			})
+
+			t.Run("it can be called when the schema has already been dropped", func(t *testing.T) {
+				if err := driver.CreateSchema(t.Context(), db); err != nil {
+					t.Fatalf("unable to create schema: %s", err)
+				}
+
+				if err := driver.DropSchema(t.Context(), db); err != nil {
+					t.Fatalf("unable to drop schema the first time: %s", err)
+				}
+
+				if err := driver.DropSchema(t.Context(), db); err != nil {
+					t.Fatalf("unable to drop schema the second time: %s", err)
+				}
+			})
+		})
+	})
+}

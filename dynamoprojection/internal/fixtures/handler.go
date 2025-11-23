@@ -13,25 +13,18 @@ type MessageHandler struct {
 	ConfigureFunc   func(c dogma.ProjectionConfigurer)
 	HandleEventFunc func(ctx context.Context, s dogma.ProjectionEventScope, m dogma.Event) ([]types.TransactWriteItem, error)
 	CompactFunc     func(context.Context, *dynamodb.Client, dogma.ProjectionCompactScope) error
+	ResetFunc       func(context.Context, dogma.ProjectionResetScope) ([]types.TransactWriteItem, error)
 }
 
-// Configure configures the behavior of the engine as it relates to this
-// handler.
-//
-// c provides access to the various configuration options, such as specifying
-// which types of event messages are routed to this handler.
-//
-// If h.ConfigureFunc is non-nil, it calls h.ConfigureFunc(c).
+// Configure declares the handler's configuration by calling methods on c.
 func (h *MessageHandler) Configure(c dogma.ProjectionConfigurer) {
 	if h.ConfigureFunc != nil {
 		h.ConfigureFunc(c)
 	}
 }
 
-// HandleEvent handles a domain event message that has been routed to this
-// handler.
-//
-// If h.HandleEventFunc is non-nil it returns h.HandleEventFunc(ctx, s, m).
+// HandleEvent updates the projection to reflect the occurrence of an
+// [Event].
 func (h *MessageHandler) HandleEvent(
 	ctx context.Context,
 	s dogma.ProjectionEventScope,
@@ -40,18 +33,21 @@ func (h *MessageHandler) HandleEvent(
 	if h.HandleEventFunc != nil {
 		return h.HandleEventFunc(ctx, s, m)
 	}
-
 	return nil, nil
 }
 
-// Compact reduces the size of the projection's data.
-//
-// If h.CompactFunc is non-nil it returns h.CompactFunc(ctx,db,s), otherwise it
-// returns nil.
+// Compact reduces the projection's size by removing or consolidating data.
 func (h *MessageHandler) Compact(ctx context.Context, client *dynamodb.Client, s dogma.ProjectionCompactScope) error {
 	if h.CompactFunc != nil {
 		return h.CompactFunc(ctx, client, s)
 	}
-
 	return nil
+}
+
+// Reset clears all projection data.
+func (h *MessageHandler) Reset(ctx context.Context, s dogma.ProjectionResetScope) ([]types.TransactWriteItem, error) {
+	if h.ResetFunc != nil {
+		return h.ResetFunc(ctx, s)
+	}
+	return nil, nil
 }

@@ -3,8 +3,6 @@ package sqlprojection
 import (
 	"context"
 	"database/sql"
-
-	"github.com/dogmatiq/enginekit/protobuf/uuidpb"
 )
 
 // Driver is an interface for database-specific projection drivers.
@@ -20,7 +18,7 @@ type Driver interface {
 	QueryCheckpointOffset(
 		ctx context.Context,
 		db *sql.DB,
-		h, s *uuidpb.UUID,
+		h, s []byte,
 	) (uint64, error)
 
 	// UpdateCheckpointOffset updates the checkpoint offset for a specific
@@ -30,7 +28,15 @@ type Driver interface {
 	UpdateCheckpointOffset(
 		ctx context.Context,
 		tx *sql.Tx,
-		h, s *uuidpb.UUID,
+		h, s []byte,
 		c, n uint64,
 	) (bool, error)
+
+	// DeleteCheckpointOffsets deletes all checkpoint offsets for a specific
+	// handler.
+	DeleteCheckpointOffsets(
+		ctx context.Context,
+		tx *sql.Tx,
+		h []byte,
+	) error
 }

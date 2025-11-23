@@ -3,8 +3,6 @@ package sqlprojection
 import (
 	"context"
 	"database/sql"
-
-	"github.com/dogmatiq/enginekit/protobuf/uuidpb"
 )
 
 // MySQLDriver is a Driver for MySQL.
@@ -37,7 +35,7 @@ func (mysqlDriver) DropSchema(ctx context.Context, db *sql.DB) error {
 func (mysqlDriver) QueryCheckpointOffset(
 	ctx context.Context,
 	db *sql.DB,
-	h, s *uuidpb.UUID,
+	h, s []byte,
 ) (uint64, error) {
 	row := db.QueryRowContext(
 		ctx,
@@ -45,8 +43,8 @@ func (mysqlDriver) QueryCheckpointOffset(
 		FROM projection_checkpoint
 		WHERE handler = ?
 		AND stream = ?`,
-		h.AsBytes(),
-		s.AsBytes(),
+		h,
+		s,
 	)
 
 	var cp uint64
@@ -59,10 +57,10 @@ func (mysqlDriver) QueryCheckpointOffset(
 	return cp, err
 }
 
-func (d mysqlDriver) UpdateCheckpointOffset(
+func (mysqlDriver) UpdateCheckpointOffset(
 	ctx context.Context,
 	tx *sql.Tx,
-	h, s *uuidpb.UUID,
+	h, s []byte,
 	c, n uint64,
 ) (bool, error) {
 	// If the "current" checkpoint offset is zero, we assumed it's correct and
@@ -80,8 +78,8 @@ func (d mysqlDriver) UpdateCheckpointOffset(
 				?
 			) ON DUPLICATE KEY UPDATE
 				handler = handler`, // do nothing
-			h.AsBytes(),
-			s.AsBytes(),
+			h,
+			s,
 			n,
 		)
 		if err != nil {
@@ -107,17 +105,31 @@ func (d mysqlDriver) UpdateCheckpointOffset(
 		AND stream = ?
 		AND checkpoint_offset = ?`,
 		n,
-		h.AsBytes(),
-		s.AsBytes(),
+		h,
+		s,
 		c,
 	)
 
 	if err != nil {
-		// CODE COVERAGE: This branch can not be easily covered without somehow
-		// breaking the SQL connection or the schema in some way.
 		return false, err
 	}
 
 	count, err := res.RowsAffected()
 	return count != 0, err
+}
+
+// DeleteCheckpointOffsets deletes all checkpoint offsets for a specific
+// handler.
+func (mysqlDriver) DeleteCheckpointOffsets(
+	ctx context.Context,
+	tx *sql.Tx,
+	h []byte,
+) error {
+	_, err := tx.ExecContext(
+		ctx,
+		`DELETE FROM projection_checkpoint
+		WHERE handler = ?`,
+		h,
+	)
+	return err
 }

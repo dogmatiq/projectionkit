@@ -1,18 +1,26 @@
 package boltprojection_test
 
 import (
-	"context"
 	"testing"
 
+	"github.com/dogmatiq/dogma"
 	. "github.com/dogmatiq/projectionkit/boltprojection"
 )
 
-func TestNoCompactBehavior_Compact_ReturnsNil(t *testing.T) {
+func TestNoCompactBehavior(t *testing.T) {
 	var v NoCompactBehavior
 
-	err := v.Compact(context.Background(), nil, nil)
-
+	err := v.Compact(t.Context(), nil, nil)
 	if err != nil {
 		t.Fatal("unexpected error returned")
+	}
+}
+
+func TestNoResetBehavior(t *testing.T) {
+	var v NoResetBehavior
+
+	err := v.Reset(t.Context(), nil, nil)
+	if err != dogma.ErrNotSupported {
+		t.Fatalf("unexpected error: got %v, want %v", err, dogma.ErrNotSupported)
 	}
 }

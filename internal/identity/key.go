@@ -6,10 +6,10 @@ import (
 )
 
 // Key returns a handler's unique key.
-func Key(h configurable) *uuidpb.UUID {
+func Key(h configurable) [16]byte {
 	var c configurer
 	h.Configure(&c)
-	return uuidpb.MustParse(c.key)
+	return uuidpb.MustParseAsByteArray(c.key)
 }
 
 var _ dogma.ProjectionConfigurer = (*configurer)(nil)
