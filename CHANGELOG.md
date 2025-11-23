@@ -13,15 +13,20 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 ## [Unreleased]
 
-### Changed
+### Added
 
 This release updates projectionkit for compatibility with Dogma v0.18.0.
 
-- **[BC]** Added `boltprojection.MessageHandler.Reset()`.
-- **[BC]** Added `dynamoprojection.MessageHandler.Reset()`.
-- **[BC]** Added `sqlprojection.MessageHandler.Reset()`.
-- **[BC]** Changed table definition used by `dynamoprojection` to allow
-  efficient querying of all checkpoint offsets for a specific projection.
+- **[BC]** Added `boltprojection.MessageHandler.Reset()` and `NoResetBehavior`.
+- **[BC]** Added `dynamoprojection.MessageHandler.Reset()` and `NoResetBehavior`.
+- **[BC]** Added `sqlprojection.MessageHandler.Reset()` and `NoResetBehavior`.
+
+### Changed
+
+- **[BC]** Changed indices used by `dynamoprojection` to allow efficient
+  querying of all checkpoint offsets for a specific projection. The new index
+  structure is not compatible with the table definition from prior versions,
+  existing projections must be rebuilt.
 
 ## [0.8.0] - 2025-09-19
 

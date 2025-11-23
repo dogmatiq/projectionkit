@@ -1,20 +1,32 @@
 package dynamoprojection_test
 
 import (
-	"context"
+	"testing"
 
+	"github.com/dogmatiq/dogma"
+	. "github.com/dogmatiq/enginekit/enginetest/stubs"
 	. "github.com/dogmatiq/projectionkit/dynamoprojection"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("NoCompactBehavior", func() {
-	When("Compact() is called", func() {
-		It("returns nil", func() {
-			var v NoCompactBehavior
+func TestNoCompactBehavior(t *testing.T) {
+	var v NoCompactBehavior
 
-			err := v.Compact(context.Background(), nil, nil)
-			Expect(err).ShouldNot(HaveOccurred())
-		})
-	})
-})
+	if err := v.Compact(
+		t.Context(),
+		nil, // client
+		&ProjectionCompactScopeStub{},
+	); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestNoResetBehavior(t *testing.T) {
+	var v NoResetBehavior
+
+	if _, err := v.Reset(
+		t.Context(),
+		&ProjectionResetScopeStub{},
+	); err != dogma.ErrNotSupported {
+		t.Fatalf("unexpected error: got %v, want %v", err, dogma.ErrNotSupported)
+	}
+}

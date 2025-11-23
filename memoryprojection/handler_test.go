@@ -1,18 +1,19 @@
 package memoryprojection_test
 
 import (
+	"testing"
+
+	. "github.com/dogmatiq/enginekit/enginetest/stubs"
 	. "github.com/dogmatiq/projectionkit/memoryprojection"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("NoCompactBehavior", func() {
-	When("Compact() is called", func() {
-		It("returns nil", func() {
-			var v NoCompactBehavior[any]
+func TestNoCompactBehavior(t *testing.T) {
+	var v NoCompactBehavior[int]
 
-			err := v.Compact(nil, nil)
-			Expect(err).ShouldNot(HaveOccurred())
-		})
-	})
-})
+	if value := v.Compact(
+		123,
+		&ProjectionCompactScopeStub{},
+	); value != 123 {
+		t.Fatalf("unexpected value: got %v, want %v", value, 123)
+	}
+}

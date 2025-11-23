@@ -150,16 +150,6 @@ func (a *adaptor) makeDeleteOperation(item map[string]types.AttributeValue) type
 				handlerKeyAttr: &a.handlerKeyAttr,
 				streamIDAttr:   item[streamIDAttr],
 			},
-			ExpressionAttributeNames: map[string]string{
-				"#O": offsetAttr,
-			},
-			ExpressionAttributeValues: map[string]types.AttributeValue{
-				":P": item[offsetAttr],
-			},
-
-			// Fail if the record does not exist, or exists with a different
-			// checkpoint offset, so we can detect an OCC conflict.
-			ConditionExpression: aws.String(`attribute_exists(#O) AND #O = :P`),
 		},
 	}
 }

@@ -3,13 +3,13 @@ package dynamoprojection
 import (
 	"context"
 	"errors"
-	"slices"
 	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/dogmatiq/dogma"
 	"github.com/dogmatiq/enginekit/protobuf/uuidpb"
+	"github.com/dogmatiq/projectionkit/dynamoprojection/internal/dynamox"
 	"github.com/dogmatiq/projectionkit/internal/awsx"
 	"github.com/dogmatiq/projectionkit/internal/identity"
 	"github.com/dogmatiq/projectionkit/internal/syncx"
@@ -122,7 +122,7 @@ func (a *adaptor) HandleEvent(
 		&req.Transaction,
 	)
 
-	if isOCCConflict(err, 1) {
+	if isOCCConflict(err) {
 		return a.checkpointOffset(ctx, req)
 	}
 
@@ -169,39 +169,41 @@ func (a *adaptor) Reset(ctx context.Context, s dogma.ProjectionResetScope) error
 	req := a.acquireRequests()
 	defer a.releaseRequests(req)
 
-	out, err := awsx.Do(
+	if err := dynamox.QueryRange(
 		ctx,
-		a.Client.Query,
+		a.Client,
 		a.OnRequest,
 		&req.GetOffsets,
-	)
-	if err != nil {
+		func(
+			_ context.Context,
+			item map[string]types.AttributeValue,
+		) (bool, error) {
+			req.Transaction.TransactItems = append(
+				req.Transaction.TransactItems,
+				a.makeDeleteOperation(item),
+			)
+			return true, nil
+		},
+	); err != nil {
 		if isTableNotFound(err) {
-			// If the table used to track offsets does not exist, we can't have
-			// handled any events yet, so there is nothing to reset.
+			// If the table used to track offsets does not exist, there is
+			// nothing to reset.
 			return nil
 		}
 
 		return err
 	}
 
-	if len(out.Items) == 0 {
+	if len(req.Transaction.TransactItems) == 0 {
 		return nil
 	}
 
-	req.Transaction.TransactItems, err = a.Handler.Reset(ctx, s)
+	items, err := a.Handler.Reset(ctx, s)
 	if err != nil {
 		return err
 	}
 
-	req.Transaction.TransactItems = slices.Grow(req.Transaction.TransactItems, len(out.Items))
-
-	for _, item := range out.Items {
-		req.Transaction.TransactItems = append(
-			req.Transaction.TransactItems,
-			a.makeDeleteOperation(item),
-		)
-	}
+	req.Transaction.TransactItems = append(req.Transaction.TransactItems, items...)
 
 	_, err = awsx.Do(
 		ctx,
@@ -215,28 +217,18 @@ func (a *adaptor) Reset(ctx context.Context, s dogma.ProjectionResetScope) error
 
 // isOCCConflict determines if the error from a DynamoDB transaction is caused
 // by the conflict in checkpoint table.
-//
-// n is the number of items at the end of the slice transaction's slice of
-// [types.TransactWriteItem] values that are used to manipulate checkpoint
-// offsets. It is assumed that any items before this point were produced by the
-// application's projection handler.
-func isOCCConflict(err error, n int) bool {
+func isOCCConflict(err error) bool {
 	var x *types.TransactionCanceledException
 
 	if !errors.As(err, &x) {
 		return false
 	}
 
-	index := len(x.CancellationReasons) - n
-	reasons := x.CancellationReasons[index:]
+	index := len(x.CancellationReasons) - 1
+	reason := x.CancellationReasons[index]
 
-	for _, reason := range reasons {
-		if reason.Code != nil && *reason.Code == "ConditionalCheckFailed" {
-			return true
-		}
-	}
-
-	return false
+	return reason.Code != nil &&
+		*reason.Code == "ConditionalCheckFailed"
 }
 
 // isTableNotFound determines if the error from a DynamoDB operation is caused

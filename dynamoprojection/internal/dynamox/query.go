@@ -51,30 +51,3 @@ func query(
 		in.ExclusiveStartKey = out.LastEvaluatedKey
 	}
 }
-
-// QueryOne executes a query and calls fn for the first item in the result set.
-func QueryOne(
-	ctx context.Context,
-	client *dynamodb.Client,
-	m func(any) []func(*dynamodb.Options),
-	in *dynamodb.QueryInput,
-	fn func(context.Context, map[string]types.AttributeValue) error,
-) (bool, error) {
-	if in.Limit == nil || *in.Limit != 1 {
-		panic("QueryOne() requires a query input with a limit of 1")
-	}
-
-	ok := false
-	err := query(
-		ctx,
-		client,
-		m,
-		in,
-		func(ctx context.Context, item map[string]types.AttributeValue) (bool, error) {
-			ok = true
-			return false, fn(ctx, item)
-		},
-	)
-
-	return ok, err
-}
