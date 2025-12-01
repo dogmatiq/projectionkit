@@ -10,7 +10,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.2
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.53.2
 	github.com/dogmatiq/dogma v0.18.0
-	github.com/dogmatiq/enginekit v0.19.7
+	github.com/dogmatiq/enginekit v0.19.8
 	github.com/go-sql-driver/mysql v1.9.3
 	github.com/jackc/pgx/v5 v5.5.4
 	github.com/mattn/go-sqlite3 v1.14.32
