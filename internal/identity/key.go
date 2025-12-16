@@ -22,6 +22,7 @@ type configurer struct {
 	key string
 }
 
-func (c *configurer) Identity(_ string, key string)   { c.key = key }
-func (c *configurer) Routes(...dogma.ProjectionRoute) {}
-func (c *configurer) Disable(...dogma.DisableOption)  {}
+func (c *configurer) Identity(_ string, key string)                     { c.key = key }
+func (c *configurer) Routes(...dogma.ProjectionRoute)                   {}
+func (c *configurer) Disable(...dogma.DisableOption)                    {}
+func (c *configurer) ConcurrencyPreference(dogma.ConcurrencyPreference) {}
