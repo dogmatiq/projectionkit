@@ -10,7 +10,7 @@ require (
 	github.com/dogmatiq/dogma v0.19.0
 	github.com/dogmatiq/enginekit v0.19.19
 	github.com/go-sql-driver/mysql v1.9.3
-	github.com/jackc/pgx/v5 v5.7.6
+	github.com/jackc/pgx/v5 v5.8.0
 	github.com/mattn/go-sqlite3 v1.14.33
 	github.com/testcontainers/testcontainers-go v0.40.0
 	github.com/testcontainers/testcontainers-go/modules/dynamodb v0.40.0
