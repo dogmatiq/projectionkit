@@ -14,7 +14,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.34
 	github.com/testcontainers/testcontainers-go v0.41.0
 	github.com/testcontainers/testcontainers-go/modules/dynamodb v0.41.0
-	github.com/testcontainers/testcontainers-go/modules/mariadb v0.40.0
+	github.com/testcontainers/testcontainers-go/modules/mariadb v0.41.0
 	github.com/testcontainers/testcontainers-go/modules/mysql v0.41.0
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.41.0
 	go.etcd.io/bbolt v1.4.3
