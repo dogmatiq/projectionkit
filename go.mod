@@ -15,7 +15,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.42.0
 	github.com/testcontainers/testcontainers-go/modules/dynamodb v0.41.0
 	github.com/testcontainers/testcontainers-go/modules/mariadb v0.42.0
-	github.com/testcontainers/testcontainers-go/modules/mysql v0.41.0
+	github.com/testcontainers/testcontainers-go/modules/mysql v0.42.0
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.42.0
 	go.etcd.io/bbolt v1.4.3
 )
