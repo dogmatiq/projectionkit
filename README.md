@@ -29,8 +29,3 @@ the lower-level `dogma.ProjectionMessageHandler` interface.
 
 - [openCypher](http://opencypher.org), implemented by [Amazon Neptune](https://aws.amazon.com/neptune/), [Neo4j](https://neo4j.com/), etc (in progress)
 - Replicated in-memory projections (planned)
-
-## Testing
-
-This project's tests depend on the Docker stack provided by
-[`dogmatiq/sqltest`](https://github.com/dogmatiq/sqltest#readme).
