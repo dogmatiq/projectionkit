@@ -22,12 +22,12 @@ github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.35 h1:WK6CjihTuLisCjSKKb
 github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.35/go.mod h1:KYleN57luLoe97R7vTnx8PMcVrr9gAcRECtOjl91DNg=
 github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.36 h1:jbGY4CXLzZElOXgGsexlC3Hi+3YM0rSmk4opFXKqg/k=
 github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.36/go.mod h1:uBu/9aKsS/UQGc72RAt3y54kjgYQxmhut8ZD2dXCDNE=
-github.com/aws/aws-sdk-go-v2/service/dynamodb v1.62.3 h1:DpQEvokO8q/qgifYKBXsDGSjng+j5JG0A4s75T4u1xs=
-github.com/aws/aws-sdk-go-v2/service/dynamodb v1.62.3/go.mod h1:8HkdFkH/KcxfnzNYPtHibUZEejby7hwbqDUAoytEKZE=
+github.com/aws/aws-sdk-go-v2/service/dynamodb v1.63.1 h1:QKBYxujKuCD0QwBfqmrgnuzORIg4r8ODr53bIYI/7lQ=
+github.com/aws/aws-sdk-go-v2/service/dynamodb v1.63.1/go.mod h1:ygCTS0/CdRkdwVDKMq1yo0NNsKR1cQCGPDP1iY78FRY=
 github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.15 h1:JJLBQxwY+AFwuPAi5ivGc1ChnTdUt4cXMv7e76m2c/Y=
 github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.15/go.mod h1:lQknBIe78MVL0cQOQDlag8KGflMbMEVFx9mB6O8ENvk=
-github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.12.11 h1:K9HW1EvC/jJ1mDkxJD+AnWHDGyxT8JBysgUpvHYlqrU=
-github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.12.11/go.mod h1:T1v0shPqzAuWdUfLc99+9B5EL5IVnjlGLFxpq9JABkk=
+github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.12.12 h1:JiBaijClgXE98o7qCTU3wXvLY2ht3mbbXUfEV6oP3LY=
+github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.12.12/go.mod h1:2jd+Rjsg3BeToVNAJT2l2FQ4FQt8nd3488jydlmB82E=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.35 h1:BBEElKh4a+rKshvjrfpajTe9CbpZvrbb4Jkg2PB7RzA=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.35/go.mod h1:zaZk983w//8beSruBVec/mr4CmDwgZitW/qzGhAAX0g=
 github.com/aws/aws-sdk-go-v2/service/signin v1.5.4 h1:cOJELVNrq5Q3Udry2GLuHUM7MhwpeaQRdYaoa6GI/yI=
