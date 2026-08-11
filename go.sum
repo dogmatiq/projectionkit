@@ -160,8 +160,8 @@ github.com/testcontainers/testcontainers-go/modules/dynamodb v0.43.0 h1:87z8Z3Sb
 github.com/testcontainers/testcontainers-go/modules/dynamodb v0.43.0/go.mod h1:vDtZ1c4HyTRPMOZENCpiQTnWkUUR9pNrflzkcQkGmfI=
 github.com/testcontainers/testcontainers-go/modules/mariadb v0.44.0 h1:tiQ6mPa+Q1Cp79xXxKxy0EDftUvrsGulYEYFbPc6H7g=
 github.com/testcontainers/testcontainers-go/modules/mariadb v0.44.0/go.mod h1:tepyUQIx4NyelTgbCvnf/C1IuKbG2L99DLKlVBAfc9I=
-github.com/testcontainers/testcontainers-go/modules/mysql v0.43.0 h1:AaHaJoMolGB4Y5Q06bRYQSOCR3n1WE7iIFZJW1M9TG0=
-github.com/testcontainers/testcontainers-go/modules/mysql v0.43.0/go.mod h1:EBP0BV3X80GE0muSleZ43AbRT625mzGCic1P1zntNLc=
+github.com/testcontainers/testcontainers-go/modules/mysql v0.44.0 h1:oJPJPxNE6YQ0zlq6mZKh06JOlyimCky4ruQUimdDet4=
+github.com/testcontainers/testcontainers-go/modules/mysql v0.44.0/go.mod h1:MSOAU6ukCpehJVHQDN1k9JgOZXZuqHD+2pT20M3JkIg=
 github.com/testcontainers/testcontainers-go/modules/postgres v0.43.0 h1:ShNOFYAF4lKHvdIG258hi69bSxC88uXnxJkJvNs/IVs=
 github.com/testcontainers/testcontainers-go/modules/postgres v0.43.0/go.mod h1:vdq5/RqmGfWeefzyfcVI/pID1rzmc1TDvqXa15bPJks=
 github.com/tklauser/go-sysconf v0.4.0 h1:7H0uAN+7RkwWRaxhYXDLqa5V3LPrJeV8wmD9dRUgPQU=
