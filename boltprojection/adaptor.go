@@ -6,8 +6,8 @@ import (
 	"fmt"
 
 	"github.com/dogmatiq/dogma"
-	"github.com/dogmatiq/enginekit/protobuf/uuidpb"
 	"github.com/dogmatiq/projectionkit/internal/identity"
+	"github.com/dogmatiq/protobuf/uuidpb"
 	"go.etcd.io/bbolt"
 	"go.etcd.io/bbolt/errors"
 )

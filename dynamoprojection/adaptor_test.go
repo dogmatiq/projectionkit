@@ -12,11 +12,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/dogmatiq/dogma"
 	. "github.com/dogmatiq/enginekit/enginetest/stubs"
-	"github.com/dogmatiq/enginekit/protobuf/uuidpb"
 	. "github.com/dogmatiq/projectionkit/dynamoprojection"
 	"github.com/dogmatiq/projectionkit/dynamoprojection/internal/dynamox"
 	"github.com/dogmatiq/projectionkit/dynamoprojection/internal/fixtures" // can't dot-import due to conflict
 	"github.com/dogmatiq/projectionkit/internal/handlertest"
+	"github.com/dogmatiq/protobuf/uuidpb"
 	"github.com/testcontainers/testcontainers-go"
 	dynamotc "github.com/testcontainers/testcontainers-go/modules/dynamodb"
 	"github.com/testcontainers/testcontainers-go/wait"

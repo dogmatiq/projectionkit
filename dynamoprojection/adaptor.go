@@ -8,11 +8,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/dogmatiq/dogma"
-	"github.com/dogmatiq/enginekit/protobuf/uuidpb"
 	"github.com/dogmatiq/projectionkit/dynamoprojection/internal/dynamox"
 	"github.com/dogmatiq/projectionkit/internal/awsx"
 	"github.com/dogmatiq/projectionkit/internal/identity"
 	"github.com/dogmatiq/projectionkit/internal/syncx"
+	"github.com/dogmatiq/protobuf/uuidpb"
 )
 
 // adaptor adapts a [ProjectionMessageHandler] to the
