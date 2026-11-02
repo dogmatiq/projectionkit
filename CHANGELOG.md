@@ -11,6 +11,16 @@ The format is based on [Keep a Changelog], and this project adheres to
 [semantic versioning]: https://semver.org/spec/v2.0.0.html
 [bc]: https://github.com/dogmatiq/.github/blob/main/VERSIONING.md#changelogs
 
+## [Unreleased]
+
+### Changed
+
+- **[BC]** Updated to Dogma v0.25.0.
+- **[BC]** Updated minimum Go version to v1.26.
+- projectionkit no longer uses enginekit's `protobuf/uuidpb` package, which is
+  removed in enginekit v0.29.0. Builds that include enginekit v0.29.0 or later
+  require this version of projectionkit.
+
 ## [0.10.0] - 2025-12-17
 
 ### Changed

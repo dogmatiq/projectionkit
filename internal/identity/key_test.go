@@ -5,8 +5,8 @@ import (
 
 	"github.com/dogmatiq/dogma"
 	. "github.com/dogmatiq/enginekit/enginetest/stubs"
-	"github.com/dogmatiq/enginekit/protobuf/uuidpb"
 	. "github.com/dogmatiq/projectionkit/internal/identity"
+	"github.com/dogmatiq/protobuf/uuidpb"
 )
 
 func TestKey(t *testing.T) {

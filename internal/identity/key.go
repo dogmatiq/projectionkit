@@ -2,7 +2,7 @@ package identity
 
 import (
 	"github.com/dogmatiq/dogma"
-	"github.com/dogmatiq/enginekit/protobuf/uuidpb"
+	"github.com/dogmatiq/protobuf/uuidpb"
 )
 
 // Key returns a handler's unique key.
