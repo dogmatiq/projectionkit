@@ -17,8 +17,6 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 - **[BC]** Updated to Dogma v0.25.0.
 - **[BC]** Updated minimum Go version to v1.26.
-- Use `uuidpb` from `github.com/dogmatiq/protobuf` instead of enginekit, which
-  is removing its copy.
 
 ## [0.10.0] - 2025-12-17
 
