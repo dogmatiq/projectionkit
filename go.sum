@@ -67,8 +67,8 @@ github.com/dogmatiq/dapper v0.7.0 h1:8vSP/XRaP8nrQDNHVrd2h9J9L/byGy6RM1j4CDZeFzw
 github.com/dogmatiq/dapper v0.7.0/go.mod h1:ennQpTWjcfVwwjYa+CTdYZ2FiIbCNOb1szfxBiPLOtE=
 github.com/dogmatiq/dogma v0.25.0 h1:L1NM8xBaQMyJ+oFSKSH9FWqyQyf91I50qFN/Bz4WsT0=
 github.com/dogmatiq/dogma v0.25.0/go.mod h1:BNKrZq9wm3jRu35XUWQXkMRhq4EzYK+rOVbGjrbCVyI=
-github.com/dogmatiq/enginekit v0.27.7 h1:7QaVnNs9x20Z/HV4mQRBqXqvJz8rIz/4uOsaadgWI5c=
-github.com/dogmatiq/enginekit v0.27.7/go.mod h1:inONDnixYhHVZnjXWnrCD/2lQyN6pik+BptNpKOmU2I=
+github.com/dogmatiq/enginekit v0.29.0 h1:c1Spx+9WXDY6vQPzTccro3k7vWH8A0yq2ScDiDjxWi8=
+github.com/dogmatiq/enginekit v0.29.0/go.mod h1:dQrqLUtFTSD6qFgpz1yTfeG5+dMCtjTaVGVZdPBbzME=
 github.com/dogmatiq/jumble v0.1.0 h1:Cb3ExfxY+AoUP4G9/sOwoOdYX8o+kOLK8+dhXAry+QA=
 github.com/dogmatiq/jumble v0.1.0/go.mod h1:FCGV2ImXu8zvThxhd4QLstiEdu74vbIVw9bFJSBcKr4=
 github.com/dogmatiq/protobuf v0.2.0 h1:HMbG3Ur30fglm1Q+4EenIxNxAuiyJhqMWaLmtdxyO/k=
