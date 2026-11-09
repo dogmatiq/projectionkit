@@ -9,7 +9,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.72.3
 	github.com/dogmatiq/dogma v0.25.0
 	github.com/dogmatiq/enginekit v0.27.7
-	github.com/dogmatiq/protobuf v0.2.0
+	github.com/dogmatiq/protobuf v0.7.0
 	github.com/go-sql-driver/mysql v1.10.1
 	github.com/jackc/pgx/v5 v5.11.0
 	github.com/mattn/go-sqlite3 v1.14.52
