@@ -12,7 +12,7 @@ require (
 	github.com/dogmatiq/protobuf v0.7.0
 	github.com/go-sql-driver/mysql v1.10.1
 	github.com/jackc/pgx/v5 v5.11.0
-	github.com/mattn/go-sqlite3 v1.14.52
+	github.com/mattn/go-sqlite3 v1.14.53
 	github.com/testcontainers/testcontainers-go v0.45.0
 	github.com/testcontainers/testcontainers-go/modules/dynamodb v0.44.0
 	github.com/testcontainers/testcontainers-go/modules/mariadb v0.45.0
