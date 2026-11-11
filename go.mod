@@ -1,6 +1,6 @@
 module github.com/dogmatiq/projectionkit
 
-go 1.26.0
+go 1.27
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.47.8
@@ -8,7 +8,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.20.16
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.73.2
 	github.com/dogmatiq/dogma v0.25.0
-	github.com/dogmatiq/enginekit v0.27.7
+	github.com/dogmatiq/enginekit v0.31.0
 	github.com/dogmatiq/protobuf v0.7.0
 	github.com/go-sql-driver/mysql v1.10.1
 	github.com/jackc/pgx/v5 v5.11.0
@@ -48,6 +48,7 @@ require (
 	github.com/distribution/reference v0.6.0 // indirect
 	github.com/docker/go-connections v0.8.2 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
+	github.com/dogmatiq/primo v0.4.4 // indirect
 	github.com/ebitengine/purego v0.10.1 // indirect
 	github.com/felixge/httpsnoop v1.1.0 // indirect
 	github.com/go-logr/logr v1.4.4 // indirect

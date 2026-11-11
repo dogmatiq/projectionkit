@@ -180,8 +180,7 @@ func TestAdaptor(t *testing.T) {
 				t.Fatal("expected an error")
 			}
 
-			var ex *types.TransactionCanceledException
-			if !errors.As(err, &ex) {
+			if ex, ok := errors.AsType[*types.TransactionCanceledException](err); !ok {
 				t.Fatalf("unexpected error: got %T(%s), want %T", err, err, ex)
 			}
 		})
