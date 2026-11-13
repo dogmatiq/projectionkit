@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"uuid"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -16,7 +17,6 @@ import (
 	"github.com/dogmatiq/projectionkit/dynamoprojection/internal/dynamox"
 	"github.com/dogmatiq/projectionkit/dynamoprojection/internal/fixtures" // can't dot-import due to conflict
 	"github.com/dogmatiq/projectionkit/internal/handlertest"
-	"github.com/dogmatiq/protobuf/uuidpb"
 	"github.com/testcontainers/testcontainers-go"
 	dynamotc "github.com/testcontainers/testcontainers-go/modules/dynamodb"
 	"github.com/testcontainers/testcontainers-go/wait"
@@ -89,7 +89,7 @@ func TestAdaptor(t *testing.T) {
 
 		deps.Adaptor = New(
 			client,
-			"ProjectionCheckpoint-"+uuidpb.Generate().AsString(),
+			"ProjectionCheckpoint-"+uuid.New().String(),
 			deps.Handler,
 		)
 
@@ -132,7 +132,7 @@ func TestAdaptor(t *testing.T) {
 		t.Run("it returns an error", func(t *testing.T) {
 			deps := setup(t)
 
-			table := "TestTable-" + uuidpb.Generate().AsString()
+			table := "TestTable-" + uuid.New().String()
 
 			if err := dynamox.CreateTableIfNotExists(
 				t.Context(),

@@ -16,7 +16,7 @@ type adaptor struct {
 	Driver  Driver
 	Handler MessageHandler
 
-	handlerKey [16]byte
+	handlerKey uuid.UUID
 }
 
 // New returns a new [dogma.ProjectionMessageHandler] that binds an

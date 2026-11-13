@@ -1,15 +1,16 @@
 package identity
 
 import (
+	"uuid"
+
 	"github.com/dogmatiq/dogma"
-	"github.com/dogmatiq/protobuf/uuidpb"
 )
 
 // Key returns a handler's unique key.
-func Key(h configurable) [16]byte {
+func Key(h configurable) uuid.UUID {
 	var c configurer
 	h.Configure(&c)
-	return uuidpb.MustParseAsByteArray(c.key)
+	return uuid.MustParse(c.key)
 }
 
 var _ dogma.ProjectionConfigurer = (*configurer)(nil)

@@ -18,7 +18,7 @@ type adaptor struct {
 	DB      *bbolt.DB
 	Handler MessageHandler
 
-	handlerKey [16]byte
+	handlerKey uuid.UUID
 }
 
 // New returns a new [dogma.ProjectionMessageHandler] that binds a
@@ -110,7 +110,7 @@ var (
 // the handler with the given key, creating it if it does not already exist.
 //
 // It returns an error if the transaction is not writable.
-func makeBucketForHandler(tx *bbolt.Tx, hk [16]byte) (*bbolt.Bucket, error) {
+func makeBucketForHandler(tx *bbolt.Tx, hk uuid.UUID) (*bbolt.Bucket, error) {
 	b, err := tx.CreateBucketIfNotExists(checkpointBucket)
 	if err != nil {
 		return nil, err
@@ -123,7 +123,7 @@ func makeBucketForHandler(tx *bbolt.Tx, hk [16]byte) (*bbolt.Bucket, error) {
 // handler with the given key.
 //
 // It returns nil if the bucket does not exist.
-func bucketForHandler(tx *bbolt.Tx, hk [16]byte) *bbolt.Bucket {
+func bucketForHandler(tx *bbolt.Tx, hk uuid.UUID) *bbolt.Bucket {
 	b := tx.Bucket(checkpointBucket)
 	if b == nil {
 		return nil
@@ -136,7 +136,7 @@ func bucketForHandler(tx *bbolt.Tx, hk [16]byte) *bbolt.Bucket {
 // the handler with the given key.
 //
 // It does nothing if the bucket does not exist.
-func deleteBucketForHandler(tx *bbolt.Tx, hk [16]byte) error {
+func deleteBucketForHandler(tx *bbolt.Tx, hk uuid.UUID) error {
 	b := tx.Bucket(checkpointBucket)
 	if b == nil {
 		return nil

@@ -2,19 +2,19 @@ package identity_test
 
 import (
 	"testing"
+	"uuid"
 
 	"github.com/dogmatiq/dogma"
 	. "github.com/dogmatiq/enginekit/enginetest/stubs"
 	. "github.com/dogmatiq/projectionkit/internal/identity"
-	"github.com/dogmatiq/protobuf/uuidpb"
 )
 
 func TestKey(t *testing.T) {
-	id := uuidpb.Generate()
+	id := uuid.New()
 
 	h := &ProjectionMessageHandlerStub{
 		ConfigureFunc: func(c dogma.ProjectionConfigurer) {
-			c.Identity("<name>", id.AsString())
+			c.Identity("<name>", id.String())
 			c.Routes(
 				dogma.HandlesEvent[*EventStub[TypeA]](),
 			)
@@ -22,9 +22,8 @@ func TestKey(t *testing.T) {
 	}
 
 	got := Key(h)
-	want := uuidpb.AsByteArray[[16]byte](id)
 
-	if got != want {
-		t.Fatalf("unexpected identity: got %v, want %v", got, want)
+	if got != id {
+		t.Fatalf("unexpected identity: got %v, want %v", got, id)
 	}
 }
