@@ -3,10 +3,10 @@ package sqlprojection
 import (
 	"context"
 	"database/sql"
+	"uuid"
 
 	"github.com/dogmatiq/dogma"
 	"github.com/dogmatiq/projectionkit/internal/identity"
-	"github.com/dogmatiq/protobuf/uuidpb"
 )
 
 // adaptor adapts an sqlprojection.ProjectionMessageHandler to the
@@ -50,14 +50,14 @@ func (a *adaptor) HandleEvent(
 	}
 	defer tx.Rollback() // nolint:errcheck
 
-	id := uuidpb.MustParseAsBytes(s.StreamID())
+	id := s.StreamID()
 	cp := s.Offset() + 1
 
 	ok, err := a.Driver.UpdateCheckpointOffset(
 		ctx,
 		tx,
 		a.handlerKey[:],
-		id,
+		id[:],
 		s.CheckpointOffset(),
 		cp,
 	)
@@ -76,16 +76,16 @@ func (a *adaptor) HandleEvent(
 		ctx,
 		a.DB,
 		a.handlerKey[:],
-		id,
+		id[:],
 	)
 }
 
-func (a *adaptor) CheckpointOffset(ctx context.Context, id string) (uint64, error) {
+func (a *adaptor) CheckpointOffset(ctx context.Context, id uuid.UUID) (uint64, error) {
 	return a.Driver.QueryCheckpointOffset(
 		ctx,
 		a.DB,
 		a.handlerKey[:],
-		uuidpb.MustParseAsBytes(id),
+		id[:],
 	)
 }
 

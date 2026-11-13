@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"uuid"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
@@ -28,7 +29,7 @@ var (
 
 type requests struct {
 	Attr struct {
-		StreamID   [16]byte                    // [streamIDAttr]
+		StreamID   uuid.UUID                   // [streamIDAttr]
 		PrevOffset types.AttributeValueMemberN // [checkpointOffsetAttr]
 		NextOffset types.AttributeValueMemberN // [checkpointOffsetAttr]
 	}

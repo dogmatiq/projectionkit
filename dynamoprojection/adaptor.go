@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"sync"
+	"uuid"
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
@@ -12,7 +13,6 @@ import (
 	"github.com/dogmatiq/projectionkit/internal/awsx"
 	"github.com/dogmatiq/projectionkit/internal/identity"
 	"github.com/dogmatiq/projectionkit/internal/syncx"
-	"github.com/dogmatiq/protobuf/uuidpb"
 )
 
 // adaptor adapts a [ProjectionMessageHandler] to the
@@ -105,7 +105,7 @@ func (a *adaptor) HandleEvent(
 		next = s.Offset() + 1
 	)
 
-	req.Attr.StreamID = uuidpb.MustParseAsByteArray(s.StreamID())
+	req.Attr.StreamID = s.StreamID()
 	req.Attr.NextOffset.Value = a.marshalOffset(next)
 
 	if s.CheckpointOffset() == 0 {
@@ -129,11 +129,11 @@ func (a *adaptor) HandleEvent(
 	return next, err
 }
 
-func (a *adaptor) CheckpointOffset(ctx context.Context, id string) (uint64, error) {
+func (a *adaptor) CheckpointOffset(ctx context.Context, id uuid.UUID) (uint64, error) {
 	req := a.acquireRequests()
 	defer a.releaseRequests(req)
 
-	req.Attr.StreamID = uuidpb.MustParseAsByteArray(id)
+	req.Attr.StreamID = id
 	return a.checkpointOffset(ctx, req)
 }
 

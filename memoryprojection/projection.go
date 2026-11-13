@@ -3,6 +3,7 @@ package memoryprojection
 import (
 	"context"
 	"sync"
+	"uuid"
 
 	"github.com/dogmatiq/dogma"
 )
@@ -12,7 +13,7 @@ type Projection[T any, H MessageHandler[T]] struct {
 	Handler H
 
 	m           sync.RWMutex
-	checkpoints map[string]uint64
+	checkpoints map[uuid.UUID]uint64
 	value       T
 }
 
@@ -56,7 +57,7 @@ func (p *Projection[T, H]) HandleEvent(
 	}
 
 	if p.checkpoints == nil {
-		p.checkpoints = map[string]uint64{}
+		p.checkpoints = map[uuid.UUID]uint64{}
 	}
 
 	cp = s.Offset() + 1
@@ -68,7 +69,7 @@ func (p *Projection[T, H]) HandleEvent(
 
 // CheckpointOffset returns the offset at which the handler expects to
 // resume handling events from a specific stream.
-func (p *Projection[T, H]) CheckpointOffset(_ context.Context, id string) (uint64, error) {
+func (p *Projection[T, H]) CheckpointOffset(_ context.Context, id uuid.UUID) (uint64, error) {
 	p.m.RLock()
 	defer p.m.RUnlock()
 

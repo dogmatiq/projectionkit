@@ -11,6 +11,14 @@ The format is based on [Keep a Changelog], and this project adheres to
 [semantic versioning]: https://semver.org/spec/v2.0.0.html
 [bc]: https://github.com/dogmatiq/.github/blob/main/VERSIONING.md#changelogs
 
+## [Unreleased]
+
+### Changed
+
+- **[BC]** Updated to Dogma v0.26.0.
+- **[BC]** `memoryprojection.Projection.CheckpointOffset()` now takes the
+  stream ID as a `uuid.UUID`.
+
 ## [0.12.0] - 2026-11-11
 
 ### Changed

@@ -2,6 +2,7 @@ package handlertest
 
 import (
 	"testing"
+	"uuid"
 
 	"github.com/dogmatiq/dogma"
 	"github.com/dogmatiq/enginekit/enginetest/stubs"
@@ -150,7 +151,7 @@ func Run(
 
 			got, err := handler.CheckpointOffset(
 				t.Context(),
-				"e108b1d5-f2c2-44f1-884d-a5cdc1d575f0",
+				uuid.MustParse("e108b1d5-f2c2-44f1-884d-a5cdc1d575f0"),
 			)
 			if err != nil {
 				t.Fatalf("unable to load checkpoint offset: %s", err)

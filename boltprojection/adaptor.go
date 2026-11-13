@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"uuid"
 
 	"github.com/dogmatiq/dogma"
 	"github.com/dogmatiq/projectionkit/internal/identity"
-	"github.com/dogmatiq/protobuf/uuidpb"
 	"go.etcd.io/bbolt"
 	"go.etcd.io/bbolt/errors"
 )
@@ -44,7 +44,7 @@ func (a *adaptor) HandleEvent(
 	s dogma.ProjectionEventScope,
 	m dogma.Event,
 ) (uint64, error) {
-	id := uuidpb.MustParseAsByteArray(s.StreamID())
+	id := s.StreamID()
 	var cp uint64
 
 	return cp, a.DB.Update(func(tx *bbolt.Tx) error {
@@ -75,12 +75,12 @@ func (a *adaptor) HandleEvent(
 	})
 }
 
-func (a *adaptor) CheckpointOffset(_ context.Context, id string) (uint64, error) {
+func (a *adaptor) CheckpointOffset(_ context.Context, id uuid.UUID) (uint64, error) {
 	var cp uint64
 
 	return cp, a.DB.View(func(tx *bbolt.Tx) (err error) {
 		if b := bucketForHandler(tx, a.handlerKey); b != nil {
-			cp, err = getCheckpointOffset(b, uuidpb.MustParseAsByteArray(id))
+			cp, err = getCheckpointOffset(b, id)
 		}
 		return err
 	})
@@ -155,7 +155,7 @@ func deleteBucketForHandler(tx *bbolt.Tx, hk [16]byte) error {
 //
 // b is a handler-specific bucket returned by [makeBucketForHandler] or
 // [bucketForHandler].
-func getCheckpointOffset(b *bbolt.Bucket, id [16]byte) (uint64, error) {
+func getCheckpointOffset(b *bbolt.Bucket, id uuid.UUID) (uint64, error) {
 	switch data := b.Get(id[:]); len(data) {
 	case 0:
 		return 0, nil
