@@ -7,3 +7,7 @@ CGO_ENABLED ?= 1
 
 .makefiles/%:
 	@curl -sfL https://makefiles.dev/v1 | bash /dev/stdin "$@"
+
+# Consumers must be able to build the library without CGO.
+ci::
+	CGO_ENABLED=0 go build ./...
