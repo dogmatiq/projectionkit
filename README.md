@@ -1,14 +1,17 @@
 <div align="center">
 
-# Dogma Projection Toolkit
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://dogmatiq.io/res/img/dynamic/repo/projectionkit/banner/dark.svg">
+  <img alt="Dogmatiq projectionkit" src="https://dogmatiq.io/res/img/dynamic/repo/projectionkit/banner/light.svg" height="44">
+</picture>
 
 Build [Dogma](https://github.com/dogmatiq/dogma) projections for popular
 database systems.
 
-[![Documentation](https://img.shields.io/badge/go.dev-documentation-007d9c?&style=for-the-badge)](https://pkg.go.dev/github.com/dogmatiq/projectionkit)
-[![Latest Version](https://img.shields.io/github/tag/dogmatiq/projectionkit.svg?&style=for-the-badge&label=semver)](https://github.com/dogmatiq/projectionkit/releases)
-[![Build Status](https://img.shields.io/github/actions/workflow/status/dogmatiq/projectionkit/ci.yml?style=for-the-badge&branch=main)](https://github.com/dogmatiq/projectionkit/actions/workflows/ci.yml)
-[![Code Coverage](https://img.shields.io/codecov/c/github/dogmatiq/projectionkit/main.svg?style=for-the-badge)](https://codecov.io/github/dogmatiq/projectionkit)
+[![API reference](https://dogmatiq.io/res/img/dynamic/repo/projectionkit/badge/docs.svg)](https://pkg.go.dev/github.com/dogmatiq/projectionkit)
+[![Latest version](https://dogmatiq.io/res/img/dynamic/repo/projectionkit/badge/semver.svg)](https://github.com/dogmatiq/projectionkit/releases)
+[![Build status](https://dogmatiq.io/res/img/dynamic/repo/projectionkit/badge/build.svg)](https://github.com/dogmatiq/projectionkit/actions/workflows/ci.yml)
+[![Code coverage](https://dogmatiq.io/res/img/dynamic/repo/projectionkit/badge/coverage.svg)](https://codecov.io/github/dogmatiq/projectionkit)
 
 </div>
 
